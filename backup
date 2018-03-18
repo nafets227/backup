@@ -1,0 +1,8 @@
+# Standard backup file
+# (C) 2017 Stefan Schallenberg
+
+# default user script just reporting an error
+
+printf "you need to mount your own backup scipt on /backup/backup\n"
+
+exit 1
