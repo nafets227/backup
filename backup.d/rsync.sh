@@ -46,6 +46,7 @@
 function backup_rsync {
 	local readonly debug=${debug:-0}
 	local hist=0
+	local rebase=0
 	local inetlog=0
 	local logfile=""
 	local prm=""
@@ -53,7 +54,6 @@ function backup_rsync {
 	local currback=""
 	local lastback=""
 	local opt="-aHX --delete"
-	local optrsh="--rsh=ssh"
 	local allowSrcRemote=1
 	local allowDstRemote=0
 
@@ -79,24 +79,28 @@ function backup_rsync {
 		allowDstRemote=1
 		allowSrcRemote=0
 		shift
-		sshusersrv="${2%%:*}"
 		opt="-aH --partial"
-		opt="$opt --password-file=/root/ssl.private/$sshusersrv.password"
-		optrsh="--rsh=ssh -i ~/ssl.private/$sshusersrv"
 	elif [ "${1%%=*}" == "--sshlog" ] ; then
 		# NB: euserv.de's remote RSync does currently not support --info=DEL,STATS0
-		# so this will not work.
-		inetlog=1	
+		# Thats why we switched back to -n -v
+		inetlog=1
 		logfile=${1#*=}
 		allowDstRemote=1
 		allowSrcRemote=0
 		shift
-		sshusersrv="${2%%:*}"
 		opt="-aH --partial"
-		opt="$opt --password-file=/root/ssl.private/$sshusersrv.password"
-		optrsh="--rsh=ssh -i ~/ssl.private/$sshusersrv"
-		optlog3="-n --info=DEL,STATS0 --debug=NONE -r --delete --force --delete-excluded --existing --ignore-existing"
-		optlog3="$optlog3 --password-file=/root/ssl.private/$sshusersrv.password"
+		#optlog3="-n --info=DEL,STATS0 --debug=NONE -r --delete --force --delete-excluded --existing --ignore-existing"
+		optlog3="-n -v --recursive --delete --delete-excluded --ignore-non-existing --ignore-existing"
+		# Options successful tried manually:
+		#rsync -n -v -aH --delete --ignore-non-existing --ignore-existing --ignore-errors "--exclude=Thumbs.db*"
+	elif [ "$1" == "--rebase" ] ; then
+		allowDstRemote=0
+		allowSrcRemote=0
+		shift
+		rebase=1
+	elif [ "${1:0:2}" == "--" ] ; then
+		printf "Error: Unknown option \"%s\"\n" "$1"
+		exit -1
 	fi
 
 	#### NB: %/ removes a trailing slash if it exists
@@ -179,9 +183,12 @@ function backup_rsync {
 			printf "Backing up %s in history mode to %s (based on %s)\n" \
 				"$src" "$currback" "$lastback"
 		fi
+	elif [ $rebase -eq 1 ] ; then
+		currback="$src.rsync-rebase.tmp"
+		histparm="--link-dest=$dst --link-dest=$src"
+		printf "Rebasing %s onto %s\n" "$src" "$dst"
 	else
 		currback="$dst"
-		lastback=""
 		printf "Backing up %s to %s\n" "$src" "$currback"
 	fi
 
@@ -195,10 +202,10 @@ function backup_rsync {
 		if [ $? -eq 0 ] ; then
 			if [ $debug -eq 1 ]; then
 				printf "Created Dest Directory %s\n" "$curback"
-		fi
-	else
-		printf "Error creating Dest Directory %s\n" "$currback"
-		exit -7
+			fi
+		else
+			printf "Error creating Dest Directory %s\n" "$currback"
+			exit -7
 		fi
 	fi
 
@@ -211,19 +218,35 @@ function backup_rsync {
 	# in the destination folder but sync all files inside source directory
 	# into the target directory
 	local start_date="$(date -u +"%s")"
-	if [ $debug -eq 1 ]; then 
-		printf "Executing rsync %s %s %s %s %s/ %s\n" "$opt" "$optrsh" "$histparm" "$prm" "$src" "$currback"
+	if [ $debug -eq 1 ]; then
+		printf "Executing rsync %s %s %s %s %s/ %s\n" "$opt" "$histparm" "$prm" "$src" "$currback"
 	fi
-	rsync $opt "$optrsh" $histparm $prm $src/ $currback
+	rsync $opt $histparm $prm $src/ $currback
 	local rsync_rc="$?"
 
 	local diff_date=$(( $(date -u +"%s") - $start_date ))
 	local elapsed=$(date +%H:%M:%S -u -d @"$diff_date")
-	if [ $rsync_rc -eq 0 ] ; then
-		printf "Backup of %s completed (%s).\n" "$src" "$elapsed"
+	if [ $rebase -ne 1 ] ; then
+		if [ $rsync_rc -eq 0 ] ; then
+			printf "Backup of %s completed (%s).\n" "$src" "$elapsed"
+		else
+			printf "Backup of %s ended in error. RSync RC=%d (%s).\n" \
+				"$src" "$rsync_rc" "$elapsed"
+		fi
 	else
-		printf "Backup of %s ended in error. RSync RC=%d (%s).\n" \
-			"$src" "$rsync_rc" "$elapsed"
+		if [ $rsync_rc -eq 0 ] ; then
+			[ $debug -eq 1 ] && printf "Removing original Src $src and renaming rebased copy.\n"
+			rm -rf $src &&
+			mv $currback $src
+			rsync_rc="$?"
+		fi
+		if [ $rsync_rc -eq 0 ] ; then
+			printf "Rebase of %s completed (%s).\n" "$src" "$elapsed"
+		else
+			printf "Rebase of %s ended in error. RSync RC=%d (%s).\n" \
+				"$src" "$rsync_rc" "$elapsed"
+			rm -rf $currback
+		fi
 	fi
 
 	# If we want a log of to be deleted files, we do it this way:
@@ -238,12 +261,39 @@ function backup_rsync {
 
 		if [ $debug -eq 1 ]; then
 			printf "Executing rsync %s %s %s %s/ %s\n" \
-				"$optrsh" "$prm" "$optlog3" "$src" "$currback"
+				"$prm" "$optlog3" "$src" "$currback"
 		fi
-		rsync "$optrsh" $prm $optlog3 $src/ $currback |\
-			sed -e 's/^deleting //' -e '/sending incremental file list/d' >$logfile
+		rsync $prm $optlog3 $src/ $currback |\
+			sed -n 's/^deleting //p' >$logfile
 	fi
 
+}
+
+function backup_rebase {
+	if [ $# -le 1 ] ; then
+		printf "too less arguments. Minimum 2 expected.\n"
+		return 1
+	fi
+
+	while [ $# -gt 1 ] ; do
+		base=$(realpath $1) &&
+		dest=$(realpath $2) &&
+		backup_rsync --rebase "$dest" "$base" \
+		|| return 1
+		shift
+	done
+
+	return 0
+}
+
+function backup_ducnt {
+	du -sh "$@" | 
+	while read size dir ; do
+	       	printf "%s\t%s\t%s\n" \
+			"$size" \
+			"$(ls -R $dir | wc -l)" \
+			"$dir"
+	done
 }
 
 function backup_rsync_print {
@@ -257,11 +307,11 @@ function backup_rsync_print {
 	local dst="${3%/}"
 	local log="$1"
 
-	if [ ! -d "$dst" ] ; then
-		printf "Error: Dest Directory %s does not exist or no directory.\n" \
-			"$dst"
-		exit -2
-	fi
+	# if [ ! -d "$dst" ] ; then
+	#	printf "Error: Dest Directory %s does not exist or no directory.\n" \
+	#		"$dst"
+	#	exit -2
+	# fi
 
 	if [ ! -f "$log" ] ; then
 		printf "Error: Logfile %s does not exist.\n" "$log"
