@@ -169,7 +169,7 @@ kubectl --kubeconfig /root/.kube/config get -n prod pod -l svc=mariadb \
 				$db
 			EOKUBE
 		kubectl --kubeconfig /root/.kube/config cp prod/$pod:$DUMPDIR_CNT $DUMPDIR
-		kubectl --kubeconfig /root/.kube/config exec -i -n prod $pod -- /bin/rm -rf $DUMPDIR_CNT
+		kubectl --kubeconfig /root/.kube/config exec -i -n prod $pod -- /bin/rm -rf $DUMPDIR_CNT </dev/null
 
 		backup_rsync --hist $DUMPDIR /srv/backup/mysql.$name.$db "--ignore-times"
 		backup_rsync $DUMPDIR /srv/backup/data.uncrypt/mysql.$name.$db "--ignore-times"

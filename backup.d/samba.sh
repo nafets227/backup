@@ -11,7 +11,12 @@
 #####     Backup Domain Database (aka Active Directory )                #####
 #############################################################################
 function backup_samba_domain {
-srv="${1-"vDom.dom.nafets.de"}"
+srv="$1"
+
+if [ -z "$1" ] ; then
+	printf "Parameter 1 MUST be set.\n"
+	return 1
+fi
 
 # Save Samba Domain Setup-Data
 echo "Dumping Samba Config-Data"
