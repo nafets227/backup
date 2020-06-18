@@ -12,15 +12,27 @@
 #     1 - command in custom backup shell
 #     2 - expected RC [default: 0]
 function test_exec_backupdocker {
-	cat >$TMPDIR/test_helper <<<"$1"  || return 100
+	cat >$TESTSETDIR/test_helper <<<"$1"  || return 100
 
 	test_exec_simple \
-		"docker run nafets227/backup:test -v $TMPDIR/test_helper:/backup/backup" \
+		"docker run nafets227/backup:test -v $TESTSETDIR/test_helper:/backup/backup" \
 		$2
 	
 	return $?
 	}
 	
+##### Test Build #############################################################
+function test_build {
+
+	# Compile / Build docker
+	test_exec_simple \
+		"docker build -t nafets227/backup:test $BASEDIR/.." \
+		0
+
+	[ $TESTRC -eq 0 ] || return 1
+
+	return 0
+}
 
 ##### Test: no custom script #################################################
 function test1 {
@@ -51,8 +63,8 @@ function test3 {
 }
 ##### Test x: remaining tests ################################################
 function testx {
-	mkdir $TMPDIR/test2
-	cat >$TMPDIR/test2/backup <<-"EOF"
+	mkdir $TESTSETDIR/test2
+	cat >$TESTSETDIR/test2/backup <<-"EOF"
  		backup_imap "test-backup@nafets.dyndns.eu" "backup"
 
 		backup_mysql "vSrv.dom.nafets.de" "dbFinance"
@@ -66,7 +78,7 @@ function testx {
 	
 		EOF
  	
-	docker run nafets227/backup:test -v $TMPDIR/test1/_backup:/backup/backup 
+	docker run nafets227/backup:test -v $TESTSETDIR/test1/_backup:/backup/backup
 	[ $? -eq 0 ] || return 1
 	
 	return 0
@@ -76,19 +88,13 @@ function testx {
 BASEDIR=$(dirname $BASH_SOURCE)
 . $BASEDIR/test-functions.sh
 
-TMPDIR=$(mktemp --tmpdir --directory backup-docker-test.XXXXXXXXXX)
-mkdir -p $TMPDIR/test1
- 
- 
-# Compile / Build docker
-docker build -t nafets227/backup:test $BASEDIR/..
-[ $? -eq 0 ] || exit 1
-
 testset_init
 
-test1
-test2
-test3
+if test_build ; then
+	test1
+	test2
+	test3
+fi
 
-test_summary
+testset_summary
 exit $?
