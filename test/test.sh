@@ -6,48 +6,6 @@
 #
 # Test script
 
-# Allgemeine Test Bibliothek
-
-# Parameters:
-#     1 - command to test
-#     2 - expected RC [default: 0]
-function test_exec_simple {
-	testnr=$(( ${testnr-0} + 1))
-	printf "Executing Test %d ... " "$testnr"
-
-	rc_exp=${2-0}
-
-	restext=$(eval $1 2>&1 )
-	rc=$?
-	
-	if [ $rc -ne $rc_exp ] ; then
-		printf "FAILED. RC=%d (exp=%d)\n" "$rc" "$rc_exp"
-		printf "CMD: %s\n" "$1"
-		printf "========== Output Test %d Begin ==========\n" "$testnr"
-		printf "%s\n" "$restext"
-		printf "========== Output Test %d End ==========\n" "$testnr"
-		testsfailed="$testsfailed $testnr"
-	else
-		printf "OK\n"
-		testsok=$(( ${testsok-0} + 1))
-	fi
-
-	return 0
-}
-
-
-function test_summary {
-	printf "TESTS Ended. %d of %d successful.\n" "$testsok" "$testnr"
-	if [ "$testsok" -ne "$testnr" ] ; then
-		printf "Failed tests:%s\n" "$testsfailed"
-		return 1
-	fi
-
-	return 0
-}
-
-# Ende allgemeine Test Bibliothek
-
 
 ##### Test Executer ##########################################################
 # Parameters:
@@ -116,6 +74,8 @@ function testx {
 
 ##### Main ###################################################################
 BASEDIR=$(dirname $BASH_SOURCE)
+. $BASEDIR/test-functions.sh
+
 TMPDIR=$(mktemp --tmpdir --directory backup-docker-test.XXXXXXXXXX)
 mkdir -p $TMPDIR/test1
  
@@ -123,6 +83,8 @@ mkdir -p $TMPDIR/test1
 # Compile / Build docker
 docker build -t nafets227/backup:test $BASEDIR/..
 [ $? -eq 0 ] || exit 1
+
+testset_init
 
 test1
 test2
