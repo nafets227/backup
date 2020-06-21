@@ -16,5 +16,4 @@ for f in /usr/lib/backup/*.sh ; do
 done
 
 ##### Now start the custom scipt
-chmod +x /backup/backup
 . backup/backup
