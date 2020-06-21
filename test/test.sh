@@ -15,11 +15,12 @@ function test_exec_backupdocker {
 	cat >$TESTSETDIR/test_helper <<<"$1"  || return 100
 
 	test_exec_simple \
-		"docker run nafets227/backup:test -v $TESTSETDIR/test_helper:/backup/backup" \
-		$2
-	
+		"docker run -v $TESTSETDIR/test_helper:/backup/backup nafets227/backup:test" \
+		"$2" \
+		"Backup Command \"$1\""
+
 	return $?
-	}
+}
 	
 ##### Test Build #############################################################
 function test_build {
@@ -35,7 +36,7 @@ function test_build {
 }
 
 ##### Test: no custom script #################################################
-function test1 {
+function test_runempty {
 	test_exec_simple \
 		"docker run nafets227/backup:test" \
 		1
@@ -44,23 +45,23 @@ function test1 {
 }
 
 ##### Test: IMAP wrong password ##############################################
-function test2 {
-	test_exec_backupdocker  \
-		 'backup_imap "test-backup@nafets.dyndns.eu" "wrongpassword"' \
-		 1
-		 
+function test_imap {
+	printf "Testing IMAP using Mail Adress \"%s\"\n" "$MAIL_ADR"
+	test_exec_simple "[ ! -z \"$MAIL_ADR $MAIL_PW\" ]"
+	if [ $TESTRC -eq 0 ] ; then
+		# IMAP Wrong password
+		test_exec_backupdocker  \
+			 "backup_imap \"$MAIL_ADR\" 'wrongpassword'" \
+			 1
+		# IMAP OK
+		test_exec_backupdocker  \
+			 "backup_imap \"$MAIL_ADR\" \"$MAIL_PW\"" \
+			 0
+	fi
+
 	return $?
 }
 
-##### Test: IMAP OK ##########################################################
-function test3 {
-	test_exec_backupdocker  \
-		 'backup_imap "test-backup@nafets.dyndns.eu" "backup"' \
-		 0
-		 
-	return $?
-	
-}
 ##### Test x: remaining tests ################################################
 function testx {
 	mkdir $TESTSETDIR/test2
@@ -86,14 +87,13 @@ function testx {
 
 ##### Main ###################################################################
 BASEDIR=$(dirname $BASH_SOURCE)
-. $BASEDIR/test-functions.sh
+. $BASEDIR/test-functions.sh || exit 1
 
-testset_init
+testset_init || exit 1
 
 if test_build ; then
-	test1
-	test2
-	test3
+	test_runempty
+	test_imap
 fi
 
 testset_summary
