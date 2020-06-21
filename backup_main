@@ -16,4 +16,10 @@ for f in /usr/lib/backup/*.sh ; do
 done
 
 ##### Now start the custom scipt
-. backup/backup
+if [ $# -ge 1 ] ; then
+	printf "executing custom command %s\n" "$*"
+	"$@"
+else
+	printf "executing standard command backup/backup\n"
+	. backup/backup
+fi
