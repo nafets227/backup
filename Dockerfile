@@ -6,11 +6,16 @@
 
 FROM alpine:3.6
 
-RUN apk add --no-cache \
-	bash \
-	mysql-client \
-	offlineimap \
-	rsync
+RUN \
+	apk update && \
+	apk add --no-cache \
+		bash \
+		ca-certificates \
+		mysql-client \
+		offlineimap \
+		rsync \
+		&& \
+	rm -rf /var/cache/apk/*
 
 # maybe include gigasync
 # https://github.com/noordawod/gigasync
