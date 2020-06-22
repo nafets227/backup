@@ -15,6 +15,10 @@ for f in /usr/lib/backup/*.sh ; do
     . $f
 done
 
+if [ x"$DEBUG" == x1 ] ; then
+	set -x
+fi
+
 ##### Now start the custom scipt
 if [ $# -ge 1 ] ; then
 	printf "executing custom command %s\n" "$*"

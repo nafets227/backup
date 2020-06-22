@@ -15,7 +15,7 @@ function test_exec_backupdocker {
 	cat >$TESTSETDIR/test_helper <<<"$1"  || return 100
 
 	test_exec_simple \
-		"docker run -v $TESTSETDIR/test_helper:/backup/backup nafets227/backup:test" \
+		"docker run -v $TESTSETDIR/test_helper:/backup/backup -e DEBUG=1 nafets227/backup:test" \
 		"$2" \
 		"Backup Command \"$1\""
 
