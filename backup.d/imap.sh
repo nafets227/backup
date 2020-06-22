@@ -7,7 +7,6 @@
 
 ##### backup_imap ############################################################
 function backup_imap {
-local certfile="/etc/ssl/certs/ca-certificates.crt"
 local email="${1,,}" # converto to lowercase
 local password="$2"
 local emailuser="${email%%@*}"
@@ -26,13 +25,11 @@ else case "$emaildomain" in
         ;;
     intranet.nafets.de | nafets.dyndns.eu )
         server="nafets.dyndns.eu"
-        certfile="/etc/ssl/ca/nafetsde-ca.crt"
 	port="143"
 	ssl="no"
         ;;
     gmail.com | googlemail.com )
         server="imap.gmail.com"
-        certfile="/etc/ca-certificates/extracted/tls-ca-bundle.pem"
 	port="993"
 	ssl="no"
         ;;
@@ -70,10 +67,9 @@ cat >$imapcfg <<-EOF
 	remoteuser = $email
 	remotepass = $password
 	subscribedonly = no
-	sslcacertfile=$certfile
 	EOF
 
-offlineimap -c $imapcfg
+offlineimap -c $imapcfg || return 1
 
 return 0
 }
