@@ -10,6 +10,10 @@
 #############################################################################
 function backup_mysql {
 
+if [ x"$DEBUG" == x1 ] ; then
+	printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+fi
+
 if [ $# -ne 2 ]; then
     printf "%s backup_mysql ERROR: Wrong number of parameters" "$0"
     return -1
@@ -40,6 +44,10 @@ EOF
 
 ##### backup_mysql_docker ####################################################
 function backup_mysql_docker {
+
+if [ x"$DEBUG" == x1 ] ; then
+	printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+fi
 
 if [ $# -ne 2 ]; then
     printf "%s backup_mysql ERROR: Wrong number of parameters" "$0"
@@ -87,6 +95,11 @@ ssh $srv <<-EOF
 #    - Backup files need to be available in Docker image in path $dir=$3
 #    - script must be running on docker host machine
 function restore_mysql_docker {
+
+if [ x"$DEBUG" == x1 ] ; then
+	printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+fi
+
 if [ $# -ne 3 ]; then
     printf "%s restore_mysql_docker ERROR: Wrong number of parameters" "$0"
     return -1
@@ -121,6 +134,10 @@ $cmd_docker <<-EOF
 
 ##### backup_mysql_kube ######################################################
 function backup_mysql_kube {
+
+if [ x"$DEBUG" == x1 ] ; then
+	printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+fi
 
 #if [ $# -ne 2 ]; then
 #    printf "%s backup_mysql ERROR: Wrong number of parameters" "$0"

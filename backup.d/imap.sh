@@ -13,6 +13,10 @@ local emailuser="${email%%@*}"
 local emaildomain="${email##*@}"
 local imapcfg="$(mktemp -t .offlineimaprc.${emailuser}-XXXXXXXXXX)"
 
+if [ x"$DEBUG" == x1 ] ; then
+	printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+fi
+
 if [ "$#" -ge 3 ]; then
     server="$3"
     port="993"

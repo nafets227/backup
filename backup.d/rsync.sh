@@ -57,6 +57,10 @@ function backup_rsync {
 	local allowSrcRemote=1
 	local allowDstRemote=0
 
+	if [ x"$DEBUG" == x1 ] ; then
+		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+	fi
+
 	if [ $# -lt 2 ]; then
 		printf "Error: wrong number or arguments (%d given, >=2 expected)", "$#"
 		exit -1
@@ -270,6 +274,10 @@ function backup_rsync {
 }
 
 function backup_rebase {
+	if [ x"$DEBUG" == x1 ] ; then
+		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+	fi
+
 	if [ $# -le 1 ] ; then
 		printf "too less arguments. Minimum 2 expected.\n"
 		return 1
@@ -287,6 +295,10 @@ function backup_rebase {
 }
 
 function backup_ducnt {
+	if [ x"$DEBUG" == x1 ] ; then
+		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+	fi
+
 	du -sh "$@" | 
 	while read size dir ; do
 	       	printf "%s\t%s\t%s\n" \
@@ -297,6 +309,10 @@ function backup_ducnt {
 }
 
 function backup_rsync_print {
+	if [ x"$DEBUG" == x1 ] ; then
+		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+	fi
+
 	# check: Parameter must be 3!
 	if [ $# -ne 3 ]; then
 		printf "Error: wrong number or arguments (%d given, =3 expected)", "$#"

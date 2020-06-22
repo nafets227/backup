@@ -11,6 +11,10 @@
 #####     Backup Domain Database (aka Active Directory )                #####
 #############################################################################
 function backup_samba_domain {
+if [ x"$DEBUG" == x1 ] ; then
+	printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+fi
+
 srv="$1"
 
 if [ -z "$1" ] ; then
@@ -41,6 +45,10 @@ backup_rsync $srv:/var/lib/samba /srv/backup/data.uncrypt/samba.domain "--exclud
 #####     Backup Samba confirmation of single machine (smb.conf etc.)   #####
 #############################################################################
 function backup_samba_conf {
+if [ x"$DEBUG" == x1 ] ; then
+	printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+fi
+
 srv="$1"
 backup_rsync --hist $srv:/etc/samba /srv/backup/samba.$srv
 backup_rsync $srv:/etc/samba /srv/backup/data.uncrypt/samba.$srv
