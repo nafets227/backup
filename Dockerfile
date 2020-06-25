@@ -23,6 +23,6 @@ RUN \
 
 ADD backup /backup/backup
 ADD backup_main /backup_main
-ADD backup.d /usr/lib/backup
+ADD backup.d /usr/lib/nafets227.backup
 
 ENTRYPOINT ["/backup_main"]

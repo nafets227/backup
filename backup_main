@@ -3,14 +3,33 @@
 # (C) 2015 Stefan Schallenberg
 #
 
+##### Execute on different machine ###########################################
+function backup_execremote {
+	remotemachine="$1"
+	shift
+
+	scp -r $MODDIR/* $remotemachine:$REMOTE_MODDIR &&
+	scp $BASH_SOURCE $remotemachine:$REMOTE_MODDIR/backup_main &&
+	ssh $remotemachine <<-EOF &&
+		DEBUG=$DEBUG
+		$REMOTE_MODDIR/backup_main "$@"
+		EOF
+	/bin/true || return 1
+
+	return 0
+}
+
+##### Main ###################################################################
 printf "starting ENTRYPOINT backup_main\n"
+readonly MODDIR=/usr/lib/nafets227.backup
+readonly REMOTE_MODDIR=/usr/local/lib/nafets227.backup
 
 ##### Parse Configs / Envirionment ###########################################
 DEBUG=${DEBUG-0}
 debug=$DEBUG
 
 #Source all modules in install.d
-for f in /usr/lib/backup/*.sh ; do
+for f in $MODDIR/*.sh ; do
     echo "Loading Module $f"
     . $f
 done
