@@ -19,6 +19,66 @@ function backup_execremote {
 	return 0
 }
 
+##### Notify on Backup result and Deleted files via Email ####################
+function backup_notify {
+	# Options:
+	#	--deleted List deleted files on remote system
+	# Parms
+	# 	1 - Sender Email adress, e.g. "my name <no-reply@example.org"
+	#	2 - Recipient Email adress
+
+	return 0
+	# Old implementation as base follow
+	###################################
+
+	#if [ -s $LDIR/crypt.filestodelete ] ; then
+	#printf "Sending EMail with list of deleted files.\n"
+	#(
+	#    printf "%s finished at %s\n\n" "$0" "$(date +"%Y-%m-%d %H:%M:%S")"
+	#
+	#    backup_rsync_print \
+	#        $LDIR/crypt.filestodelete \
+	#        "/srv/backup/data.crypt" \
+	#        "remotebackup@stevro.dyndns.eu:/crypt"
+	#
+	#) 2>&1 </dev/null | mail \
+	#    -r "nafets-backup-upload <no-reply@nafets.dyndns.eu>" \
+	#    -s "Deleted files found" \
+	#    infos@nafets.de
+	#
+	#else
+	#    printf "No deleted Files. Not sending EMail.\n"
+	#fi
+	#
+	#if [ -s $LDIR/euserv.fotos.filestodelete ] ||
+	#   [ -s $LDIR/euserv.music.filestodelete ] ; then
+	#printf "Sending EMail with list of deleted files.\n"
+	#(
+	#    printf "%s finished at %s\n\n" "$0" "$(date +"%Y-%m-%d %H:%M:%S")"
+	#
+	#    backup_rsync_print \
+	#        $LDIR/euserv.fotos.filestodelete \
+	#        "/srv/samba/data/fotos" \
+	#        "remotebackup@stevro.dyndns.eu:/fotos"
+	#
+	#    backup_rsync_print \
+	#        $LDIR/euserv.music.filestodelete \
+	#        "/srv/samba/data/music" \
+	#        "remotebackup@stevro.dyndns.eu:/music"
+	#
+	#) 2>&1 </dev/null | mail \
+	#    -S smtp=smtp://mail.intranet.nafets.de \
+	#    -S hostname=$HOSTNAME.dom.nafets.de \
+	#    -r "nafets-backup-upload-euserv <no-reply@nafets.dyndns.eu>" \
+	#    -s "Deleted files found" \
+	#    infos@nafets.de
+	#
+	#else
+	#    printf "No deleted Files. Not sending EMail.\n"
+	#fi
+	#}
+}
+
 ##### Main ###################################################################
 printf "starting ENTRYPOINT backup_main\n"
 readonly MODDIR=/usr/lib/nafets227.backup
