@@ -21,7 +21,7 @@ function test_exec_backupdocker {
 
 	return $?
 }
-	
+
 ##### Test Build #############################################################
 function test_build {
 
@@ -47,16 +47,33 @@ function test_runempty {
 ##### Test: IMAP wrong password ##############################################
 function test_imap {
 	printf "Testing IMAP using Mail Adress \"%s\"\n" "$MAIL_ADR"
+	test_assert_tools "curl mailx" || return 1
+
 	test_exec_simple "[ ! -z \"$MAIL_ADR $MAIL_PW\" ]"
 	if [ $TESTRC -eq 0 ] ; then
+		test_cleanImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" || return 1
+
 		# IMAP Wrong password
 		test_exec_backupdocker  \
 			 "backup_imap \"$MAIL_ADR\" 'wrongpassword'" \
 			 1
-		# IMAP OK
+		# IMAP OK with Empty Mailbox
 		test_exec_backupdocker  \
 			 "backup_imap \"$MAIL_ADR\" \"$MAIL_PW\"" \
 			 0
+
+		local mail_pwd mail_user
+		mail_user="$(mailx -# <<<"urlcodec encode $MAIL_ADR")"
+		mail_pwd="$(mailx -# <<<"urlcodec encode $MAIL_PW")"
+		test_exec_sendmail "smtp://$mail_user:$mail_pwd@$MAIL_SRV" 0 \
+			"$MAIL_ADR" "$MAIL_ADR" \
+			"-S 'smtp-auth=plain' -S 'smtp-use-starttls'"
+
+		# IMAP OK with one Mail
+		test_exec_backupdocker  \
+			 "backup_imap \"$MAIL_ADR\" \"$MAIL_PW\"" \
+			 0
+
 	fi
 
 	return $?
@@ -87,7 +104,7 @@ function testx {
 
 ##### Main ###################################################################
 BASEDIR=$(dirname $BASH_SOURCE)
-. $BASEDIR/test-functions.sh || exit 1
+. $BASEDIR/../util/test-functions.sh || exit 1
 
 testset_init || exit 1
 

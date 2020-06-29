@@ -21,8 +21,9 @@ RUN \
 # https://github.com/noordawod/gigasync
 # to speedup rsync
 
-ADD backup /backup/backup
-ADD backup_main /backup_main
+ADD backup-error /backup/backup
+ADD backup-sample /backup/backup-sample
 ADD backup.d /usr/lib/nafets227.backup
+ADD src/backup_main /usr/lib/nafets227.backup/backup_main
 
-ENTRYPOINT ["/backup_main"]
+ENTRYPOINT ["/usr/lib/nafets227.backup/backup_main"]
