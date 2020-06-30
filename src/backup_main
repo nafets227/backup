@@ -92,6 +92,10 @@ debug=$DEBUG
 for f in $MODDIR/*.sh ; do
     echo "Loading Module $f"
     . $f
+    if [ x$? != x0 ] ; then
+	    printf "Error loading module %s\n" "$f"
+	    exit 1
+    fi
 done
 
 if [ x"$DEBUG" == x1 ] ; then
@@ -106,3 +110,5 @@ else
 	printf "executing standard command backup/backup\n"
 	. backup/backup
 fi
+
+exit $?
