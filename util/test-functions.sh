@@ -52,7 +52,7 @@ function test_cleanImap {
 		--request 'EXPUNGE'
 	) || return 1
 
-	return 1
+	return 0
 }
 
 function test_lastoutput_contains {
