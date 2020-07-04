@@ -55,11 +55,11 @@ function test_imap {
 
 		# IMAP Wrong password
 		test_exec_backupdocker  \
-			 "backup_imap \"$MAIL_ADR\" 'wrongpassword'" \
+			 "backup imap \"$MAIL_ADR\" /backup/imap/test1 \"$MAIL_SRV:143\" 'wrongpassword'" \
 			 1
 		# IMAP OK with Empty Mailbox
 		test_exec_backupdocker  \
-			 "backup_imap \"$MAIL_ADR\" \"$MAIL_PW\"" \
+			 "backup imap \"$MAIL_ADR\" /backup/imap/test2  \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
 			 0
 
 		local mail_pwd mail_user
@@ -71,9 +71,11 @@ function test_imap {
 
 		# IMAP OK with one Mail
 		test_exec_backupdocker  \
-			 "backup_imap \"$MAIL_ADR\" \"$MAIL_PW\"" \
+			 "backup imap \"$MAIL_ADR\" /backup/imap/test3 \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
 			 0
 
+	else
+		printf "Skipping IMAP Tests because MAIL_ADR or MAIL_PW is not set.\n"
 	fi
 
 	return $?

@@ -4,19 +4,50 @@
 #
 
 ##### Execute on different machine ###########################################
-function backup_execremote {
+function backup_remote {
 	remotemachine="$1"
+	[ -z "remotemachine" ] && return 1
 	shift
 
 	scp -r $MODDIR/* $remotemachine:$REMOTE_MODDIR &&
 	scp $BASH_SOURCE $remotemachine:$REMOTE_MODDIR/backup_main &&
 	ssh $remotemachine <<-EOF &&
 		DEBUG=$DEBUG
-		$REMOTE_MODDIR/backup_main "$@"
+		$REMOTE_MODDIR/backup_main --local "$@"
 		EOF
 	/bin/true || return 1
 
 	return 0
+}
+
+##### Execute on this machine ################################################
+function backup_local {
+	[ "$#" -lt 3 ] && return 1
+
+	local bck_type="$1"
+	local bck_src="$2"
+	local bck_dst="$3"
+	shift 3
+
+	local bck_local_prm=()
+	local bck_hist=0
+
+	while [ $# -gt 0 ] ; do
+		if [ "$1" == "--hist" ] ; then # historize
+			bck_hist=1
+			shift
+		elif [ "$1" == "--" ] ; then # end of global parms
+			bck_local_prm+=( "$@" )
+			shift $#
+		else # unknown parm -> probably type-specific
+			bck_local_prm+=( "$1" )
+			shift
+		fi
+	done
+
+	backup2_$bck_type "$bck_src" "$bck_dst" "${bck_local_prm[@]}"
+
+	return $?
 }
 
 ##### Notify on Backup result and Deleted files via Email ####################
@@ -79,6 +110,139 @@ function backup_notify {
 	#}
 }
 
+##### backup - entry point for custom script #################################
+# backup <type> <source> <target> [ global-options ] [ -- ] [ type-options ]
+function backup {
+	# This function is called by the custom script.
+	if [ "$#" -lt 3 ] ; then
+		printf "Error in custom config script. "
+		printf "Calling backup with parms:\n\t%s\n"
+			"$*"
+		NAFETS227BACKUP_GRC=1
+		return 1
+	fi
+
+	local bck_type="$1"
+	local bck_src="$2"
+	local bck_dst="$3"
+
+	if [ "$bck_type" != imap ] &&
+	   [ "$bck_type" != file ] &&
+	   [ "$bck_type" != mysql-kube ] &&
+	   [ "$bck_type" != notify ] ; then
+		printf "Wrong backup type %s " "$type"
+		printf "when calling backup with\n\t%s\n" \
+			"$*"
+		NAFETS227BACKUP_GRC=1
+		return 1
+	fi
+	shift 3
+
+	local bck_runon=0
+	local bck_local=0
+	local bck_local_prm=()
+	while [ $# -gt 0 ] ; do
+		if [ "$1" == "--runonsrc" ] ; then # historize
+			bck_runon=-1
+			shift
+		elif [ "$1" == "--runontgt" ] ; then # historize
+			bck_runon=1
+			shift
+		elif [ "$1" == "--local" ] ; then # historize
+			bck_local=1
+			shift
+		elif [ "$1" == "--" ] ; then # end of global parms
+			bck_local_prm+=( "$@" )
+			shift $#
+		else # unknown parm -> probably type-specific
+			bck_local_prm+=( "$1" )
+			shift
+		fi
+	done
+
+	#check if we need to execut locally or remote
+	if [ "$bck_type" != file ] ; then
+		# all backup types except file can only run on target
+		if [ $bck_runon == -1 ] ; then
+			printf "Error: cannot run on source with type %s\n" \
+				"$bck_type"
+			NAFETS227BACKUP_GRC=1
+			return 1
+		fi
+
+		if [[ "$bck_dst" == *":"* ]] ; then
+			[ $bck_local == 1 ] && return 1
+			backup_execremote \
+				"${bck_dst%%:*}" \
+				$bck_type \
+				"$bck_src" \
+				"${bck_dst##*:}" \
+				"${bck_local_prm[@]}"
+		else
+			backup_local \
+				"$bck_type" \
+				"$bck_src" \
+				"$bck_dst" \
+				"${bck_local_prm[@]}"
+		fi
+	else # "$type" == file
+		# file can run on source and target, so lets identify it
+		if [[ "$bck_dst" == *":"* ]] &&
+			[[ "$bck_src" == *":"* ]] ; then
+			# Backing up from remote to remote
+			# --> Need to know where to run
+			if [ $bck_runon == 0 ] ; then
+				printf "Error: Missing option --runonsrc or "
+				printf "--runontgt when copying from remote "
+				printf "to remote\n"
+				NAFETS227BACKUP_GRC=1
+				return 1
+			elif [ $bck_runon == -1 ] ; then
+				# run on source
+				[ $bck_local == 1 ] && return 1
+				backup_execremote \
+					"${bck_src%%:*}" \
+					$bck_type \
+					"${bck_src##*:}" \
+					"$bck_dst" \
+					"${bck_local_prm[@]}"
+			elif [ $bck_runon == -1 ] ; then
+				# run on dest
+				[ $bck_local == 1 ] && return 1
+				backup_execremote \
+					"${bck_dst%%:*}" \
+					$bck_type \
+					"$bck_src" \
+					"${bck_dst##*:}" \
+					"${bck_local_prm[@]}"
+			else
+				printf "Internal Error \n"
+				NAFETS227BACKUP_GRC=1
+				return 1
+			fi
+		else
+			# backup up from remote to local
+			# --- or ---
+			# backup up from local to remote
+			# --- or ---
+			# backup from local to local
+			backup_local \
+				"$bck_type" \
+				"$bck_src" \
+				"$bck_dst" \
+				"${bck_local_prm[@]}"
+		fi
+
+	fi
+
+	if [ $? -ne 0 ] ; then
+		NAFETS227BACKUP_GRC=1
+		return 1
+	fi
+
+	return 0
+}
+
 ##### Main ###################################################################
 printf "starting ENTRYPOINT backup_main\n"
 readonly MODDIR=/usr/lib/nafets227.backup
@@ -102,13 +266,22 @@ if [ x"$DEBUG" == x1 ] ; then
 	set -x
 fi
 
+NAFETS227BACKUP_GRC=0
 ##### Now start the custom scipt
 if [ $# -ge 1 ] ; then
 	printf "executing custom command %s\n" "$*"
 	"$@"
 else
 	printf "executing standard command backup/backup\n"
-	. backup/backup
+	. backup/backup || NAFETS227BACKUP_GRC=2
 fi
 
-exit $?
+if [ "x$NAFETS227BACKUP_GRC" == "x0" ] ; then
+	printf "Success: all Backup Tasks have been completed successfully.\n"
+	exit 0
+else
+	printf "Error %d: " "$NAFETS227BACKUP_GRC"
+	printf "not all Backup Tasks have been completed successfully.\n"
+	exit 1
+fi
+
