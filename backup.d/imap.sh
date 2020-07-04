@@ -18,9 +18,14 @@ if [ x"$DEBUG" == x1 ] ; then
 fi
 
 if [ "$#" -ge 3 ]; then
-    server="$3"
-    port="993"
-    ssl="yes"
+    server="${3%%:*}"
+    port=${3:$((${#server} + 1))}
+    port=${port:-993}
+    if [ "$port" == "143" ] ; then
+	    ssl="no"
+    else
+	    ssl="yes"
+    fi
 else case "$emaildomain" in
     1und1.de | nafets.de | stevro.de )
         server="imap.1und1.de"
