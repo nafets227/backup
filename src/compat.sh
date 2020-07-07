@@ -17,6 +17,6 @@ function backup2_imap {
 	local bckimap_srv="$3"
 	local bckimap_pw="$4"
 
-	backup_imap "$bckimap_src" "$bckimap_pw" "$bckimap_srv" # @TODO $backimp_dst
+	backup_imap "$bckimap_src" "$bckimap_pw" "$bckimap_srv" "$backimp_dst"
 
 }

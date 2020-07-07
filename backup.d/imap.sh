@@ -49,6 +49,15 @@ else case "$emaildomain" in
     esac
 fi
 
+local dest
+if [ "$#" -ge 4 ] ; then
+    dest="$4"
+    if [ "${dest:0:1}" != "/" ] ; then
+	    dest="/backup/$dest"
+    fi
+else
+    dest="/srv/backup/data.imap/$email"
+fi
 
 cat >$imapcfg <<-EOF
 	# OfflineIMAP configuration
@@ -65,7 +74,7 @@ cat >$imapcfg <<-EOF
 
 	[Repository ${emailuser}Local]
 	type = Maildir
-	localfolders = /srv/backup/data.imap/$email
+	localfolders = $dest
 
 	[Repository ${emailuser}Remote]
 	type = IMAP

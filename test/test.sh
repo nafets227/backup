@@ -12,10 +12,19 @@
 #     1 - command in custom backup shell
 #     2 - expected RC [default: 0]
 function test_exec_backupdocker {
-	cat >$TESTSETDIR/test_helper <<<"$1"  || return 100
+	if [ ! -d $TESTSETDIR/backup ] ; then
+		mkdir $TESTSETDIR/backup || return 1
+	fi
+	cat >$TESTSETDIR/backup/backup <<<"$1"  || return 100
+
+	local docker_cmd=""
+	docker_cmd+="docker run"
+	docker_cmd+=" -v $TESTSETDIR/backup:/backup"
+	docker_cmd+=" -e DEBUG=1"
+	docker_cmd+=" nafets227/backup:test"
 
 	test_exec_simple \
-		"docker run -v $TESTSETDIR/test_helper:/backup/backup -e DEBUG=1 nafets227/backup:test" \
+		"$docker_cmd" \
 		"$2" \
 		"Backup Command \"$1\""
 
@@ -55,12 +64,14 @@ function test_imap {
 
 		# IMAP Wrong password
 		test_exec_backupdocker  \
-			 "backup imap \"$MAIL_ADR\" /backup/imap/test1 \"$MAIL_SRV:143\" 'wrongpassword'" \
+			 "backup imap \"$MAIL_ADR\" /backup \"$MAIL_SRV:143\" 'wrongpassword'" \
 			 1
 		# IMAP OK with Empty Mailbox
 		test_exec_backupdocker  \
-			 "backup imap \"$MAIL_ADR\" /backup/imap/test2  \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
+			 "backup imap \"$MAIL_ADR\" /backup \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
 			 0
+		test_expect_files "backup/INBOX/new" 0
+		test_expect_files "backup/INBOX/cur" 0
 
 		local mail_pwd mail_user
 		mail_user="$(mailx -# <<<"urlcodec encode $MAIL_ADR")"
@@ -71,8 +82,28 @@ function test_imap {
 
 		# IMAP OK with one Mail
 		test_exec_backupdocker  \
-			 "backup imap \"$MAIL_ADR\" /backup/imap/test3 \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
+			 "backup imap \"$MAIL_ADR\" /backup \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
 			 0
+		test_expect_files "backup/INBOX/new" 1
+		test_expect_files "backup/INBOX/cur" 0
+		# @TODO test content of file
+
+return 0
+		# IMAP OK with one Mail in subdirectory
+		test_exec_backupdocker  \
+			 "backup imap \"$MAIL_ADR\" /backup/testimapsubdir \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
+			 0
+		test_expect_files "backup/testimapsubdir/INBOX/new" 1
+		test_expect_files "backup/testimapsubdir/INBOX/cur" 0
+
+		test_cleanImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" || return 1
+
+		# IMAP OK with Empty Mailbox
+		test_exec_backupdocker  \
+			 "backup imap \"$MAIL_ADR\" /backup \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
+			 0
+		test_expect_files "backup/INBOX/new" 0
+		test_expect_files "backup/INBOX/cur" 0
 
 	else
 		printf "Skipping IMAP Tests because MAIL_ADR or MAIL_PW is not set.\n"
