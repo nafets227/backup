@@ -94,11 +94,10 @@ function test_imap {
 	test_expect_files "backup/INBOX/cur" 0
 	# @TODO test content of file
 
-return 0
 	# IMAP OK with one Mail in subdirectory
 	test_exec_backupdocker  \
 		 "backup imap \"$MAIL_ADR\" /backup/testimapsubdir \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
-			 0
+		 0
 	test_expect_files "backup/testimapsubdir/INBOX/new" 1
 	test_expect_files "backup/testimapsubdir/INBOX/cur" 0
 
