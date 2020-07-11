@@ -12,10 +12,17 @@
 #     1 - command in custom backup shell
 #     2 - expected RC [default: 0]
 function test_exec_backupdocker {
-	if [ ! -d $TESTSETDIR/backup ] ; then
+	if [ "$#" -lt 1 ] ; then
+		printf "Internal Error in %s - git %s parms (exp 1+)\n" \
+			"$FUNCNAME" "$#"
+		return 1
+	elif [ ! -d $TESTSETDIR/backup ] ; then
 		mkdir $TESTSETDIR/backup || return 1
 	fi
-	cat >$TESTSETDIR/backup/backup <<<"$1"  || return 100
+	rc_exp="$1"
+	shift
+
+	cat >$TESTSETDIR/backup/backup <<<"$@"  || return 100
 
 	local docker_cmd=""
 	docker_cmd+="docker run"
@@ -25,8 +32,20 @@ function test_exec_backupdocker {
 
 	test_exec_simple \
 		"$docker_cmd" \
-		"$2" \
-		"Backup Command \"$1\""
+		"$rc_exp" \
+		"Backup Command \"$*\""
+
+	return $?
+}
+
+##### Send Test-Email to be backuped #########################################
+function testimap_send_testmail {
+	local mail_pwd mail_user
+	mail_user="$(mailx -# <<<"urlcodec encode $MAIL_ADR")" &&
+	mail_pwd="$(mailx -# <<<"urlcodec encode $MAIL_PW")" &&
+	test_exec_sendmail "smtp://$mail_user:$mail_pwd@$MAIL_SRV" 0 \
+		"$MAIL_ADR" "$MAIL_ADR" \
+		"-S 'smtp-auth=plain' -S 'smtp-use-starttls'"
 
 	return $?
 }
@@ -66,44 +85,56 @@ function test_imap {
 	test_cleanImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" || return 1
 
 	# IMAP Wrong password
-	test_exec_backupdocker  \
-		 "backup imap \"$MAIL_ADR\" /backup \"$MAIL_SRV:143\" 'wrongpassword'" \
-			 1
+	test_exec_backupdocker 1 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		/backup \
+		"$MAIL_SRV:143" \
+		'wrongpassword'
+	
 	# IMAP OK with Empty Mailbox
-	test_exec_backupdocker  \
-		 "backup imap \"$MAIL_ADR\" /backup \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
-			 0
+	test_exec_backupdocker  0 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		/backup \
+		"$MAIL_SRV:143" \
+		"$MAIL_PW"
 	test_expect_files "backup/INBOX/new" 0
 	test_expect_files "backup/INBOX/cur" 0
 
-	local mail_pwd mail_user
-	mail_user="$(mailx -# <<<"urlcodec encode $MAIL_ADR")"
-	mail_pwd="$(mailx -# <<<"urlcodec encode $MAIL_PW")"
-	test_exec_sendmail "smtp://$mail_user:$mail_pwd@$MAIL_SRV" 0 \
-		"$MAIL_ADR" "$MAIL_ADR" \
-		"-S 'smtp-auth=plain' -S 'smtp-use-starttls'"
+	# Send Testmail
+	testimap_send_testmail || return 1
 
 	# IMAP OK with one Mail
-	test_exec_backupdocker  \
-		 "backup imap \"$MAIL_ADR\" /backup \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
-		 0
+	test_exec_backupdocker 0 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		/backup \
+		"$MAIL_SRV:143" \
+		"$MAIL_PW"
 	test_expect_files "backup/INBOX/new" 1
 	test_expect_files "backup/INBOX/cur" 0
 	# @TODO test content of file
 
 	# IMAP OK with one Mail in subdirectory
-	test_exec_backupdocker  \
-		 "backup imap \"$MAIL_ADR\" /backup/testimapsubdir \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
-		 0
+	test_exec_backupdocker 0 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		/backup/testimapsubdir \
+		"$MAIL_SRV:143" \
+		"$MAIL_PW"
 	test_expect_files "backup/testimapsubdir/INBOX/new" 1
 	test_expect_files "backup/testimapsubdir/INBOX/cur" 0
 
 	test_cleanImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" || return 1
 
 	# IMAP OK with Empty Mailbox
-	test_exec_backupdocker  \
-		 "backup imap \"$MAIL_ADR\" /backup \"$MAIL_SRV:143\" \"$MAIL_PW\"" \
-			 0
+	test_exec_backupdocker 0 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		/backup \
+		"$MAIL_SRV:143" \
+		"$MAIL_PW"
 	test_expect_files "backup/INBOX/new" 0
 	test_expect_files "backup/INBOX/cur" 0
 
