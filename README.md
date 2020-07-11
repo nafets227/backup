@@ -1,18 +1,15 @@
 # backup #
 Container based implementation of backup. Features:
   - rsync to target system
+  - ssh to source system
   - historize data
-  - requires file-sourced to be mounted (NFS possible)
   - can backup IMAP accounts
   - can backup mysql databases
   - can backup Samba configuration
-  - Plugin system for other types of data
+  - other types of data can be added easily
 
 # Targets #
-  - --local copy data to local disk that is mounted in the container on /backup.local
-  - --cloud copy data to cloud location. Cloud location must support rsync protocol, it it indicated by the
-     environment variable CLOUD_URL, CLOUD_USER and CLOUD_AUTH
-     @TODO describe how env variables work.
+Target can be anything that is reachable via ssh or a local disk mounten inthe container. Copying via internet is supported.
 
 # Sources #
 backup supports currently the following sources:
@@ -22,7 +19,7 @@ backup supports currently the following sources:
 
 # How to use #
 1) Create your own custom script that has the configuration
-2) mount this scipt on /backup/backup into container
+2) mount this script on /backup/backup into container
 
 # Environmetn Parameters #
 DEBUG [default: 0]
@@ -34,5 +31,9 @@ see https://lincolnloop.com/blog/detecting-file-moves-renames-rsync/ as input
 
 # Reference #
 Source https://github.com/nafets227/backup
-Copyright (C) 2017 Stefan Schallenberg
+Copyright (C) 2017-2020 Stefan Schallenberg
 License: @TODO define license
+
+Leveraging on 
+  - Rsync https://rsync.samba.org/
+  - Offlineimap https://www.offlineimap.org/
