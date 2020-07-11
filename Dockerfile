@@ -13,6 +13,7 @@ RUN \
 		ca-certificates \
 		mysql-client \
 		offlineimap \
+		openssh-client \
 		rsync \
 		&& \
 	rm -rf /var/cache/apk/*

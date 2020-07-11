@@ -27,6 +27,7 @@ function test_exec_backupdocker {
 	local docker_cmd=""
 	docker_cmd+="docker run"
 	docker_cmd+=" -v $TESTSETDIR/backup:/backup"
+	docker_cmd+=" -v ~/.ssh/id_rsa:/root/.ssh/id_rsa"
 	docker_cmd+=" -e DEBUG=1"
 	docker_cmd+=" nafets227/backup:test"
 
@@ -72,12 +73,20 @@ function test_runempty {
 	return $?
 }
 
-##### Test: IMAP wrong password ##############################################
+##### Tests for IMAP #########################################################
 function test_imap {
 	if ! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" ||
 	   ! test_assert_tools "curl" "mailx" ; then
 		printf "\tSkipping IMAP Tests.\n"
 		return 0
+	elif ! test_assert_tools "offlineimap" "ip" "jq" ; then
+		printf "\tSkipping IMAP Remote Tests.\n"
+		exec_remote=/bin/false
+	else
+		my_ip=$(ip -4 -j a show dev docker0 primary |
+			jq '.[].addr_info[0].local')
+		my_ip=${my_ip//\"}
+		exec_remote=/bin/true
 	fi
 
 	printf "Testing IMAP using Mail Adress \"%s\"\n" "$MAIL_ADR"
@@ -101,6 +110,17 @@ function test_imap {
 		"$MAIL_PW"
 	test_expect_files "backup/INBOX/new" 0
 	test_expect_files "backup/INBOX/cur" 0
+
+	# IMAP OK with Empty Mailbox - remote backup target
+	$exec_remote &&
+	test_exec_backupdocker 0 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		$my_ip:$TESTSETDIR/backup-rem \
+		"$MAIL_SRV:143" \
+		"$MAIL_PW" &&
+	test_expect_files "backup-rem/INBOX/new" 0 &&
+	test_expect_files "backup-rem/INBOX/cur" 0
 
 	# Send Testmail
 	testimap_send_testmail || return 1
@@ -126,6 +146,17 @@ function test_imap {
 	test_expect_files "backup/testimapsubdir/INBOX/new" 1
 	test_expect_files "backup/testimapsubdir/INBOX/cur" 0
 
+	# IMAP OK with one Mail - remote backup target
+	$exec_remote &&
+	test_exec_backupdocker 0 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		$my_ip:$TESTSETDIR/backup-rem \
+		"$MAIL_SRV:143" \
+		"$MAIL_PW" &&
+	test_expect_files "backup-rem/INBOX/new" 1 &&
+	test_expect_files "backup-rem/INBOX/cur" 0
+
 	test_cleanImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" || return 1
 
 	# IMAP OK with Empty Mailbox
@@ -138,7 +169,7 @@ function test_imap {
 	test_expect_files "backup/INBOX/new" 0
 	test_expect_files "backup/INBOX/cur" 0
 
-	return $?
+	return 0
 }
 
 ##### Test x: remaining tests ################################################
