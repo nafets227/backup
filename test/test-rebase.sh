@@ -49,22 +49,23 @@ function test_rebase () {
 }
 
 #### MAIN ####################################################################
+function test_rebase_main {
+	#load test framework
+	BASEDIR=$(dirname $BASH_SOURCE)
+	. $BASEDIR/../util/test-functions.sh || exit 1
+	testset_init "$@"
 
-#load test framework
-BASEDIR=$(dirname $BASH_SOURCE)
-. $BASEDIR/../util/test-functions.sh || exit 1
-testset_init "$@"
+	# Load config including $BASEDIR und $BASEURL
+	#. $(dirname $BASH_SOURCE)/install --config $TESTSETPARM || exit 1
+	#printf "\tBASEDIR=%s\n" "$BASEDIR"
+	#printf "\tDOM=%s\n" "$DOM"
+	#printf "\tMNAME=%s\n" "$MNAME"
+	#printf "\tMDEV=%s\n" "$MDEV"
+	#printf "\tIP_NET=%s\n" "$IP_NET"
 
-# Load config including $BASEDIR und $BASEURL
-#. $(dirname $BASH_SOURCE)/install --config $TESTSETPARM || exit 1
-#printf "\tBASEDIR=%s\n" "$BASEDIR"
-#printf "\tDOM=%s\n" "$DOM"
-#printf "\tMNAME=%s\n" "$MNAME"
-#printf "\tMDEV=%s\n" "$MDEV"
-#printf "\tIP_NET=%s\n" "$IP_NET"
+	testdir_init
+	test_rebase
 
-testdir_init
-test_rebase
-
-testset_summary
-exit $?
+	testset_summary
+	exit $?
+}
