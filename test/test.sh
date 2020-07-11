@@ -55,16 +55,13 @@ function test_runempty {
 
 ##### Test: IMAP wrong password ##############################################
 function test_imap {
-	if [ -z "$MAIL_ADR" ] ||
-	   [ -z "$MAIL_PW" ] ||
-	   [ -z "$MAIL_SRV" ] ; then
-		printf "Skipping IMAP Tests because %s is not set.\n" \
-			"MAIL_ADR, MAIL_PW or MAIL_SRV"
+	if ! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" ||
+	   ! test_assert_tools "curl" "mailx" ; then
+		printf "\tSkipping IMAP Tests.\n"
 		return 0
 	fi
 
 	printf "Testing IMAP using Mail Adress \"%s\"\n" "$MAIL_ADR"
-	test_assert_tools "curl mailx" || return 1
 
 	test_cleanImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" || return 1
 
