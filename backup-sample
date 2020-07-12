@@ -11,15 +11,16 @@ MY_TARGET="myserver.mydomain.xxx"
 # General syntax of each backup is 
 # backup <type> <source> <target> [ global-options ] [ -- ] [ type-options ]
 
-backup imap "example@mydomain.xxx" "$MY_TARGET:/imap/example@mydomain.xxx" --password="secret"
+backup imap "example@mydomain.xxx" "$MY_TARGET:/imap/example@mydomain.xxx" "imap.mydomain.xxx:143" "secret"
 
-backup file "/mydir" "$MY_TAGGET:/mydir-backup" \
-# you can use rsync options after --:
-backup file "/mydir2" "$MY_TAGGET:/mydir2-backup" --hist \
-	-- "--exclude=/file-not-to-be-backuped"
-
-backup mysql-kube "kube.mydomain.xxx" "$MY_TARGET:/mysql"
-
-# NOt yet clear how to define the interface:
-backup notify --deleted "nafets227.backup <no-reply@mydomain.xxx" \
-	"notify@mydomain.xxx"
+###### Not implemented in this version yet ###################################
+#backup file "/mydir" "$MY_TAGGET:/mydir-backup" \
+## you can use rsync options after --:
+#backup file "/mydir2" "$MY_TAGGET:/mydir2-backup" --hist \
+#	-- "--exclude=/file-not-to-be-backuped"
+#
+#backup mysql-kube "kube.mydomain.xxx" "$MY_TARGET:/mysql"
+#
+## NOt yet clear how to define the interface:
+#backup notify --deleted "nafets227.backup <no-reply@mydomain.xxx" \
+#	"notify@mydomain.xxx"

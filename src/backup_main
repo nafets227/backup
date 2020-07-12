@@ -144,10 +144,11 @@ function backup {
 	local bck_src="$2"
 	local bck_dst="$3"
 
-	if [ "$bck_type" != imap ] &&
-	   [ "$bck_type" != file ] &&
-	   [ "$bck_type" != mysql-kube ] &&
-	   [ "$bck_type" != notify ] ; then
+	if /bin/true && \
+#	   [ "$bck_type" != file ] &&
+#	   [ "$bck_type" != mysql-kube ] &&
+#	   [ "$bck_type" != notify ] &&
+	   [ "$bck_type" != imap ] ; then
 		printf "Wrong backup type %s " "$type"
 		printf "when calling backup with\n\t%s\n" \
 			"$*"
