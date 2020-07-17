@@ -9,6 +9,8 @@ function backup_remote {
 	[ -z "$remotemachine" ] && return 1
 	shift
 
+	local rc
+	printf "===== Start Executing on %s =====\n" "$remotemachine"
 	ssh -o StrictHostKeyChecking=no $remotemachine <<-EOF &&
 		[ x"$DEBUG" == x1 ] && set -x
 		mkdir -p $REMOTE_MODDIR
@@ -17,19 +19,25 @@ function backup_remote {
 		-r $MODDIR/* $remotemachine:$REMOTE_MODDIR &&
 	scp -o StrictHostKeyChecking=no \
 		$BASH_SOURCE $remotemachine:$REMOTE_MODDIR/backup_main &&
-	ssh -o StrictHostKeyChecking=no $remotemachine <<-EOF &&
+	ssh -o StrictHostKeyChecking=no $remotemachine <<-EOF
+		[ x"$DEBUG" == x1 ] && set -x
 		export DEBUG=$DEBUG
-		# please not the trick to have a correct quoting on the
+		# please note the trick to have a correct quoting on the
 		# target machine. Simply using \"\$@\" does not work.
 		$REMOTE_MODDIR/backup_main backup --local $(
 			for s in "$@" ; do
 				printf " \"%s\"" "$s"
 			done
 			)
+		# rc=\$?
+		# printf \"+++++ RC=%s +++++\\n\" \"\$rc\"
+		# exit \$rc
 		EOF
-	/bin/true || return 1
+	rc=$?
+	printf "===== Returning with RC=%d from %s =====\n" \
+		"$rc" "$remotemachine"
 
-	return 0
+	return $rc
 }
 
 ##### Execute on this machine ################################################
