@@ -37,6 +37,9 @@ see also [Example][1].
 ## Environment Parameters #
   - DEBUG: 0 or 1, defaults to 0
 
+## IMAP
+IMAP Logon name must be the Email including the domain.
+
 # Future Plans #
 Features planned in the future
   - can backup mysql databases
