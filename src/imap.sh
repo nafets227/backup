@@ -7,56 +7,41 @@
 
 ##### backup2_imap ###########################################################
 function backup2_imap {
-        if [ "$#" -lt 4 ] ; then
+        if [ "$#" -ne 4 ] ; then
                 printf "Error in custom config script. "
                 printf "Calling backup imap with parms:\n\t%s\n"
                         "$*"
                 return 1
-        fi
+	elif [ x"$DEBUG" == x1 ] ; then
+		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+	fi
 
         local bckimap_src="$1"
         local bckimap_dst="$2"
         local bckimap_srv="$3"
         local bckimap_pw="$4"
 
-        backup_imap "$bckimap_src" "$bckimap_pw" "$bckimap_srv" "$bckimap_dst"
-
-}
-
-##### backup_imap ############################################################
-function backup_imap {
-	local email="${1,,}" # converto to lowercase
-	local password="$2"
-	local emailuser="${email%%@*}"
-	local emaildomain="${email##*@}"
+	local emailuser="${bckimap_src%%@*}"
+	local emailuser="${emailuser,,}" # convert to lowercase
 	local imapcfg="$(mktemp -t .offlineimaprc.${emailuser}-XXXXXXXXXX)"
+	local bckimap_dst_server="${3%%:*}"
+	local bckimap_dst_port=${3:$((${#bckimap_dst_server} + 1))}
 
-	if [ x"$DEBUG" == x1 ] ; then
-		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
-	fi
-
-	if [ "$#" -lt 4 ]; then
-		printf "Internal Error: Too less parms (%s, exp: >=4).\n" "$#"
+	if [ -z "$bckimap_dst_port" ] ; then
+		printf "Error: IMAP Port not specified in URL %s.\n" \
+			"bckimap_srv"
 		return 1
 	fi
 
-	server="${3%%:*}"
-	port=${3:$((${#server} + 1))}
-	port=${port:-993}
-	if [ "$port" == "143" ] ; then
-		ssl="no"
+	local ssl=""
+	if [ "$bckimap_dst_port" == "143" ] ; then
+		ssl=$'ssl = no\nstarttls = yes'
 	else
-		ssl="yes"
+		ssl=$'ssl = yes'
 	fi
 
-	local dest
-	dest="$4"
-	if [ "${dest:0:1}" != "/" ] ; then
-		dest="/backup/$dest"
-	fi
-
-	if [ ! -d "$dest" ] ; then
-		mkdir -p "$dest" || return 1
+	if [ ! -d "$bckimap_dst" ] ; then
+		mkdir -p "$bckimap_dst" || return 1
 	fi
 
 	cat >$imapcfg <<-EOF
@@ -67,7 +52,7 @@ function backup_imap {
 
 		[general]
 		accounts = $emailuser
-		metadata = $dest/.offlineimap
+		metadata = $bckimap_dst/.offlineimap
 
 		[Account $emailuser]
 		localrepository = ${emailuser}Local
@@ -75,17 +60,18 @@ function backup_imap {
 
 		[Repository ${emailuser}Local]
 		type = Maildir
-		localfolders = $dest
+		localfolders = $bckimap_dst
 
 		[Repository ${emailuser}Remote]
 		type = IMAP
 		readonly = True
-		remotehost = $server
-		remoteport = $port
-		ssl = $ssl
-		remoteuser = $email
-		remotepass = $password
+		remotehost = $bckimap_dst_server
+		remoteport = $bckimap_dst_port
+		remoteuser = $bckimap_src
+		remotepass = $bckimap_pw
 		subscribedonly = no
+
+		$ssl
 		EOF
 
 	offlineimap -c $imapcfg || return 1
