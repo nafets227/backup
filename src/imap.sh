@@ -35,46 +35,24 @@ function backup_imap {
 		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
 	fi
 
-	if [ "$#" -ge 3 ]; then
-		server="${3%%:*}"
-		port=${3:$((${#server} + 1))}
-		port=${port:-993}
-		if [ "$port" == "143" ] ; then
-			ssl="no"
-		else
-			ssl="yes"
-		fi
-	else case "$emaildomain" in
-		1und1.de | nafets.de | stevro.de )
-			server="imap.1und1.de"
-			port="993"
-			ssl="yes"
-			;;
-		intranet.nafets.de | nafets.dyndns.eu )
-			server="nafets.dyndns.eu"
-			port="143"
-			ssl="no"
-			;;
-		gmail.com | googlemail.com )
-			server="imap.gmail.com"
-			port="993"
-			ssl="no"
-			;;
-		* )
-			printf "Error: Server not given and domain \"%s\" unknown\n" \
-				"$emaildomain"
-			return -1
-		esac
+	if [ "$#" -lt 4 ]; then
+		printf "Internal Error: Too less parms (%s, exp: >=4).\n" "$#"
+		return 1
+	fi
+
+	server="${3%%:*}"
+	port=${3:$((${#server} + 1))}
+	port=${port:-993}
+	if [ "$port" == "143" ] ; then
+		ssl="no"
+	else
+		ssl="yes"
 	fi
 
 	local dest
-	if [ "$#" -ge 4 ] ; then
-		dest="$4"
-		if [ "${dest:0:1}" != "/" ] ; then
-			dest="/backup/$dest"
-		fi
-	else
-		dest="/srv/backup/data.imap/$email"
+	dest="$4"
+	if [ "${dest:0:1}" != "/" ] ; then
+		dest="/backup/$dest"
 	fi
 
 	if [ ! -d "$dest" ] ; then
