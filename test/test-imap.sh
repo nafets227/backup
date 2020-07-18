@@ -49,6 +49,15 @@ function test_imap {
 		"$MAIL_SRV" \
 		'wrongpassword'
 	
+	# IMAP Wrong password - remote backup target
+	$exec_remote &&
+	test_exec_backupdocker 1 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		$my_ip:$TESTSETDIR/backup-rem \
+		"$MAIL_SRV" \
+		'wrongpassword'
+
 	# IMAP OK with Empty Mailbox
 	test_exec_backupdocker  0 \
 		"backup imap" \
