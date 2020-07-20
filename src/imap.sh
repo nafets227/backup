@@ -23,7 +23,6 @@ function backup2_imap {
 
 	local emailuser="${bckimap_src%%@*}"
 	local emailuser="${emailuser,,}" # convert to lowercase
-	local imapcfg="$(mktemp -t .offlineimaprc.${emailuser}-XXXXXXXXXX)"
 	local bckimap_dst_server="${3%%:*}"
 	local bckimap_dst_port=${3:$((${#bckimap_dst_server} + 1))}
 
@@ -44,7 +43,7 @@ function backup2_imap {
 		mkdir -p "$bckimap_dst" || return 1
 	fi
 
-	cat >$imapcfg <<-EOF
+	offlineimap -c /dev/fd/10 10<<-EOFCFG 11<<-EOFPW || return 1
 		# OfflineIMAP configuration
 		#
 		# (C) 2012-2015 Stefan Schallenberg
@@ -68,13 +67,13 @@ function backup2_imap {
 		remotehost = $bckimap_dst_server
 		remoteport = $bckimap_dst_port
 		remoteuser = $bckimap_src
-		remotepass = $bckimap_pw
+		remotepassfile = /dev/fd/11
 		subscribedonly = no
 
 		$ssl
-		EOF
-
-	offlineimap -c $imapcfg || return 1
+		EOFCFG
+		$bckimap_pw
+		EOFPW
 
 	return 0
 }
