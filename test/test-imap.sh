@@ -38,8 +38,29 @@ function test_imap {
 	printf "Testing IMAP using Mail Adress \"%s\"\n" "$MAIL_ADR"
 
 	local mail_smtpsrv=${MAIL_SRV%%:*}
+	echo "wrongpassword" \
+		>$TESTSETDIR/backup/imap_wrongpassword.password \
+	       || return 1
+	echo "$MAIL_PW" \
+		>$TESTSETDIR/backup/imap_password.password \
+	       || return 1
 
 	test_cleanImap "$MAIL_ADR" "$MAIL_PW" "$mail_smtpsrv" || return 1
+
+	# No password and default does not exist
+	test_exec_backupdocker 1 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		/backup \
+		"$MAIL_SRV"
+
+	# Not existing password file
+	test_exec_backupdocker 1 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		/backup \
+		"$MAIL_SRV" \
+		--srcsecret "filedoesnotexist"
 
 	# IMAP Wrong password
 	test_exec_backupdocker 1 \
@@ -47,7 +68,7 @@ function test_imap {
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
-		'wrongpassword'
+		--srcsecret /backup/imap_wrongpassword.password
 	
 	# IMAP Wrong password - remote backup dest
 	$exec_remote &&
@@ -56,7 +77,7 @@ function test_imap {
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
-		'wrongpassword'
+		--srcsecret /backup/imap_wrongpassword.password
 
 	# IMAP OK with Empty Mailbox
 	test_exec_backupdocker  0 \
@@ -64,7 +85,7 @@ function test_imap {
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
-		"$MAIL_PW" &&
+		--srcsecret /backup/imap_password.password &&
 	test_expect_files "backup/INBOX/new" 0 &&
 	test_expect_files "backup/INBOX/cur" 0
 
@@ -75,9 +96,26 @@ function test_imap {
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
-		"$MAIL_PW" &&
+		--srcsecret /backup/imap_password.password &&
 	test_expect_files "backup-rem/INBOX/new" 0 &&
 	test_expect_files "backup-rem/INBOX/cur" 0
+
+	# IMAP OK with default password
+	echo "$MAIL_PW" \
+		>$TESTSETDIR/backup/$MAIL_ADR.password \
+		|| return 1
+	test_exec_backupdocker 0 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		/backup \
+		"$MAIL_SRV"
+
+	# IMAP OK with default password remote
+	test_exec_backupdocker 0 \
+		"backup imap" \
+		"$MAIL_ADR" \
+		$my_ip:$TESTSETDIR/backup-rem \
+		"$MAIL_SRV"
 
 	# Send Testmail
 	testimap_send_testmail || return 1
@@ -88,7 +126,7 @@ function test_imap {
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
-		"$MAIL_PW" &&
+		--srcsecret /backup/imap_password.password &&
 	test_expect_files "backup/INBOX/new" 1 &&
 	test_expect_files "backup/INBOX/cur" 0
 	# @TODO test content of file
@@ -99,7 +137,7 @@ function test_imap {
 		"$MAIL_ADR" \
 		/backup/testimapsubdir \
 		"$MAIL_SRV" \
-		"$MAIL_PW" &&
+		--srcsecret /backup/imap_password.password &&
 	test_expect_files "backup/testimapsubdir/INBOX/new" 1 &&
 	test_expect_files "backup/testimapsubdir/INBOX/cur" 0
 
@@ -110,7 +148,7 @@ function test_imap {
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
-		"$MAIL_PW" &&
+		--srcsecret /backup/imap_password.password &&
 	test_expect_files "backup-rem/INBOX/new" 1 &&
 	test_expect_files "backup-rem/INBOX/cur" 0
 
@@ -122,7 +160,7 @@ function test_imap {
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
-		"$MAIL_PW" &&
+		--srcsecret /backup/imap_password.password &&
 	test_expect_files "backup/INBOX/new" 0 &&
 	test_expect_files "backup/INBOX/cur" 0
 

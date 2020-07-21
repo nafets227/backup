@@ -11,7 +11,10 @@ MY_DEST="myserver.mydomain.xxx"
 # General syntax of each backup is 
 # backup <type> <source> <dest> [ global-options ] [ -- ] [ type-options ]
 
-backup imap "example@mydomain.xxx" "$MY_DEST:/imap/example@mydomain.xxx" "imap.mydomain.xxx:143" "secret"
+backup imap "example@mydomain.xxx" "$MY_DEST:/imap/example@mydomain.xxx" "imap.mydomain.xxx:143"
+
+# srcsecret and dstsecret could be ommited, because they match the default
+backup imap "example@mydomain.xxx" "$MY_DEST:/imap/example@mydomain.xxx" "imap.mydomain.xxx:143" --srcsecret "/backup/example@mydomain.xxx.password" --dstsecret "/backup/tgt.id_rsa"
 
 ###### Not implemented in this version yet ###################################
 #backup file "/mydir" "$MY_DEST:/mydir-backup" \

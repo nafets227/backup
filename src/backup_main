@@ -5,9 +5,25 @@
 
 ##### Execute on different machine ###########################################
 function backup_remote {
-	remotemachine="$1"
-	[ -z "$remotemachine" ] && return 1
-	shift
+	[ "$#" -lt 7 ] && return 1
+
+	local remotemachine="$1"
+	local remotesecret="$2"
+	local bck_type="$3"
+	local bck_src="$4"
+	local bck_dst="$5"
+	local bck_src_secret="$6"
+	local bck_dst_secret="$7"
+	shift 7
+
+	if [ -z "$remotemachine" ] ||
+	   [ -z "$remotesecret" ] ; then
+		return 1
+	fi
+
+	#----- remove remotemachine from URL ---------------------------------
+	bck_src="${bck_src##$remotemachine:}"
+	bck_dst="${bck_dst##$remotemachine:}"
 
 	local rc
 	printf "===== Start Executing on %s =====\n" "$remotemachine"
@@ -17,12 +33,32 @@ function backup_remote {
 		EOF
 	scp -o StrictHostKeyChecking=no \
 		-r $MODDIR/* $remotemachine:$REMOTE_MODDIR &&
+	{
+		[ $bck_src_secret == null ] ||
+		scp -o StrictHostKeyChecking=no \
+			$bck_src_secret \
+			$remotemachine:$REMOTE_MODDIR/srcsecret &&
+		bck_src_secret="$REMOTE_MODDIR/srcsecret"
+	} &&
+	{
+		[ $bck_dst_secret == null ] ||
+		scp -o StrictHostKeyChecking=no \
+			$bck_dst_secret \
+			$remotemachine:$REMOTE_MODDIR/dstsecret &&
+		bck_dst_secret="$REMOTE_MODDIR/srcsecret"
+	} &&
 	ssh -o StrictHostKeyChecking=no $remotemachine <<-EOF
 		[ x"$DEBUG" == x1 ] && set -x
 		export DEBUG=$DEBUG
 		# please note the trick to have a correct quoting on the
 		# destination machine. Simply using \"\$@\" does not work.
-		$REMOTE_MODDIR/backup_main backup --local $(
+		$REMOTE_MODDIR/backup_main backup --local \
+			$bck_type \
+			$bck_src \
+			$bck_dst \
+			--srcsecret $bck_src_secret \
+			--dstsecret $bck_dst_secret \
+			$(
 			for s in "$@" ; do
 				printf " \"%s\"" "$s"
 			done
@@ -38,12 +74,14 @@ function backup_remote {
 
 ##### Execute on this machine ################################################
 function backup_local {
-	[ "$#" -lt 3 ] && return 1
+	[ "$#" -lt 5 ] && return 1
 
 	local bck_type="$1"
 	local bck_src="$2"
 	local bck_dst="$3"
-	shift 3
+	local bck_src_secret="$4"
+	local bck_dst_secret="$5"
+	shift 5
 
 	local bck_local_prm=()
 	local bck_hist=0
@@ -61,7 +99,19 @@ function backup_local {
 		fi
 	done
 
-	backup2_$bck_type "$bck_src" "$bck_dst" "${bck_local_prm[@]}"
+	# Interface to type_specific drivers:
+	#	backup2_<type>	function name
+	#	bck_src		Source URL
+	#	bck_dst		Destination URL
+	#	bck_src_secret	Source Secret Filename
+	#	bck_dst_secret	Destination Secret Filename
+	#	[ ...]		type specific futher options
+	backup2_$bck_type \
+		"$bck_src" \
+		"$bck_dst" \
+		"$bck_src_secret" \
+		"$bck_dst_secret" \
+		"${bck_local_prm[@]}"
 
 	return $?
 }
@@ -138,6 +188,42 @@ function check_runon_empty {
 	fi
 }
 
+##### Helper: Check that parm#2 is not empty #################################
+function check_another_parm {
+	local parms="$1"
+	local parm1="$2"
+
+	if [ "$parms" -lt 2 ] ; then
+		printf "Error: parameter %s needs a value\n" \
+			"$parm1"
+		return 1
+	else
+		return 0
+	fi
+}
+
+##### Helper: Return Secret ##################################################
+function make_secret {
+	local value="$1"
+	local url="$2"
+	local type="$3"
+
+	if [ -z "$value" ] ; then
+		value="/backup/${url%%:*}.$type"
+		if [ ! -f $value ] && [ "$type" == "id_rsa" ] ; then
+			value="/root/.ssh/id_rsa"
+		fi
+	fi
+	if [ ! -f "$value" ] ; then
+		printf "Error: Secret File %s not found.\n" \
+			"$value" >/dev/stderr
+		return 1
+	fi
+
+	printf "%s\n" "$value"
+	return 0
+}
+
 ##### determine where to run if user did not specify #########################
 function backup_default_runon {
 	[ "$#" -lt 3 ] && return 1
@@ -195,6 +281,14 @@ function backup {
 			check_runon_empty "$bck_runon" || return 1
 			bck_runon=0
 			shift
+		elif [ "$1" == "--srcsecret" ] ; then
+			check_another_parm "$#" "$1" || return 1
+			bck_src_secret="$2"
+			shift 2
+		elif [ "$1" == "--dstsecret" ] ; then
+			check_another_parm "$#" "$1" || return 1
+			bck_dst_secret="$2"
+			shift 2
 		elif [ "$1" == "--" ] ; then # end of global parms
 			bck_local_prm+=( "$@" )
 			shift $#
@@ -227,11 +321,13 @@ function backup {
 			"$bck_global_prm"
 		NAFETS227BACKUP_GRC=1
 		return 1
-	elif /bin/true && \
-#	     [ "$bck_type" != file ] &&
-#	     [ "$bck_type" != mysql-kube ] &&
-#	     [ "$bck_type" != notify ] &&
-	     [ "$bck_type" != imap ] ; then
+	elif [ "$bck_type" == imap ] ; then
+		bck_src_secret_type="password"
+		bck_dst_secret_type="id_rsa"
+#	elif [ "$bck_type" != file ] &&
+#	elif [ "$bck_type" != mysql-kube ] &&
+#	elif [ "$bck_type" != notify ] &&
+	else
 		printf "Wrong backup type %s " "$type"
 		printf "when calling backup with\n\t%s\n" \
 			"$*"
@@ -257,6 +353,19 @@ function backup {
 		return 1
 	fi
 
+	#----- Verify Secrets ------------------------------------------------
+	bck_src_secret=$(make_secret \
+			"$bck_src_secret" \
+			"$bck_src" \
+			"$bck_src_secret_type" \
+		) || return 1
+
+	bck_dst_secret=$(make_secret \
+			"$bck_dst_secret" \
+			"$bck_dst" \
+			"$bck_dst_secret_type" \
+		) || return 1
+
 	#----- Execute on source, local or dest ------------------------------
 	if [ "$bck_runon" == "-1" ] ; then
 		if [[ "$bck_src" != *":"* ]] ; then
@@ -264,14 +373,19 @@ function backup {
 				"$bck_type" \
 				"$bck_src" \
 				"$bck_dst" \
+				"$bck_src_secret" \
+				"$bck_dst_secret" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		else
 			backup_remote \
 				"${bck_src%%:*}" \
-				$bck_type \
-				"${bck_src##*:}" \
+				"$bck_src_secret"
+				"$bck_type" \
+				"$bck_src" \
 				"$bck_dst" \
+				"null" \
+				"$bck_dst_secret" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		fi
@@ -280,6 +394,8 @@ function backup {
 				"$bck_type" \
 				"$bck_src" \
 				"$bck_dst" \
+				"$bck_src_secret" \
+				"$bck_dst_secret" \
 				"${bck_local_prm[@]}"
 			rc=$?
 	elif [ "$bck_runon" == "1" ] ; then
@@ -288,14 +404,19 @@ function backup {
 				"$bck_type" \
 				"$bck_src" \
 				"$bck_dst" \
+				"$bck_src_secret" \
+				"$bck_dst_secret" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		else
 			backup_remote \
 				"${bck_dst%%:*}" \
-				$bck_type \
+				"$bck_dst_secret" \
+				"$bck_type" \
 				"$bck_src" \
-				"${bck_dst##*:}" \
+				"$bck_dst" \
+				"$bck_src_secret" \
+				"null" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		fi

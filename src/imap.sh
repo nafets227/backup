@@ -6,25 +6,32 @@
 #
 
 ##### backup2_imap ###########################################################
+# Interface to type_specific drivers:
+#	backup2_<type>	function name
+#	bck_src		Source URL
+#	bck_dst		Destination URL
+#	bck_src_secret	Source Secret Filename
+#	bck_dst_secret	Destination Secret Filename
+#	[ ...]		type specific futher options
 function backup2_imap {
-        if [ "$#" -ne 4 ] ; then
+        if [ "$#" -ne 5 ] ; then
                 printf "Error in custom config script. "
-                printf "Calling backup imap with parms:\n\t%s\n"
-                        "$*"
+                printf "Calling backup imap with parms:\n\t%s\n" "$*"
                 return 1
 	elif [ x"$DEBUG" == x1 ] ; then
 		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
 	fi
 
-        local bckimap_src="$1"
-        local bckimap_dst="$2"
-        local bckimap_srv="$3"
-        local bckimap_pw="$4"
+	local bckimap_src="$1"
+	local bckimap_dst="$2"
+	local bckimap_src_secret="$3"
+	local bckimap_dst_secret="$4"
+	local bckimap_srv="$5"
 
 	local emailuser="${bckimap_src%%@*}"
 	local emailuser="${emailuser,,}" # convert to lowercase
 	local bckimap_srv_server="${bckimap_srv%%:*}"
-	local bckimap_srv_port=${3:$((${#bckimap_srv_server} + 1))}
+	local bckimap_srv_port=${bckimap_srv:$((${#bckimap_srv_server} + 1))}
 
 	if [ -z "$bckimap_srv_port" ] ; then
 		printf "Error: IMAP Port not specified in URL %s.\n" \
@@ -43,7 +50,7 @@ function backup2_imap {
 		mkdir -p "$bckimap_dst" || return 1
 	fi
 
-	offlineimap -c /dev/fd/10 10<<-EOFCFG 11<<-EOFPW || return 1
+	offlineimap -c /dev/fd/10 10<<-EOFCFG  || return 1
 		# OfflineIMAP configuration
 		#
 		# (C) 2012-2015 Stefan Schallenberg
@@ -67,13 +74,11 @@ function backup2_imap {
 		remotehost = $bckimap_srv_server
 		remoteport = $bckimap_srv_port
 		remoteuser = $bckimap_src
-		remotepassfile = /dev/fd/11
+		remotepassfile = $bckimap_src_secret
 		subscribedonly = no
 
 		$ssl
 		EOFCFG
-		$bckimap_pw
-		EOFPW
 
 	return 0
 }
