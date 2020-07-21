@@ -17,8 +17,6 @@ function backup_remote {
 		EOF
 	scp -o StrictHostKeyChecking=no \
 		-r $MODDIR/* $remotemachine:$REMOTE_MODDIR &&
-	scp -o StrictHostKeyChecking=no \
-		$BASH_SOURCE $remotemachine:$REMOTE_MODDIR/backup_main &&
 	ssh -o StrictHostKeyChecking=no $remotemachine <<-EOF
 		[ x"$DEBUG" == x1 ] && set -x
 		export DEBUG=$DEBUG
