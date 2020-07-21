@@ -16,8 +16,6 @@ function test_exec_backupdocker {
 		printf "Internal Error in %s - git %s parms (exp 1+)\n" \
 			"$FUNCNAME" "$#"
 		return 1
-	elif [ ! -d $TESTSETDIR/backup ] ; then
-		mkdir $TESTSETDIR/backup || return 1
 	fi
 	rc_exp="$1"
 	shift
@@ -92,6 +90,9 @@ for f in $BASEDIR/*.sh ; do
 done
 
 testset_init || exit 1
+if [ ! -d $TESTSETDIR/backup ] ; then
+	mkdir $TESTSETDIR/backup || return 1
+fi
 
 if test_build ; then
 	test_runempty
