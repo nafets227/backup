@@ -1,11 +1,11 @@
 # Backup #
 Container based implementation of backup. Features:
-  - rsync to target system
+  - rsync to destination system
   - can backup IMAP accounts
   - Plugin system allows adding other types of data
 
-# Targets #
-Target can be anything that is reachable via rsync/ssh or a local disk mounted in the container. Copying via internet is supported.
+# Destinations #
+Destination can be anything that is reachable via rsync/ssh or a local disk mounted in the container. Copying via internet is supported.
 
 # Sources #
 backup supports currently the following sources:
@@ -28,7 +28,7 @@ other complex setups.
   1. "backup" (fix)
   2. Type (currently only "imap" supported)
   3. Source
-  4. Target
+  4. Destination
   5. (IMAP) Server Url (e.g. imap.mydomain.xxx:143)
   6. (IMAP) Password
 

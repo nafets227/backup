@@ -49,7 +49,7 @@ function test_imap {
 		"$MAIL_SRV" \
 		'wrongpassword'
 	
-	# IMAP Wrong password - remote backup target
+	# IMAP Wrong password - remote backup dest
 	$exec_remote &&
 	test_exec_backupdocker 1 \
 		"backup imap" \
@@ -68,7 +68,7 @@ function test_imap {
 	test_expect_files "backup/INBOX/new" 0
 	test_expect_files "backup/INBOX/cur" 0
 
-	# IMAP OK with Empty Mailbox - remote backup target
+	# IMAP OK with Empty Mailbox - remote backup dest
 	$exec_remote &&
 	test_exec_backupdocker 0 \
 		"backup imap" \
@@ -103,7 +103,7 @@ function test_imap {
 	test_expect_files "backup/testimapsubdir/INBOX/new" 1
 	test_expect_files "backup/testimapsubdir/INBOX/cur" 0
 
-	# IMAP OK with one Mail - remote backup target
+	# IMAP OK with one Mail - remote backup dest
 	$exec_remote &&
 	test_exec_backupdocker 0 \
 		"backup imap" \

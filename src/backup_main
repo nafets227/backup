@@ -23,7 +23,7 @@ function backup_remote {
 		[ x"$DEBUG" == x1 ] && set -x
 		export DEBUG=$DEBUG
 		# please note the trick to have a correct quoting on the
-		# target machine. Simply using \"\$@\" does not work.
+		# destination machine. Simply using \"\$@\" does not work.
 		$REMOTE_MODDIR/backup_main backup --local $(
 			for s in "$@" ; do
 				printf " \"%s\"" "$s"
@@ -135,7 +135,7 @@ function check_runon_empty {
 	local bck_runon="$1"
 	if [ ! -z "$bck_runon" ] ; then
 		printf "Parm Conflict: More than one of %s\n" \
-			"--runonsrc --runontgt --local"
+			"--runonsrc --runondst --local"
 		return 1
 	else
 		return 0
@@ -151,12 +151,12 @@ function backup_default_runon {
 	local bck_runon=""
 
 	if [ "$bck_type" != file ] ; then
-		bck_runon=1 # can only run on target
+		bck_runon=1 # can only run on destination
 	else
 		if   [[ "$bck_dst" == *":"* ]] &&
 		     [[ "$bck_src" == *":"* ]] ; then
 			printf "Error: Missing option --runonsrc or "
-			printf "--runontgt when copying from remote "
+			printf "--runondst when copying from remote "
 			printf "to remote\n"
 			return 1
 		elif [[ "$bck_dst" != *":"* ]] &&
@@ -178,7 +178,7 @@ function backup_default_runon {
 }
 
 ##### backup - entry point for custom script #################################
-# backup <type> <source> <target> [ global-options ] [ -- ] [ type-options ]
+# backup <type> <source> <dest> [ global-options ] [ -- ] [ type-options ]
 function backup {
 	# This function is called by the custom script.
 
@@ -191,7 +191,7 @@ function backup {
 			check_runon_empty "$bck_runon" || return 1
 			bck_runon=-1
 			shift
-		elif [ "$1" == "--runontgt" ] ; then # Execute on target
+		elif [ "$1" == "--runondst" ] ; then # Execute on destination
 			check_runon_empty "$bck_runon" || return 1
 			bck_runon=1
 			shift
