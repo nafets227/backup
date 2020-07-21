@@ -64,8 +64,8 @@ function test_imap {
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
-		"$MAIL_PW"
-	test_expect_files "backup/INBOX/new" 0
+		"$MAIL_PW" &&
+	test_expect_files "backup/INBOX/new" 0 &&
 	test_expect_files "backup/INBOX/cur" 0
 
 	# IMAP OK with Empty Mailbox - remote backup dest
@@ -88,8 +88,8 @@ function test_imap {
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
-		"$MAIL_PW"
-	test_expect_files "backup/INBOX/new" 1
+		"$MAIL_PW" &&
+	test_expect_files "backup/INBOX/new" 1 &&
 	test_expect_files "backup/INBOX/cur" 0
 	# @TODO test content of file
 
@@ -99,8 +99,8 @@ function test_imap {
 		"$MAIL_ADR" \
 		/backup/testimapsubdir \
 		"$MAIL_SRV" \
-		"$MAIL_PW"
-	test_expect_files "backup/testimapsubdir/INBOX/new" 1
+		"$MAIL_PW" &&
+	test_expect_files "backup/testimapsubdir/INBOX/new" 1 &&
 	test_expect_files "backup/testimapsubdir/INBOX/cur" 0
 
 	# IMAP OK with one Mail - remote backup dest
@@ -122,8 +122,8 @@ function test_imap {
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
-		"$MAIL_PW"
-	test_expect_files "backup/INBOX/new" 0
+		"$MAIL_PW" &&
+	test_expect_files "backup/INBOX/new" 0 &&
 	test_expect_files "backup/INBOX/cur" 0
 
 	return 0

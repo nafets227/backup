@@ -34,7 +34,7 @@ function test_exec_backupdocker {
 		"$rc_exp" \
 		"Backup Command \"$*\""
 
-	return $?
+	return $TESTRC
 }
 
 ##### Test Build #############################################################
