@@ -23,17 +23,17 @@ function backup2_imap {
 
 	local emailuser="${bckimap_src%%@*}"
 	local emailuser="${emailuser,,}" # convert to lowercase
-	local bckimap_dst_server="${3%%:*}"
-	local bckimap_dst_port=${3:$((${#bckimap_dst_server} + 1))}
+	local bckimap_srv_server="${bckimap_srv%%:*}"
+	local bckimap_srv_port=${3:$((${#bckimap_srv_server} + 1))}
 
-	if [ -z "$bckimap_dst_port" ] ; then
+	if [ -z "$bckimap_srv_port" ] ; then
 		printf "Error: IMAP Port not specified in URL %s.\n" \
 			"bckimap_srv"
 		return 1
 	fi
 
 	local ssl=""
-	if [ "$bckimap_dst_port" == "143" ] ; then
+	if [ "$bckimap_srv_port" == "143" ] ; then
 		ssl=$'ssl = no\nstarttls = yes'
 	else
 		ssl=$'ssl = yes'
@@ -64,8 +64,8 @@ function backup2_imap {
 		[Repository ${emailuser}Remote]
 		type = IMAP
 		readonly = True
-		remotehost = $bckimap_dst_server
-		remoteport = $bckimap_dst_port
+		remotehost = $bckimap_srv_server
+		remoteport = $bckimap_srv_port
 		remoteuser = $bckimap_src
 		remotepassfile = /dev/fd/11
 		subscribedonly = no
