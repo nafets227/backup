@@ -27,9 +27,7 @@ function backup_remote {
 				printf " \"%s\"" "$s"
 			done
 			)
-		# rc=\$?
-		# printf \"+++++ RC=%s +++++\\n\" \"\$rc\"
-		# exit \$rc
+		exit \$?
 		EOF
 	rc=$?
 	printf "===== Returning with RC=%d from %s =====\n" \
