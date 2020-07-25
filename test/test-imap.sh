@@ -27,12 +27,13 @@ function test_imap {
 		return 0
 	elif ! test_assert_tools "offlineimap" "ip" "jq" ; then
 		printf "\tSkipping IMAP Remote Tests.\n"
-		exec_remote=/bin/false
+		exec_remote=/usr/bin/false
 	else
 		my_ip=$(ip -4 -j a show dev docker0 primary |
-			jq '.[].addr_info[0].local')
-		my_ip=${my_ip//\"}
-		exec_remote=/bin/true
+			jq '.[].addr_info[0].local') &&
+		my_ip=${my_ip//\"} &&
+		exec_remote=/usr/bin/true \
+		|| return 1
 	fi
 
 	printf "Testing IMAP using Mail Adress \"%s\"\n" "$MAIL_ADR"
@@ -111,6 +112,7 @@ function test_imap {
 		"$MAIL_SRV"
 
 	# IMAP OK with default password remote
+	$exec_remote &&
 	test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
