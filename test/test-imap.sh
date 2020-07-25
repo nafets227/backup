@@ -7,18 +7,6 @@
 # Test script for IMAP
 
 
-##### Send Test-Email to be backuped #########################################
-function testimap_send_testmail {
-	local mail_pwd mail_user mail_smtpsrv
-	mail_user="$(mailx -# <<<"urlcodec encode $MAIL_ADR")" &&
-	mail_pwd="$(mailx -# <<<"urlcodec encode $MAIL_PW")" &&
-	mail_smtpsrv=${MAIL_SRV%%:*}
-	test_exec_sendmail "smtp://$mail_user:$mail_pwd@$mail_smtpsrv" 0 \
-		"$MAIL_ADR" "$MAIL_ADR" \
-		"-S 'smtp-auth=plain' -S 'smtp-use-starttls'"
-	return $?
-}
-
 ##### Tests for IMAP #########################################################
 function test_imap {
 	if ! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" ||
@@ -119,8 +107,9 @@ function test_imap {
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV"
 
-	# Send Testmail
-	testimap_send_testmail || return 1
+	# Store Testmail
+	test_putImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" \
+		|| return 1
 
 	# IMAP OK with one Mail
 	test_exec_backupdocker 0 \
@@ -129,8 +118,8 @@ function test_imap {
 		/backup \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password &&
-	test_expect_files "backup/INBOX/new" 1 &&
-	test_expect_files "backup/INBOX/cur" 0
+	test_expect_files "backup/INBOX/new" 0 &&
+	test_expect_files "backup/INBOX/cur" 1
 	# @TODO test content of file
 
 	# IMAP OK with one Mail in subdirectory
@@ -140,8 +129,8 @@ function test_imap {
 		/backup/testimapsubdir \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password &&
-	test_expect_files "backup/testimapsubdir/INBOX/new" 1 &&
-	test_expect_files "backup/testimapsubdir/INBOX/cur" 0
+	test_expect_files "backup/testimapsubdir/INBOX/new" 0 &&
+	test_expect_files "backup/testimapsubdir/INBOX/cur" 1
 
 	# IMAP OK with one Mail - remote backup dest
 	$exec_remote &&
@@ -151,8 +140,8 @@ function test_imap {
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password &&
-	test_expect_files "backup-rem/INBOX/new" 1 &&
-	test_expect_files "backup-rem/INBOX/cur" 0
+	test_expect_files "backup-rem/INBOX/new" 0 &&
+	test_expect_files "backup-rem/INBOX/cur" 1
 
 	test_cleanImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" || return 1
 
