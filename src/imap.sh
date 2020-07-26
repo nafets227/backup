@@ -28,10 +28,13 @@ function backup2_imap {
 	local bckimap_dst_secret="$4"
 	local bckimap_srv="$5"
 
-	local emailuser="${bckimap_src%%@*}"
-	local emailuser="${emailuser,,}" # convert to lowercase
-	local bckimap_srv_server="${bckimap_srv%%:*}"
-	local bckimap_srv_port=${bckimap_srv:$((${#bckimap_srv_server} + 1))}
+	local emailuser bckimapo_srv_server bckimap_srv_port
+	emailuser="${bckimap_src%%@*}" &&
+	# convert to lowercase
+	emailuser="${emailuser,,}" &&
+	bckimap_srv_server="${bckimap_srv%%:*}" &&
+	bckimap_srv_port=${bckimap_srv:$((${#bckimap_srv_server} + 1))} &&
+	/usr/bin/true || return 1
 
 	if [ -z "$bckimap_srv_port" ] ; then
 		printf "Error: IMAP Port not specified in URL %s.\n" \
