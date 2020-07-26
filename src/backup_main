@@ -35,17 +35,21 @@ function backup_remote {
 		-r $MODDIR/* $remotemachine:$REMOTE_MODDIR &&
 	{
 		[ $bck_src_secret == null ] ||
-		scp -o StrictHostKeyChecking=no \
-			$bck_src_secret \
-			$remotemachine:$REMOTE_MODDIR/srcsecret &&
-		bck_src_secret="$REMOTE_MODDIR/srcsecret"
+		{
+			scp -o StrictHostKeyChecking=no \
+				$bck_src_secret \
+				$remotemachine:$REMOTE_MODDIR/srcsecret &&
+			bck_src_secret="$REMOTE_MODDIR/srcsecret"
+		}
 	} &&
 	{
 		[ $bck_dst_secret == null ] ||
-		scp -o StrictHostKeyChecking=no \
-			$bck_dst_secret \
-			$remotemachine:$REMOTE_MODDIR/dstsecret &&
-		bck_dst_secret="$REMOTE_MODDIR/srcsecret"
+		{
+			scp -o StrictHostKeyChecking=no \
+				$bck_dst_secret \
+				$remotemachine:$REMOTE_MODDIR/dstsecret &&
+			bck_dst_secret="$REMOTE_MODDIR/dstsecret"
+		}
 	} &&
 	ssh -o StrictHostKeyChecking=no $remotemachine <<-EOF
 		[[ x"$DEBUG" == x1 ]] && set -x
@@ -208,12 +212,17 @@ function make_secret {
 	local url="$2"
 	local type="$3"
 
+	if [ "$value" == "null" ] ; then
+		return 0
+	fi
+
 	if [ -z "$value" ] ; then
 		value="/backup/${url%%:*}.$type"
 		if [ ! -f $value ] && [ "$type" == "id_rsa" ] ; then
 			value="/root/.ssh/id_rsa"
 		fi
 	fi
+
 	if [ ! -f "$value" ] ; then
 		printf "Error: Secret File %s not found.\n" \
 			"$value" >/dev/stderr
