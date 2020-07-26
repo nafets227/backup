@@ -64,11 +64,12 @@ Features planned in the future
     see https://lincolnloop.com/blog/detecting-file-moves-renames-rsync/
 
 # Hacking #
-If you want to developer on MacOS, you need:
+If you want to develop and test on MacOS, you need:
   - brew install offlineimap jq bash
   - activated local ssh server
   - trust your own ssh key (e.g. ~/.ssh/id_rsa.pub must be in authorized_keys)
   - tested with docker desktop for Mac
+start with running test/test to verify your environment
 
 # Reference #
 [Source](https://github.com/nafets227/backup)
