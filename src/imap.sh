@@ -34,7 +34,7 @@ function backup2_imap {
 	emailuser="${emailuser,,}" &&
 	bckimap_srv_server="${bckimap_srv%%:*}" &&
 	bckimap_srv_port=${bckimap_srv:$((${#bckimap_srv_server} + 1))} &&
-	/usr/bin/true || return 1
+	true || return 1
 
 	if [ -z "$bckimap_srv_port" ] ; then
 		printf "Error: IMAP Port not specified in URL %s.\n" \

@@ -93,7 +93,7 @@ function test_putImap {
 		--user "$mail_adr:$mail_pw" \
 		--request 'STORE 1 -Flags /Seen' &&
 
-	/usr/bin/true || return 1
+	true || return 1
 
 	return 0
 }

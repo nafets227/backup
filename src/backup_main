@@ -28,7 +28,7 @@ function backup_remote {
 	local rc
 	printf "===== Start Executing on %s =====\n" "$remotemachine"
 	ssh -o StrictHostKeyChecking=no $remotemachine <<-EOF &&
-		[ x"$DEBUG" == x1 ] && set -x
+		[[ x"$DEBUG" == x1 ]] && set -x
 		mkdir -p $REMOTE_MODDIR
 		EOF
 	scp -o StrictHostKeyChecking=no \
@@ -48,7 +48,7 @@ function backup_remote {
 		bck_dst_secret="$REMOTE_MODDIR/srcsecret"
 	} &&
 	ssh -o StrictHostKeyChecking=no $remotemachine <<-EOF
-		[ x"$DEBUG" == x1 ] && set -x
+		[[ x"$DEBUG" == x1 ]] && set -x
 		export DEBUG=$DEBUG
 		# please note the trick to have a correct quoting on the
 		# destination machine. Simply using \"\$@\" does not work.
@@ -444,6 +444,26 @@ readonly REMOTE_MODDIR=/usr/local/lib/nafets227.backup
 ##### Parse Configs / Envirionment ###########################################
 DEBUG=${DEBUG-0}
 debug=$DEBUG
+
+##### Ensure running on bash v4+ #############################################
+if [[ ${BASH_VERSION:0:1} -lt "4" ]] ; then
+	# Special workaround for MacOS:
+	# system bash in /bin/bash is V3
+	# but v4+ max be available in /usr/local/bin
+	if [[ -x /usr/local/bin/bash ]] &&
+	   bashver=$(/usr/local/bin/bash -c 'echo $BASH_VERSION') &&
+	   [[ ${bashver:0:1} -ge 4 ]]
+	then
+		PATH="/usr/local/bin:$PATH" /usr/local/bin/bash "$0" "$@"
+		exit $?
+	else
+		printf "bash version below 4: %s\n" "$BASH_VERSION"
+		exit 1
+	fi
+elif ! which true || ! which false ; then
+	printf "true or false not found in path.\n"
+	exit 1
+fi
 
 #Source all modules in install.d
 for f in $(dirname $0)/*.sh ; do
