@@ -1,6 +1,7 @@
 # nafets227/backup CHANGELOG
 
 ## 0.2.1 (2020-07-27)
+* Removed Default location for Secrets
 * Bugfix dst-secret that has been ignored
 
 ## 0.2 (2020-07-26)

@@ -25,7 +25,7 @@ function test_exec_backupdocker {
 	local docker_cmd=""
 	docker_cmd+="docker run"
 	docker_cmd+=" -v $TESTSETDIR/backup:/backup"
-	docker_cmd+=" -v ~/.ssh/id_rsa:/root/.ssh/id_rsa"
+	docker_cmd+=" -v ~/.ssh/id_rsa:/secrets/id_rsa"
 	docker_cmd+=" -e DEBUG=1"
 	docker_cmd+=" nafets227/backup:test"
 

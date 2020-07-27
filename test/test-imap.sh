@@ -75,7 +75,8 @@ function test_imap {
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
-		--srcsecret /backup/imap_wrongpassword.password
+		--srcsecret /backup/imap_wrongpassword.password \
+		--dstsecret /secrets/id_rsa
 
 	# IMAP OK with Empty Mailbox
 	test_exec_backupdocker  0 \
@@ -94,27 +95,29 @@ function test_imap {
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
-		--srcsecret /backup/imap_password.password &&
+		--srcsecret /backup/imap_password.password \
+		--dstsecret /secrets/id_rsa &&
 	test_expect_files "backup-rem/INBOX/new" 0 &&
 	test_expect_files "backup-rem/INBOX/cur" 0
 
-	# IMAP OK with default password
+	# IMAP KO without password
 	echo "$MAIL_PW" \
 		>$TESTSETDIR/backup/$MAIL_ADR.password \
 		|| return 1
-	test_exec_backupdocker 0 \
+	test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV"
 
-	# IMAP OK with default password remote
+	# IMAP KO without password remote
 	$exec_remote &&
-	test_exec_backupdocker 0 \
+	test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
-		"$MAIL_SRV"
+		"$MAIL_SRV" \
+		--dstsecret /secrets/id_rsa
 
 	# Store Testmail
 	test_putImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" \
@@ -148,7 +151,8 @@ function test_imap {
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
-		--srcsecret /backup/imap_password.password &&
+		--srcsecret /backup/imap_password.password \
+		--dstsecret /secrets/id_rsa &&
 	test_expect_files "backup-rem/INBOX/new" 0 &&
 	test_expect_files "backup-rem/INBOX/cur" 1
 

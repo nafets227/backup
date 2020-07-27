@@ -40,17 +40,8 @@ see also [Example][1].
 IMAP Logon name must be the Email including the domain.
 
 # Security (Secrets)
-Each remote system needs a Secret for Authentication and authorisation. Typical form of Secrets are public keys or passwords. Secrets are searched in the following order:
-  1. Paramter
-     if the --srcsecret or --dstsecret parameters are set, they must contain a
-     fully qualified pathname of the secret
-  2. Default
-     The default is to search in /backup/<partner>.<extension>.
-     <partner> specifies the remote id (e.g. machinename or Emailname).
-     Extension depends on the type (e.g. .password for IMAP,
-     .id_rsa as SSH-key for rsync or remote execution).
-  3. System Default
-     only in case of SSH the system Default /root/.ssh/id_rsa is used.
+Each remote system needs a Secret for Authentication and authorisation. Typical form of Secrets are public keys or passwords. If needed, Secrets can be defined with the --srcsecret or --dstsecret parameter.
+Starting from version 0.2.1 no Defaults are applied.
 
 # Future Plans #
 Features planned in the future

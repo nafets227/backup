@@ -40,6 +40,9 @@ function backup2_imap {
 		printf "Error: IMAP Port not specified in URL %s.\n" \
 			"bckimap_srv"
 		return 1
+	elif [ ! -f "$bckimap_src_secret" ] ; then
+		printf "Error: No IMAP Secret given.\n"
+		return 1
 	fi
 
 	local ssl=""

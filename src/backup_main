@@ -34,22 +34,24 @@ function backup_remote {
 	scp -o StrictHostKeyChecking=no -i $remotesecret \
 		-r $MODDIR/* $remotemachine:$REMOTE_MODDIR &&
 	{
-		[ $bck_src_secret == null ] ||
-		{
+		if [ -z "$bck_src_secret" ] ; then
+			true
+		else
 			scp -o StrictHostKeyChecking=no -i $remotesecret \
 				$bck_src_secret \
 				$remotemachine:$REMOTE_MODDIR/srcsecret &&
-			bck_src_secret="$REMOTE_MODDIR/srcsecret"
-		}
+			bck_src_secret="--srcsecret $REMOTE_MODDIR/srcsecret"
+		fi
 	} &&
 	{
-		[ $bck_dst_secret == null ] ||
-		{
+		if [ -z "$bck_dst_secret" ] ; then
+			true
+		else
 			scp -o StrictHostKeyChecking=no -i $remotesecret \
 				$bck_dst_secret \
 				$remotemachine:$REMOTE_MODDIR/dstsecret &&
-			bck_dst_secret="$REMOTE_MODDIR/dstsecret"
-		}
+			bck_dst_secret="--dstsecret $REMOTE_MODDIR/dstsecret"
+		fi
 	} &&
 	ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF
 		[[ x"$DEBUG" == x1 ]] && set -x
@@ -60,8 +62,8 @@ function backup_remote {
 			$bck_type \
 			$bck_src \
 			$bck_dst \
-			--srcsecret $bck_src_secret \
-			--dstsecret $bck_dst_secret \
+			$bck_src_secret \
+			$bck_dst_secret \
 			$(
 			for s in "$@" ; do
 				printf " \"%s\"" "$s"
@@ -206,33 +208,6 @@ function check_another_parm {
 	fi
 }
 
-##### Helper: Return Secret ##################################################
-function make_secret {
-	local value="$1"
-	local url="$2"
-	local type="$3"
-
-	if [ "$value" == "null" ] ; then
-		return 0
-	fi
-
-	if [ -z "$value" ] ; then
-		value="/backup/${url%%:*}.$type"
-		if [ ! -f $value ] && [ "$type" == "id_rsa" ] ; then
-			value="/root/.ssh/id_rsa"
-		fi
-	fi
-
-	if [ ! -f "$value" ] ; then
-		printf "Error: Secret File %s not found.\n" \
-			"$value" >/dev/stderr
-		return 1
-	fi
-
-	printf "%s\n" "$value"
-	return 0
-}
-
 ##### determine where to run if user did not specify #########################
 function backup_default_runon {
 	[ "$#" -lt 3 ] && return 1
@@ -330,6 +305,14 @@ function backup {
 			"$bck_global_prm"
 		NAFETS227BACKUP_GRC=1
 		return 1
+	elif [ ! -z "$bck_src_secret" ] && [ ! -f "$bck_src_secret" ] ; then
+		printf "Error: Source Secret File %s not found.\n" \
+			"$bck_src_secret"
+		return 1
+	elif [ ! -z "$bck_tgt_secret" ] && [ ! -f "$bck_tgt_secret" ] ; then
+		printf "Error: Target Secret File %s not found.\n" \
+			"$bck_tgt_secret"
+		return 1
 	elif [ "$bck_type" == imap ] ; then
 		bck_src_secret_type="password"
 		bck_dst_secret_type="id_rsa"
@@ -362,19 +345,6 @@ function backup {
 		return 1
 	fi
 
-	#----- Verify Secrets ------------------------------------------------
-	bck_src_secret=$(make_secret \
-			"$bck_src_secret" \
-			"$bck_src" \
-			"$bck_src_secret_type" \
-		) || return 1
-
-	bck_dst_secret=$(make_secret \
-			"$bck_dst_secret" \
-			"$bck_dst" \
-			"$bck_dst_secret_type" \
-		) || return 1
-
 	#----- Execute on source, local or dest ------------------------------
 	if [ "$bck_runon" == "-1" ] ; then
 		if [[ "$bck_src" != *":"* ]] ; then
@@ -393,7 +363,7 @@ function backup {
 				"$bck_type" \
 				"$bck_src" \
 				"$bck_dst" \
-				"null" \
+				"" \
 				"$bck_dst_secret" \
 				"${bck_local_prm[@]}"
 			rc=$?
@@ -425,7 +395,7 @@ function backup {
 				"$bck_src" \
 				"$bck_dst" \
 				"$bck_src_secret" \
-				"null" \
+				"" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		fi
