@@ -1,5 +1,8 @@
 # nafets227/backup CHANGELOG
 
+## 0.2.1 (2020-07-27)
+* Bugfix dst-secret that has been ignored
+
 ## 0.2 (2020-07-26)
 * Implement Secrets (INCOMPATIBLE CHANGE)
 * No longer Support Password parameter in IMAP. Replaced by Secret.

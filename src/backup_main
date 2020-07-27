@@ -27,16 +27,16 @@ function backup_remote {
 
 	local rc
 	printf "===== Start Executing on %s =====\n" "$remotemachine"
-	ssh -o StrictHostKeyChecking=no $remotemachine <<-EOF &&
+	ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF &&
 		[[ x"$DEBUG" == x1 ]] && set -x
 		mkdir -p $REMOTE_MODDIR
 		EOF
-	scp -o StrictHostKeyChecking=no \
+	scp -o StrictHostKeyChecking=no -i $remotesecret \
 		-r $MODDIR/* $remotemachine:$REMOTE_MODDIR &&
 	{
 		[ $bck_src_secret == null ] ||
 		{
-			scp -o StrictHostKeyChecking=no \
+			scp -o StrictHostKeyChecking=no -i $remotesecret \
 				$bck_src_secret \
 				$remotemachine:$REMOTE_MODDIR/srcsecret &&
 			bck_src_secret="$REMOTE_MODDIR/srcsecret"
@@ -45,13 +45,13 @@ function backup_remote {
 	{
 		[ $bck_dst_secret == null ] ||
 		{
-			scp -o StrictHostKeyChecking=no \
+			scp -o StrictHostKeyChecking=no -i $remotesecret \
 				$bck_dst_secret \
 				$remotemachine:$REMOTE_MODDIR/dstsecret &&
 			bck_dst_secret="$REMOTE_MODDIR/dstsecret"
 		}
 	} &&
-	ssh -o StrictHostKeyChecking=no $remotemachine <<-EOF
+	ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF
 		[[ x"$DEBUG" == x1 ]] && set -x
 		export DEBUG=$DEBUG
 		# please note the trick to have a correct quoting on the
