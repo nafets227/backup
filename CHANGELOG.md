@@ -3,6 +3,7 @@
 ## 0.2.1 (2020-07-27)
 * Removed Default location for Secrets
 * Bugfix dst-secret that has been ignored
+* Remove default location of complex script (was /backup/backup)
 
 ## 0.2 (2020-07-26)
 * Implement Secrets (INCOMPATIBLE CHANGE)

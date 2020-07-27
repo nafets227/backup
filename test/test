@@ -20,7 +20,8 @@ function test_exec_backupdocker {
 	rc_exp="$1"
 	shift
 
-	cat >$TESTSETDIR/backup/backup <<<"$@"  || return 100
+	cat >$TESTSETDIR/backup/backup <<<"$@" &&
+	chmod +x $TESTSETDIR/backup/backup <<<"$@" || return 100
 
 	local docker_cmd=""
 	docker_cmd+="docker run"
@@ -28,6 +29,7 @@ function test_exec_backupdocker {
 	docker_cmd+=" -v ~/.ssh/id_rsa:/secrets/id_rsa"
 	docker_cmd+=" -e DEBUG=1"
 	docker_cmd+=" nafets227/backup:test"
+	docker_cmd+=" . /backup/backup"
 
 	test_exec_simple \
 		"$docker_cmd" \

@@ -19,7 +19,8 @@ This way of usage is recommended for testing and small number data storages.
 ## Complex configurations
   - Create your own custom script
   - This script can contain multiple backup actions. see [Example][1]
-  - mount this script on /backup/backup into container
+  - mount this script e.g. on /backup into container
+  - give ". <scriptname>" as parameter to the container
 
 This way of usage is recommended if you have a number of backup actions and
 other complex setups.

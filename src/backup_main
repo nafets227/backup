@@ -460,13 +460,13 @@ fi
 
 NAFETS227BACKUP_GRC=0
 ##### Now start the custom scipt
-if [ $# -ge 1 ] ; then
-	printf "executing custom command %s\n" "$*"
-	"$@" || NAFETS227BACKUP_GRC=3
-else
-	printf "executing standard command backup/backup\n"
-	. backup/backup || NAFETS227BACKUP_GRC=2
+if [ $# == 0 ] ; then
+	printf "No command given.\n"
+	exit 1
 fi
+
+printf "executing custom command %s\n" "$*"
+"$@" || NAFETS227BACKUP_GRC=3
 
 if [ "x$NAFETS227BACKUP_GRC" == "x0" ] ; then
 	printf "Success: all Backup Tasks have been completed successfully.\n"
