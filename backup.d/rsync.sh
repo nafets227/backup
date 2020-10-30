@@ -137,7 +137,6 @@ function backup_rsync {
 		fi
 	fi
 
-
 	if [[ "$dst" == *":"* ]] ; then
 		if [ $allowDstRemote -eq 1 ]; then
 			if [ $debug -eq 1 ]; then
@@ -195,7 +194,6 @@ function backup_rsync {
 		currback="$dst"
 		printf "Backing up %s to %s\n" "$src" "$currback"
 	fi
-
 
 	if [[ "$dst" == *":"* ]] ; then
 		if [ $debug -eq 1 ]; then
@@ -341,5 +339,3 @@ function backup_rsync_print {
 		cat $log
 	fi
 }
-
-

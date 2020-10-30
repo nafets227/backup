@@ -6,7 +6,6 @@
 #
 # Test script for IMAP
 
-
 ##### Tests for IMAP #########################################################
 function test_imap {
 	if ! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" ||
