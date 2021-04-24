@@ -32,7 +32,7 @@
 #               the current timestamp at write time and do now allow to
 #               modify it)
 #            2) Symbolic LInks are excluded (not allowed on WebDav)
-#            3) NO Delete will be executed for safety reasond. If 
+#            3) NO Delete will be executed for safety reasond. If
 #               INTERNT LOG Mode ist set, a logfile will be created that
 #               shows all files that shoul be deleted.
 #               to execute the deletes just call <logfilename>.sh
@@ -85,7 +85,7 @@ function backup_rsync {
 		shift
 		opt="-aH --partial"
 	elif [ "${1%%=*}" == "--sshlog" ] ; then
-		# NB: euserv.de's remote RSync does currently not support --info=DEL,STATS0
+		# NB: euserv.deßs remote RSync does currently not support --info=DEL,STATS0
 		# Thats why we switched back to -n -v
 		inetlog=1
 		logfile=${1#*=}
@@ -297,9 +297,9 @@ function backup_ducnt {
 		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
 	fi
 
-	du -sh "$@" | 
+	du -sh "$@" |
 	while read size dir ; do
-	       	printf "%s\t%s\t%s\n" \
+		printf "%s\t%s\t%s\n" \
 			"$size" \
 			"$(ls -R $dir | wc -l)" \
 			"$dir"

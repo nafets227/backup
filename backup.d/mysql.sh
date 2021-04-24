@@ -15,9 +15,9 @@ if [ x"$DEBUG" == x1 ] ; then
 fi
 
 if [ $# -ne 2 ]; then
-    printf "%s backup_mysql ERROR: Wrong number of parameters" "$0"
-    return -1
-    fi
+	printf "%s backup_mysql ERROR: Wrong number of parameters" "$0"
+	return -1
+	fi
 
 local srv="$1"
 local db="$2"
@@ -30,7 +30,7 @@ ssh $srv <<-EOF
 	# This script will be executed on the DB Server
 	mkdir -p $DUMPDIR
 	chown mysql:mysql $DUMPDIR
-	mysqldump --skip-comments -T$DUMPDIR $db 
+	mysqldump --skip-comments -T$DUMPDIR $db
 EOF
 
 backup_rsync --hist $srv:$DUMPDIR /srv/backup/mysql.$db.$srv "--ignore-times"
@@ -50,9 +50,9 @@ if [ x"$DEBUG" == x1 ] ; then
 fi
 
 if [ $# -ne 2 ]; then
-    printf "%s backup_mysql ERROR: Wrong number of parameters" "$0"
-    return -1
-    fi
+	printf "%s backup_mysql ERROR: Wrong number of parameters" "$0"
+	return -1
+fi
 
 local srv="$1"
 local cnt="$2"
@@ -101,9 +101,9 @@ if [ x"$DEBUG" == x1 ] ; then
 fi
 
 if [ $# -ne 3 ]; then
-    printf "%s restore_mysql_docker ERROR: Wrong number of parameters" "$0"
-    return -1
-    fi
+	printf "%s restore_mysql_docker ERROR: Wrong number of parameters" "$0"
+	return -1
+fi
 
 local container="$1"
 local db="$2"
@@ -120,16 +120,15 @@ $cmd_docker <<-EOF
 		EOFMY
 	echo "Creating Database $db if not exists."
 	mysql -e "CREATE DATABASE IF NOT EXISTS $db;"
-	for f in $dir/*.sql ; do 
-	    echo "Executing \$f."
-	    mysql $db <\$f
+	for f in $dir/*.sql ; do
+		echo "Executing \$f."
+		mysql $db <\$f
 	done
 	for f in $dir/*.txt ; do
-	    echo "Loading Data from \$f."
-	    mysql $db -e "LOAD DATA INFILE '\$f' INTO TABLE \$(basename \$f .txt);"
+		echo "Loading Data from \$f."
+		mysql $db -e "LOAD DATA INFILE '\$f' INTO TABLE \$(basename \$f .txt);"
 	done
 	EOF
-
 }
 
 ##### backup_mysql_kube ######################################################
@@ -158,12 +157,12 @@ kubectl --kubeconfig /root/.kube/config get -n prod pod -l svc=mariadb \
 
 	dbs=$(kubectl --kubeconfig /root/.kube/config exec -i -n prod $pod /bin/bash <<-EOKUBE
 		mysql -uroot -p"\$MYSQL_ROOT_PASSWORD" \
-			 --skip-column-names \
-		       	-e "show databases"
+			--skip-column-names \
+			-e "show databases"
 		EOKUBE
 		)
 
-	for db in $dbs ; do 
+	for db in $dbs ; do
 		case "$db" in
 			information_schema|mysql|performance_schema)
 			continue
