@@ -155,7 +155,7 @@ kubectl --kubeconfig /root/.kube/config get -n prod pod -l svc=mariadb \
 
 	printf "Searching MySQl databases in Kubernetes POD %s (%s)\n" "$name" "$pod"
 
-	dbs=$(kubectl --kubeconfig /root/.kube/config exec -i -n prod $pod /bin/bash <<-EOKUBE
+	dbs=$(kubectl --kubeconfig /root/.kube/config exec -i -n prod $pod -- /bin/bash <<-EOKUBE
 		mysql -uroot -p"\$MYSQL_ROOT_PASSWORD" \
 			--skip-column-names \
 			-e "show databases"
@@ -174,7 +174,7 @@ kubectl --kubeconfig /root/.kube/config get -n prod pod -l svc=mariadb \
 		#    mysql, so we use /var/lib.
 		local readonly DUMPDIR_CNT="/var/lib/mysqldump.$(date +%Y%m%d)"
 		local readonly DUMPDIR="/var/lib/mysqldump.$(date +%Y%m%d)"
-		kubectl --kubeconfig /root/.kube/config exec -i -n prod $pod /bin/bash <<-EOKUBE
+		kubectl --kubeconfig /root/.kube/config exec -i -n prod $pod -- /bin/bash <<-EOKUBE
 			set -x
 			# This script will be executed in the DB-container
 			mkdir -p $DUMPDIR_CNT
