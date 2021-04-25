@@ -38,11 +38,11 @@ function test_imap {
 	echo "wrongpassword" \
 		>$TESTSETDIR/backup/imap_wrongpassword.password \
 	       || return 1
-	echo "$MAIL_PW" \
-		>$TESTSETDIR/backup/imap_password.password \
+	cp "$MAIL_PW" \
+		$TESTSETDIR/backup/imap_password.password \
 	       || return 1
 
-	test_cleanImap "$MAIL_ADR" "$MAIL_PW" "$mail_smtpsrv" || return 1
+	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$mail_smtpsrv" || return 1
 
 	# No password and default does not exist
 	test_exec_backupdocker 1 \
@@ -100,8 +100,8 @@ function test_imap {
 	test_expect_files "backup-rem/INBOX/cur" 0
 
 	# IMAP KO without password
-	echo "$MAIL_PW" \
-		>$TESTSETDIR/backup/$MAIL_ADR.password \
+	cp "$MAIL_PW" \
+		$TESTSETDIR/backup/$MAIL_ADR.password \
 		|| return 1
 	test_exec_backupdocker 1 \
 		"backup imap" \
@@ -119,7 +119,7 @@ function test_imap {
 		--dstsecret /secrets/id_rsa
 
 	# Store Testmail
-	test_putImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" \
+	test_putImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV" \
 		|| return 1
 
 	# IMAP OK with one Mail
@@ -155,7 +155,7 @@ function test_imap {
 	test_expect_files "backup-rem/INBOX/new" 0 &&
 	test_expect_files "backup-rem/INBOX/cur" 1
 
-	test_cleanImap "$MAIL_ADR" "$MAIL_PW" "$MAIL_SRV" || return 1
+	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV" || return 1
 
 	# IMAP OK with Empty Mailbox
 	test_exec_backupdocker 0 \
