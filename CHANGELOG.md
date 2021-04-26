@@ -1,5 +1,11 @@
 # nafets227/backup CHANGELOG
 
+## 0.2.3 (2021-04-26)
+* Adopt to new kubectl version (mysql - currently unused)
+* test: MAIL_ADR to point to a password file instead of containing the
+  password itself
+* Documentation Updates (CHANGELOG, README)
+
 ## 0.2.2 (2020-09-28)
 * Enhance Tracing on IMAP error (print offlineimap config)
 
