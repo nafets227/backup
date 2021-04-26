@@ -30,19 +30,51 @@ other complex setups.
   2. Type (currently only "imap" supported)
   3. Source
   4. Destination
-  5. (IMAP) Server Url (e.g. imap.mydomain.xxx:143)
+  5. global options
+  6. '--'
+  7. local options (specific to "type", see relevant section)
 
 see also [Example][1].
+
+## Global Options
+  - --runonsrc
+    Prefer to run on the source side
+  - --runondst
+    Prefer to run on destination side
+	- --local
+    Run locally (=in the container) only
+  - --srcsecret
+    Secret to access source system (password/ssh-key, depending on type)
+  - --dstsecret
+    Secret to access destination system (password/ssh-key, depending on type)
 
 ## Environment Parameters #
   - DEBUG: 0 or 1, defaults to 0
 
-## IMAP
-IMAP Logon name must be the Email including the domain.
+# IMAP
+Backups data from an IMAP Server using offlineimap. This is done in a delta
+approach, so only modified Emails are downloaded whereas deleted EMails are
+deleted on the file directory
+
+### IMAP Global parameters
+  * Source - Logon user used to connect to the IMAP Server. Typically it
+    contains the Email including the domain.
+  * Destination - Directory where to store the downloaded EMails. Optionally
+    prefixed by Server name followed by a colon.
+  * Source Secret
+    is the password to logon to the server \[mandatory\]
+  * Destination Secret
+    is the password to connect to the target server \[optional\]
+
+### IMAP local parameters
+  1. IMAP Server Url (e.g. imap.mydomain.xxx:143) 
+     \[mandatory\]
 
 # Security (Secrets)
-Each remote system needs a Secret for Authentication and authorisation. Typical form of Secrets are public keys or passwords. If needed, Secrets can be defined with the --srcsecret or --dstsecret parameter.
-Starting from version 0.2.1 no Defaults are applied.
+Each remote system needs a Secret for Authentication and authorisation.
+Typical form of Secrets are public keys or passwords. If needed, Secrets can
+be defined with the --srcsecret or --dstsecret parameter. Starting from
+version 0.2.1 no Defaults are applied.
 
 # Future Plans #
 Features planned in the future
@@ -66,8 +98,8 @@ start with running test/test to verify your environment
 # Reference #
 [Source](https://github.com/nafets227/backup)
 
-Copyright (C) 2017-2020 Stefan Schallenberg
-License: @TODO define license
+Copyright (C) 2017-2021 Stefan Schallenberg
+License: GPLv3, see [LICENSE](LICENSE)
 
 Leveraging on 
   - [Rsync](https://rsync.samba.org/)
