@@ -3,9 +3,15 @@ Container based implementation of backup. Features:
   - rsync to destination system
   - can backup IMAP accounts
   - Plugin system allows adding other types of data
+  - History Mode preserves deleted files or old versions optimizing space by using hard links
 
 # Destinations #
 Destination can be anything that is reachable via rsync/ssh or a local disk mounted in the container. Copying via internet is supported.
+
+## History Mode ##
+History mode safes the backup to a subdirectory YYYY/mm/dd based on the backup
+date (today, unless --histdate is used). In order to save space, starting from
+the second backup we are hard-linking to unchanged filed of previous backup.
 
 # Sources #
 backup supports currently the following sources:
@@ -47,6 +53,12 @@ see also [Example][1].
     Secret to access source system (password/ssh-key, depending on type)
   - --dstsecret
     Secret to access destination system (password/ssh-key, depending on type)
+  - --hist
+    Backup in History Mode (see separate section)
+  - --histdate <date>
+    Backup in History Mode, using <date> instead of today. Not intended for production use, but mainly for testing 
+  - --histraw <YYYY/mm/dd>
+    Backup in History Mode, using fixed subdirectory as target. Only intended for internal use
 
 ## Environment Parameters #
   - DEBUG: 0 or 1, defaults to 0
@@ -81,7 +93,6 @@ Features planned in the future
   - can backup mysql databases
   - can backup Samba configuration
   - ssh to source system
-  - historize data
   - Find a way to improve sync to cloud when files / directories have
     been moved. It would be fantastic if we can reuse files that are
     already present in the backup.

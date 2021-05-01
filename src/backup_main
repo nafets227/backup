@@ -5,7 +5,7 @@
 
 ##### Execute on different machine ###########################################
 function backup_remote {
-	[ "$#" -lt 7 ] && return 1
+	[ "$#" -lt 8 ] && return 1
 
 	local remotemachine="$1"
 	local remotesecret="$2"
@@ -14,7 +14,8 @@ function backup_remote {
 	local bck_dst="$5"
 	local bck_src_secret="$6"
 	local bck_dst_secret="$7"
-	shift 7
+	local bck_histdate="$8"
+	shift 8
 
 	if [ -z "$remotemachine" ] ||
 	   [ -z "$remotesecret" ] ; then
@@ -24,6 +25,12 @@ function backup_remote {
 	#----- remove remotemachine from URL ---------------------------------
 	bck_src="${bck_src##$remotemachine:}"
 	bck_dst="${bck_dst##$remotemachine:}"
+
+	#----- set hist parm if present ------
+	local rem_hist=""
+	if [ ! -z "$bck_histdate" ] ; then
+		rem_hist="--histraw \"$bck_histdate\""
+	fi
 
 	local rc
 	printf "===== Start Executing on %s =====\n" "$remotemachine"
@@ -59,11 +66,12 @@ function backup_remote {
 		# please note the trick to have a correct quoting on the
 		# destination machine. Simply using \"\$@\" does not work.
 		$REMOTE_MODDIR/backup_main backup --local \
-			$bck_type \
-			$bck_src \
-			$bck_dst \
+			"$bck_type" \
+			"$bck_src" \
+			"$bck_dst" \
 			$bck_src_secret \
 			$bck_dst_secret \
+			$rem_hist \
 			$(
 			for s in "$@" ; do
 				printf " \"%s\"" "$s"
@@ -80,23 +88,21 @@ function backup_remote {
 
 ##### Execute on this machine ################################################
 function backup_local {
-	[ "$#" -lt 5 ] && return 1
+	[ "$#" -lt 6 ] && return 1
 
 	local bck_type="$1"
 	local bck_src="$2"
 	local bck_dst="$3"
 	local bck_src_secret="$4"
 	local bck_dst_secret="$5"
-	shift 5
+	local bck_histdate="$6"
+	shift 6
 
 	local bck_local_prm=()
-	local bck_hist=0
+	local bck_dst_full
 
 	while [ $# -gt 0 ] ; do
-		if [ "$1" == "--hist" ] ; then # historize
-			bck_hist=1
-			shift
-		elif [ "$1" == "--" ] ; then # end of global parms
+		if [ "$1" == "--" ] ; then # end of global parms
 			bck_local_prm+=( "$@" )
 			shift $#
 		else # unknown parm -> probably type-specific
@@ -104,6 +110,13 @@ function backup_local {
 			shift
 		fi
 	done
+
+	if [ ! -z "$bck_histdate" ] ; then # History mode
+		# bck_dst_full="$bck_dst/$bck_histdate.in-progress"
+		bck_dst_full=$(backup_inithist "$bck_dst" "$bck_histdate" ) || return 1
+	else
+		bck_dst_full="$bck_dst"
+	fi
 
 	# Interface to type_specific drivers:
 	#	backup2_<type>	function name
@@ -114,12 +127,148 @@ function backup_local {
 	#	[ ...]		type specific futher options
 	backup2_$bck_type \
 		"$bck_src" \
-		"$bck_dst" \
+		"$bck_dst_full" \
 		"$bck_src_secret" \
 		"$bck_dst_secret" \
-		"${bck_local_prm[@]}"
+		"${bck_local_prm[@]}" \
+		|| return 1
 
-	return $?
+	if [ ! -z "$bck_histdate" ] && [ "$bck_dst_full" != "$bck_dst/$bck_histdate" ] ; then
+		# History mode and we used a temporary dir for backup (.in-progress)
+		mv "$bck_dst_full" "$bck_dst/$bck_histdate" || return 1
+		printf "Backup in history mode successful - renamed to %s\n" \
+			"$bck_dst/$bck_histdate" >&2
+	fi
+
+	return 0
+}
+
+##### Initialise history backup ##############################################
+function backup_inithist {
+	# How it works:
+	#     When backuping up in history mode we create a new subdirectory
+	#     YYYY/MM/DD.in-progress if it does not yet exist. Then we hard-link
+	#     all files from the previous backup there. After that the
+	#     type-specific backup procedure is run and will overwrite or delete
+	#     the files. If it does not, because the file is still present and
+	#     unchanged in the source, the hard link will remain. After successful
+	#     Backup, YYYY/MM/YY.in-progress is renamed to YYYY/MM/DD.
+	#     Only compliant directories are considered as previous backup, 
+	#     exluding .in-progress dirs.
+	# Parm:
+	#     - backup destination (without YYYY/mm/dd)
+	#     - backup date in format of YYYY/mm/dd
+	# Output: Directory name of the prepared directory
+	#     (appending .in-progressXX to "backup dest/backup date" if needed)
+	local currback lastback
+
+	local bck_dst="$1"
+	local bck_histdate="$2"
+
+	if [[ "$bck_dst" == *":"* ]] ; then
+		printf "Error: cannot backup to remote %s in history mode\n" \
+			"$bck_dst" >&2
+		return 1
+	fi
+
+	currback="$bck_dst/$bck_histdate"
+	lastback=$(backup_findlasthist "$bck_dst") || return 1
+
+	if [ -z "$lastback" ]; then
+		printf "Backing up in history mode to %s (Initial Backup)\n" "$currback" >&2
+		if [ -e "$currback.in-progress" ] ; then
+			rm -rf "$currback.in-progress" || return 1
+		fi
+		printf "%s" "$currback.in-progress"
+		return 0
+	elif [[ "$lastback" > "$currback" ]] ; then
+		printf "Error: Newer Backup %s found for %s\n" \
+			"$lastback" "$currback" >&2
+		return 1
+	elif [ "$lastback" == "$currback" ] ; then
+		printf "Backing up in history mode to %s (Update existing Backup)\n" \
+			"$currback" >&2
+		printf "%s" "$currback"
+		return 0
+	else
+		printf "Initialising history mode for %s based on %s ... \n" \
+			"$currback.in-progress" "$lastback" >&2
+
+		if [ -e "$currback.in-progress" ] ; then
+			rm -rf "$currback.in-progress" || return 1
+		fi
+
+		mkdir -p "$currback.in-progress" &&
+		rsync -aH \
+			"--link-dest=$lastback" \
+			"$lastback/" \
+			"$currback.in-progress" \
+		|| return 1
+
+		printf "Finished initialising history mode for %s based on %s\n" \
+			"$currback.in-progress" "$lastback" >&2
+
+		printf "%s" "$currback.in-progress"
+		return 0
+	fi
+
+	return 99 # should never reach this.
+}
+
+##### Find last history backup ###############################################
+function backup_findlasthist {
+	# Parm:
+	#     backup destination, must be local, without YYYY/mm/dd
+	# Output:
+	#     Directory of last backup, "" if not found
+	local bck_dst="$1"
+
+	local dirs_year dir_year dirs_month dir_month dirs_day dir_day
+	local IFS=$'\n'
+
+	if [ -z "$bck_dst" ] ; then
+		printf "Internal Error: Empty Param\n" >&2
+		return 1
+	fi
+
+	#----- check year --------------------------------------------------------
+	dirs_year=$(ls -1rd $bck_dst/2* 2>/dev/null) # ignore not-found error
+
+	for dir_year in $dirs_year ; do
+		if [[ ! "$dir_year" =~ /[0-9]{4}$ ]] ; then
+			printf "Warning: Ignoring Invalid year-dir-format in '%s'\n" \
+				"$dir_year" >&2
+			continue
+		fi
+
+		dirs_month=$(ls -1rd $dir_year/* 2>/dev/null) # ignore not-found error
+		for dir_month in $dirs_month ; do
+			if [[ ! "$dir_month" =~ /[0-9]{2}$ ]] ; then
+				printf "Warning: Ignoring Invalid month-dir-format in '%s'\n" \
+					"$dir_month" >&2
+				continue
+			fi
+
+			# month is valid -> search for backups in it.
+			# if not found continue with next month
+			dirs_day=$(ls -1rd $dir_month/* 2>/dev/null) # ignore not-found error
+			for dir_day in $dirs_day ; do
+				if [[ ! "$dir_day" =~ /[0-9]{2}$ ]] ; then
+					printf "Warning: Ignoring Invalid day-dir-format in '%s'\n" \
+						"$dir_day" >&2
+					continue
+				fi
+
+				# day is valid -> use it as last backup!
+				printf "%s" "$dir_day"
+				return 0
+			done
+		done
+	done
+
+	# no previous backup found -> return blank
+	printf ""
+	return 0
 }
 
 ##### Notify on Backup result and Deleted files via Email ####################
@@ -252,6 +401,7 @@ function backup {
 	local bck_global_prm=0
 	local bck_runon=""
 	local bck_local_prm=()
+	local bck_histdate=""
 	while [ $# -gt 0 ] ; do
 		if [ "$1" == "--runonsrc" ] ; then # Execute on source
 			check_runon_empty "$bck_runon" || return 1
@@ -265,6 +415,17 @@ function backup {
 			check_runon_empty "$bck_runon" || return 1
 			bck_runon=0
 			shift
+		elif [ "$1" == "--hist" ] ; then # Backup in history mode
+			bck_histdate="$(date +%Y/%m/%d)" || return 1
+			shift
+		elif [ "$1" == "--histdate" ] ; then
+			check_another_parm "$#" "$1" || return 1
+			bck_histdate="$(date +%Y/%m/%d "--date=$2")" || return 1
+			shift 2
+		elif [ "$1" == "--histraw" ] ; then
+			check_another_parm "$#" "$1" || return 1
+			bck_histdate="$2"
+			shift 2
 		elif [ "$1" == "--srcsecret" ] ; then
 			check_another_parm "$#" "$1" || return 1
 			bck_src_secret="$2"
@@ -313,6 +474,11 @@ function backup {
 		printf "Error: Target Secret File %s not found.\n" \
 			"$bck_tgt_secret"
 		return 1
+	elif	[ ! -z "$bck_histdate" ] && 
+			[[ ! "$bck_histdate" =~ [0-9]{4}/[0-9]{2}/[0-9]{2} ]] ; then
+		printf "Error: Invalid format %s in --hist* (not YYYY/MM/DD).\n" \
+			"$bck_histdate"
+		return 1
 	elif [ "$bck_type" == imap ] ; then
 		bck_src_secret_type="password"
 		bck_dst_secret_type="id_rsa"
@@ -354,6 +520,7 @@ function backup {
 				"$bck_dst" \
 				"$bck_src_secret" \
 				"$bck_dst_secret" \
+				"$bck_histdate" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		else
@@ -365,6 +532,7 @@ function backup {
 				"$bck_dst" \
 				"" \
 				"$bck_dst_secret" \
+				"$bck_histdate" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		fi
@@ -375,6 +543,7 @@ function backup {
 				"$bck_dst" \
 				"$bck_src_secret" \
 				"$bck_dst_secret" \
+				"$bck_histdate" \
 				"${bck_local_prm[@]}"
 			rc=$?
 	elif [ "$bck_runon" == "1" ] ; then
@@ -385,6 +554,7 @@ function backup {
 				"$bck_dst" \
 				"$bck_src_secret" \
 				"$bck_dst_secret" \
+				"$bck_histdate" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		else
@@ -396,6 +566,7 @@ function backup {
 				"$bck_dst" \
 				"$bck_src_secret" \
 				"" \
+				"$bck_histdate" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		fi
@@ -476,4 +647,3 @@ else
 	printf "not all Backup Tasks have been completed successfully.\n"
 	exit 1
 fi
-
