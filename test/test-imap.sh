@@ -45,57 +45,63 @@ function test_imap {
 	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$mail_smtpsrv" || return 1
 
 	# No password and default does not exist
-	test_exec_backupdocker 1 \
+	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV"
+		)
 
 	# Not existing password file
-	test_exec_backupdocker 1 \
+	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
 		--srcsecret "filedoesnotexist"
+		)
 
 	# IMAP Wrong password
-	test_exec_backupdocker 1 \
+	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_wrongpassword.password
+		)
 	
 	# IMAP Wrong password - remote backup dest
 	$exec_remote &&
-	test_exec_backupdocker 1 \
+	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_wrongpassword.password \
 		--dstsecret /secrets/id_rsa
+		)
 
 	# IMAP OK with Empty Mailbox
-	test_exec_backupdocker  0 \
+	eval $(test_exec_backupdocker  0 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
-		--srcsecret /backup/imap_password.password &&
+		--srcsecret /backup/imap_password.password
+		) &&
 	test_expect_files "backup/INBOX/new" 0 &&
 	test_expect_files "backup/INBOX/cur" 0
 
 	# IMAP OK with Empty Mailbox - remote backup dest
 	$exec_remote &&
-	test_exec_backupdocker 0 \
+	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa &&
+		--dstsecret /secrets/id_rsa
+		) &&
 	test_expect_files "backup-rem/INBOX/new" 0 &&
 	test_expect_files "backup-rem/INBOX/cur" 0
 
@@ -103,67 +109,73 @@ function test_imap {
 	cp "$MAIL_PW" \
 		$TESTSETDIR/backup/$MAIL_ADR.password \
 		|| return 1
-	test_exec_backupdocker 1 \
+	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV"
+		)
 
 	# IMAP KO without password remote
 	$exec_remote &&
-	test_exec_backupdocker 1 \
+	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
 		--dstsecret /secrets/id_rsa
+		)
 
 	# Store Testmail
 	test_putImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV" \
 		|| return 1
 
 	# IMAP OK with one Mail
-	test_exec_backupdocker 0 \
+	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
-		--srcsecret /backup/imap_password.password &&
+		--srcsecret /backup/imap_password.password
+		) &&
 	test_expect_files "backup/INBOX/new" 0 &&
 	test_expect_files "backup/INBOX/cur" 1
 	# @TODO test content of file
 
 	# IMAP OK with one Mail in subdirectory
-	test_exec_backupdocker 0 \
+	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		/backup/testimapsubdir \
 		"$MAIL_SRV" \
-		--srcsecret /backup/imap_password.password &&
+		--srcsecret /backup/imap_password.password
+		) &&
 	test_expect_files "backup/testimapsubdir/INBOX/new" 0 &&
 	test_expect_files "backup/testimapsubdir/INBOX/cur" 1
 
 	# IMAP OK with one Mail - remote backup dest
 	$exec_remote &&
-	test_exec_backupdocker 0 \
+	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		$my_ip:$TESTSETDIR/backup-rem \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa &&
+		--dstsecret /secrets/id_rsa
+		) &&
 	test_expect_files "backup-rem/INBOX/new" 0 &&
 	test_expect_files "backup-rem/INBOX/cur" 1
 
 	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV" || return 1
 
 	# IMAP OK with Empty Mailbox
-	test_exec_backupdocker 0 \
+	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
 		/backup \
 		"$MAIL_SRV" \
-		--srcsecret /backup/imap_password.password &&
+		--srcsecret /backup/imap_password.password
+		) &&
 	test_expect_files "backup/INBOX/new" 0 &&
 	test_expect_files "backup/INBOX/cur" 0
 

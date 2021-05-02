@@ -30,10 +30,10 @@ function test_exec_backupdocker {
 	docker_cmd+=" nafets227/backup:test"
 	docker_cmd+=" . /backup/backup"
 
-	test_exec_simple \
+	printf "test_exec_simple \"%s\" \"%s\" \"%s\"" \
 		"$docker_cmd" \
 		"$rc_exp" \
-		"Backup Command \"$*\""
+		"Backup Command $*"
 
 	return $TESTRC
 }
