@@ -351,11 +351,9 @@ function backup {
 			"$bck_histdate"
 		return 1
 	elif [ "$bck_type" == imap ] ; then
-		bck_src_secret_type="password"
-		bck_dst_secret_type="id_rsa"
+		:
 	elif [ "$bck_type" == file ] ; then
-		bck_src_secret_type="id_rsa" # @TODO Check if bck_*_secret_type is really used
-		bck_dst_secret_type="id_rsa"
+		:
 #	elif [ "$bck_type" != mysql-kube ] &&
 #	elif [ "$bck_type" != notify ] &&
 	else
