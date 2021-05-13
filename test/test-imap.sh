@@ -48,7 +48,7 @@ function test_imap {
 	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		/backup \
+		/backup/imap \
 		"$MAIL_SRV"
 		)
 
@@ -56,7 +56,7 @@ function test_imap {
 	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		/backup \
+		/backup/imap \
 		"$MAIL_SRV" \
 		--srcsecret "filedoesnotexist"
 		)
@@ -65,7 +65,7 @@ function test_imap {
 	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		/backup \
+		/backup/imap \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_wrongpassword.password
 		)
@@ -75,7 +75,7 @@ function test_imap {
 	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		$my_ip:$TESTSETDIR/backup-rem \
+		$my_ip:$TESTSETDIR/backup-rem/imap \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_wrongpassword.password \
 		--dstsecret /secrets/id_rsa
@@ -85,25 +85,25 @@ function test_imap {
 	eval $(test_exec_backupdocker  0 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		/backup \
+		/backup/imap \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password
 		) &&
-	test_expect_files "backup/INBOX/new" 0 &&
-	test_expect_files "backup/INBOX/cur" 0
+	test_expect_files "backup/imap/INBOX/new" 0 &&
+	test_expect_files "backup/imap/INBOX/cur" 0
 
 	# IMAP OK with Empty Mailbox - remote backup dest
 	$exec_remote &&
 	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		$my_ip:$TESTSETDIR/backup-rem \
+		$my_ip:$TESTSETDIR/backup-rem/imap \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
 		) &&
-	test_expect_files "backup-rem/INBOX/new" 0 &&
-	test_expect_files "backup-rem/INBOX/cur" 0
+	test_expect_files "backup-rem/imap/INBOX/new" 0 &&
+	test_expect_files "backup-rem/imap/INBOX/cur" 0
 
 	# IMAP KO without password
 	cp "$MAIL_PW" \
@@ -112,7 +112,7 @@ function test_imap {
 	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		/backup \
+		/backup/imap \
 		"$MAIL_SRV"
 		)
 
@@ -121,7 +121,7 @@ function test_imap {
 	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		$my_ip:$TESTSETDIR/backup-rem \
+		$my_ip:$TESTSETDIR/backup-rem/imap \
 		"$MAIL_SRV" \
 		--dstsecret /secrets/id_rsa
 		)
@@ -134,37 +134,37 @@ function test_imap {
 	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		/backup \
+		/backup/imap \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password
 		) &&
-	test_expect_files "backup/INBOX/new" 0 &&
-	test_expect_files "backup/INBOX/cur" 1
+	test_expect_files "backup/imap/INBOX/new" 0 &&
+	test_expect_files "backup/imap/INBOX/cur" 1
 	# @TODO test content of file
 
 	# IMAP OK with one Mail in subdirectory
 	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		/backup/testimapsubdir \
+		/backup/imap/testimapsubdir \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password
 		) &&
-	test_expect_files "backup/testimapsubdir/INBOX/new" 0 &&
-	test_expect_files "backup/testimapsubdir/INBOX/cur" 1
+	test_expect_files "backup/imap/testimapsubdir/INBOX/new" 0 &&
+	test_expect_files "backup/imap/testimapsubdir/INBOX/cur" 1
 
 	# IMAP OK with one Mail - remote backup dest
 	$exec_remote &&
 	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		$my_ip:$TESTSETDIR/backup-rem \
+		$my_ip:$TESTSETDIR/backup-rem/imap \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
 		) &&
-	test_expect_files "backup-rem/INBOX/new" 0 &&
-	test_expect_files "backup-rem/INBOX/cur" 1
+	test_expect_files "backup-rem/imap/INBOX/new" 0 &&
+	test_expect_files "backup-rem/imap/INBOX/cur" 1
 
 	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV" || return 1
 
@@ -172,12 +172,12 @@ function test_imap {
 	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		/backup \
+		/backup/imap \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password
 		) &&
-	test_expect_files "backup/INBOX/new" 0 &&
-	test_expect_files "backup/INBOX/cur" 0
+	test_expect_files "backup/imap/INBOX/new" 0 &&
+	test_expect_files "backup/imap/INBOX/cur" 0
 
 	return 0
 }
