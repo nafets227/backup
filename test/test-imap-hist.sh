@@ -240,7 +240,6 @@ function test_imap_hist {
 	test_expect_files "backup-rem/imap-hist/2021/01/16/INBOX/new" 0 &&
 	test_expect_files "backup-rem/imap-hist/2021/01/16/INBOX/cur" 0
 
-return 0 # @TODO activate remaining tests
 	# IMAP KO with date before last backup 2021-01-07
 	eval $(test_exec_backupdocker  1 \
 		"backup imap" \
@@ -282,13 +281,14 @@ return 0 # @TODO activate remaining tests
 
 	# IMAP OK with Empty Mail and default date=today - remote backup dest
 	datedir="$(date +%Y/%m/%d)"
-	eval $(test_exec_backupdocker  0 \
+	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		--hist \
 		"$MAIL_ADR" \
-		/backup/imap-hist \
+		$my_ip:$TESTSETDIR/backup-rem/imap-hist \
 		"$MAIL_SRV" \
-		--srcsecret /backup/imap_password.password
+		--srcsecret /backup/imap_password.password \
+		--dstsecret /secrets/id_rsa
 		) &&
 	test_expect_files "backup-rem/imap-hist/$datedir/INBOX/new" 0 &&
 	test_expect_files "backup-rem/imap-hist/$datedir/INBOX/cur" 0
