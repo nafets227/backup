@@ -242,9 +242,8 @@ function backup_default_runon {
 	else
 		if   [[ "$bck_dst" == *":"* ]] &&
 		     [[ "$bck_src" == *":"* ]] ; then
-			printf "Error: Missing option --runonsrc or "
-			printf "--runondst when copying from remote "
-			printf "to remote\n"
+			printf "Error: Missing option --runonsrc or --runondst %s\n" \
+				"when copying from remote to remote" >&2
 			return 1
 		elif [[ "$bck_dst" != *":"* ]] &&
 		     [[ "$bck_src" != *":"* ]] ; then
@@ -255,7 +254,7 @@ function backup_default_runon {
 			bck_runon=1
 		else
 			prinf "Internal Error at %s.\n" \
-				"autodetecting runon"
+				"autodetecting runon" >&2
 			return 99
 		fi
 	fi
