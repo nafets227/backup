@@ -397,7 +397,7 @@ function backup {
 		else
 			backup_remote \
 				"${bck_src%%:*}" \
-				"$bck_src_secret"
+				"$bck_src_secret" \
 				"$bck_type" \
 				"$bck_src" \
 				"$bck_dst" \
