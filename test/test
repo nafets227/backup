@@ -98,6 +98,7 @@ fi
 if test_build ; then
 	test_runempty
 	test_file
+	test_file_hist
 	test_imap
 	test_imap_hist
 fi
