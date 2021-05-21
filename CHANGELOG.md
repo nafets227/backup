@@ -1,5 +1,10 @@
 # nafets227/backup CHANGELOG
 
+## 0.4 (2021-05-21)
+* File backup
+* Small fixes
+* Improve tests and code quality
+
 ## 0.3 (2021-05-03)
 * History Mode
 
