@@ -16,6 +16,7 @@ the second backup we are hard-linking to unchanged filed of previous backup.
 # Sources #
 backup supports currently the following sources:
   - IMAP
+  - File
 
 # How to use #
 ## Easy use 
@@ -33,7 +34,7 @@ other complex setups.
 
 ## parameters defining a backup action
   1. "backup" (fix)
-  2. Type (currently only "imap" supported)
+  2. Type (currently only "imap" or "file" supported)
   3. Source
   4. Destination
   5. global options
@@ -82,6 +83,23 @@ deleted on the file directory
   1. IMAP Server Url (e.g. imap.mydomain.xxx:143) 
      \[mandatory\]
 
+# File
+Backups data from any server reachable via rsync and/or ssh. It is based on
+rsync, so only modified files are copied (delta-approach). No more existing
+files are deleted in the target.
+
+### File Global paramaters
+  * Source - Directoy of Files to be backed up. Optionally prefixed by Server
+    name folloed by a colon
+  * Destination - Directory where to store the downloaded EMails. Optionally
+    prefixed by Server name followed by a colon.
+  * Source Secret
+    is the password to logon to the server \[optional\]
+    mandatory if the Source is remote
+  * Destination Secret
+    is the password to connect to the target server \[optional\]
+    mandatory if the Destination is remote
+
 # Security (Secrets)
 Each remote system needs a Secret for Authentication and authorisation.
 Typical form of Secrets are public keys or passwords. If needed, Secrets can
@@ -92,7 +110,6 @@ version 0.2.1 no Defaults are applied.
 Features planned in the future
   - can backup mysql databases
   - can backup Samba configuration
-  - ssh to source system
   - Find a way to improve sync to cloud when files / directories have
     been moved. It would be fantastic if we can reuse files that are
     already present in the backup.

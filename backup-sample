@@ -11,19 +11,17 @@ MY_DEST="myserver.mydomain.xxx"
 # General syntax of each backup is 
 # backup <type> <source> <dest> [ global-options ] [ -- ] [ type-options ]
 
-backup imap "example@mydomain.xxx" "$MY_DEST:/imap/example@mydomain.xxx" "imap.mydomain.xxx:143"
-
-# srcsecret and dstsecret could be ommited, because they match the default
 backup imap "example@mydomain.xxx" "$MY_DEST:/imap/example@mydomain.xxx" "imap.mydomain.xxx:143" --srcsecret "/backup/example@mydomain.xxx.password" --dstsecret "/backup/tgt.id_rsa"
 
+backup file "/mydir" "$MY_DEST:/mydir-backup" --dstsecret "/backup/tgt.id_rsa"
+# you can use rsync options after --:
+backup file "/mydir2" "$MY_DEST:/mydir2-backup" --dstsecret "/backup/tgt.id_rsa" \
+    --hist \
+	-- "--exclude=/file-not-to-be-backuped"
+
 ###### Not implemented in this version yet ###################################
-#backup file "/mydir" "$MY_DEST:/mydir-backup" \
-## you can use rsync options after --:
-#backup file "/mydir2" "$MY_DEST:/mydir2-backup" --hist \
-#	-- "--exclude=/file-not-to-be-backuped"
-#
 #backup mysql-kube "kube.mydomain.xxx" "$MY_DEST:/mysql"
 #
-## NOt yet clear how to define the interface:
+## Not yet clear how to define the interface:
 #backup notify --deleted "nafets227.backup <no-reply@mydomain.xxx" \
 #	"notify@mydomain.xxx"
