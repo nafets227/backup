@@ -118,7 +118,7 @@ function test_file_srcdest {
 		"$dest" \
 		"$@" \
 		)
-		
+
 	test_expect_files "backup/file/dest/2020/06/11" 0
 	test_expect_files "backup/file/dest/2020/06/12" 1
 	test_expect_files "backup/file/dest/2020/06/13" 2 && # includes subdir!
@@ -139,30 +139,6 @@ function test_file_srcdest {
 
 ##### Tests for File backup (rsync) ##########################################
 function test_file_hist {
-	if which "ip" >/dev/null ; then
-		my_ip="$USER@$(set -o pipefail
-			ip -4 -j a show dev docker0 primary |
-			jq '.[].addr_info[0].local')" &&
-		my_ip=${my_ip//\"} &&
-		exec_remote=true \
-		|| return 1
-	elif which "ipconfig" >/dev/null ; then
-		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
-		test ! -z "$my_ip" &&
-		exec_remote=true \
-		|| return 1
-	else
-		printf "\tSkipping FILE Remote Tests (ip/ipconfig).\n"
-		return 1
-	fi
-
-	if [[ "$OSTYPE" =~ darwin* ]] ; then
-		printf "Activate MacOS workaround - using /usr/local/bin/rsync\n"
-		rsync_opt="--rsync-path=/usr/local/bin/rsync"
-	else
-		rsync_opt=""
-	fi
-
     ##### Specific tests for local/remote
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist-1" \

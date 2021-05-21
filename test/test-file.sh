@@ -118,30 +118,6 @@ function test_file_srcdest {
 
 ##### Tests for File backup (rsync) ##########################################
 function test_file {
-	if which "ip" >/dev/null ; then
-		my_ip="$USER@$(set -o pipefail
-			ip -4 -j a show dev docker0 primary |
-			jq '.[].addr_info[0].local')" &&
-		my_ip=${my_ip//\"} &&
-		exec_remote=true \
-		|| return 1
-	elif which "ipconfig" >/dev/null ; then
-		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
-		test ! -z "$my_ip" &&
-		exec_remote=true \
-		|| return 1
-	else
-		printf "\tSkipping FILE Remote Tests (ip/ipconfig).\n"
-		return 1
-	fi
-
-	if [[ "$OSTYPE" =~ darwin* ]] ; then
-		printf "Activate MacOS workaround - using /usr/local/bin/rsync\n"
-		rsync_opt="--rsync-path=/usr/local/bin/rsync"
-	else
-		rsync_opt=""
-	fi
-
     ##### Specific tests for local/remote
 	mkdir -p "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2" || return 1
 

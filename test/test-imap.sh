@@ -15,18 +15,8 @@ function test_imap {
 	elif ! test_assert_tools "offlineimap" "jq" ; then
 		printf "\tSkipping IMAP Remote Tests.\n"
 		exec_remote=false
-	elif which "ip" >/dev/null ; then
-		my_ip="$USER@$(set -o pipefail
-			ip -4 -j a show dev docker0 primary |
-			jq '.[].addr_info[0].local')" &&
-		my_ip=${my_ip//\"} &&
-		exec_remote=true \
-		|| return 1
-	elif which "ipconfig" >/dev/null ; then
-		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
-		test ! -z "$my_ip" &&
-		exec_remote=true \
-		|| return 1
+	elif [ ! -z "$my_ip" ] ; then
+		exec_remote=true
 	else
 		printf "\tSkipping IMAP Remote Tests (ip/ipconfig).\n"
 		exec_remote=false

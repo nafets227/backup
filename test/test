@@ -6,6 +6,34 @@
 #
 # Test script
 
+##### Test Init ##############################################################
+# Initialise tests including any necessary workaround
+function test_init {
+
+	if which "ip" >/dev/null ; then
+		my_ip="$USER@$(set -o pipefail
+			ip -4 -j a show dev docker0 primary |
+			jq '.[].addr_info[0].local')" &&
+		my_ip=${my_ip//\"} \
+		|| return 1
+	elif which "ipconfig" >/dev/null ; then
+		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
+		test ! -z "$my_ip" \
+		|| return 1
+	else
+		my_ip=""
+	fi
+
+	if [[ "$OSTYPE" =~ darwin* ]] ; then
+		printf "Activate MacOS workaround - using /usr/local/bin/rsync\n"
+		rsync_opt="--rsync-path=/usr/local/bin/rsync"
+	else
+		rsync_opt=""
+	fi
+
+	return 0
+}
+
 ##### Test Executer ##########################################################
 # Parameters:
 #     1 - command in custom backup shell
@@ -95,7 +123,7 @@ if [ ! -d $TESTSETDIR/backup ] ; then
 	mkdir $TESTSETDIR/backup || return 1
 fi
 
-if test_build ; then
+if test_build && test_init ; then
 	test_runempty
 	test_file
 	test_file_hist
