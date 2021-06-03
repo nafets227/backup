@@ -1,5 +1,7 @@
 # nafets227/backup CHANGELOG
 
+## 0.4.1 (2021-06-03)
+* Fix Param handling after "--" for rsync params (backup type file)
 ## 0.4 (2021-05-21)
 * File backup
 * Small fixes
