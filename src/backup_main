@@ -34,20 +34,26 @@ function backup_remote {
 
 	local rc
 	printf "===== Start Executing on %s =====\n" "$remotemachine"
-	ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF &&
-		[[ x"$DEBUG" == x1 ]] && set -x
-		mkdir -p $REMOTE_MODDIR
+	local remdir
+	remdir=$(ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF
+		# this mktemp call works on both Linux and MacOS with slightly different
+		# results:
+		# Linux: nafets227.backup.<random>
+		# MacOS: nafets227.backup.XXXXXXXXXX.<random>
+		# but the delta is acceptable
+		mktemp -d -t nafets227.backup.XXXXXXXXXX
 		EOF
+		) &&
 	scp -o StrictHostKeyChecking=no -i $remotesecret \
-		-r "$(dirname "$0")"/*.sh $remotemachine:$REMOTE_MODDIR &&
+		-r "$0" "$(dirname "$0")"/*.sh $remotemachine:$remdir &&
 	{
 		if [ -z "$bck_src_secret" ] ; then
 			true
 		else
 			scp -o StrictHostKeyChecking=no -i $remotesecret \
 				$bck_src_secret \
-				$remotemachine:$REMOTE_MODDIR/srcsecret &&
-			bck_src_secret="--srcsecret $REMOTE_MODDIR/srcsecret"
+				$remotemachine:$remdir/srcsecret &&
+			bck_src_secret="--srcsecret $remdir/srcsecret"
 		fi
 	} &&
 	{
@@ -56,8 +62,8 @@ function backup_remote {
 		else
 			scp -o StrictHostKeyChecking=no -i $remotesecret \
 				$bck_dst_secret \
-				$remotemachine:$REMOTE_MODDIR/dstsecret &&
-			bck_dst_secret="--dstsecret $REMOTE_MODDIR/dstsecret"
+				$remotemachine:$remdir/dstsecret &&
+			bck_dst_secret="--dstsecret $remdir/dstsecret"
 		fi
 	} &&
 	ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF
@@ -65,7 +71,7 @@ function backup_remote {
 		export DEBUG=$DEBUG
 		# please note the trick to have a correct quoting on the
 		# destination machine. Simply using \"\$@\" does not work.
-		$REMOTE_MODDIR/backup_main backup --local \
+		$remdir/backup_main backup --local \
 			"$bck_type" \
 			"$bck_src" \
 			"$bck_dst" \
@@ -453,7 +459,6 @@ function backup {
 
 ##### Main ###################################################################
 printf "starting ENTRYPOINT backup_main\n"
-readonly REMOTE_MODDIR=/usr/local/lib/nafets227.backup
 
 ##### Parse Configs / Envirionment ###########################################
 DEBUG=${DEBUG-0}
