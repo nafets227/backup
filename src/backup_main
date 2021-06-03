@@ -39,7 +39,7 @@ function backup_remote {
 		mkdir -p $REMOTE_MODDIR
 		EOF
 	scp -o StrictHostKeyChecking=no -i $remotesecret \
-		-r $MODDIR/* $remotemachine:$REMOTE_MODDIR &&
+		-r "$(dirname "$0")"/*.sh $remotemachine:$REMOTE_MODDIR &&
 	{
 		if [ -z "$bck_src_secret" ] ; then
 			true
@@ -453,7 +453,6 @@ function backup {
 
 ##### Main ###################################################################
 printf "starting ENTRYPOINT backup_main\n"
-readonly MODDIR=/usr/lib/nafets227.backup
 readonly REMOTE_MODDIR=/usr/local/lib/nafets227.backup
 
 ##### Parse Configs / Envirionment ###########################################
