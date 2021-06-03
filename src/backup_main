@@ -101,15 +101,8 @@ function backup_local {
 	local bck_local_prm=()
 	local bck_dst_full
 
-	while [ $# -gt 0 ] ; do
-		if [ "$1" == "--" ] ; then # end of global parms
-			bck_local_prm+=( "$@" )
-			shift $#
-		else # unknown parm -> probably type-specific
-			bck_local_prm+=( "$1" )
-			shift
-		fi
-	done
+	bck_local_prm+=( "$@" )
+	shift $#
 
 	if [ ! -z "$bck_histdate" ] ; then # History mode
 		# bck_dst_full="$bck_dst/$bck_histdate.in-progress"
@@ -306,6 +299,7 @@ function backup {
 			bck_dst_secret="$2"
 			shift 2
 		elif [ "$1" == "--" ] ; then # end of global parms
+			shift # ignore parm "--"
 			bck_local_prm+=( "$@" )
 			shift $#
 		elif [ "$bck_global_prm" == 0 ] ; then

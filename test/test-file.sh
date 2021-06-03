@@ -54,6 +54,17 @@ function test_file_srcdest {
 		) &&
 	test_expect_files "backup/file/dest" 0
 
+	# rsync parameters with empty path
+	eval $(test_exec_backupdocker 0 \
+		"backup file" \
+		"$source" \
+		"$dest" \
+		"$@" \
+		-- \
+		--verbose
+		) &&
+	test_expect_files "backup/file/dest" 0
+
 	# backup one file
 	echo "Dummyfile" >$TESTSETDIR/backup/file/source/dummyfile || return 1
 	eval $(test_exec_backupdocker 0 \
