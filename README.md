@@ -117,7 +117,7 @@ Features planned in the future
 
 # Hacking #
 If you want to develop and test on MacOS, you need:
-  - brew install offlineimap jq bash
+  - brew install offlineimap jq bash rsync
   - activated local ssh server
   - trust your own ssh key (e.g. ~/.ssh/id_rsa.pub must be in authorized_keys)
   - tested with docker desktop for Mac
