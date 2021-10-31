@@ -100,6 +100,15 @@ files are deleted in the target.
     is the password to connect to the target server \[optional\]
     mandatory if the Destination is remote
 
+# rclone
+Backups data from various Clouds, leveraging [rclone](https://rclone.org/).
+
+### rcone Global paramaters
+  * Source - Name of the cloud in rclone config
+  * Destination - Directory where to store the download.
+    Optionally prefixed by Server name followed by a colon.
+  * Source Secret - rclone.conf file to be used
+
 # Security (Secrets)
 Each remote system needs a Secret for Authentication and authorisation.
 Typical form of Secrets are public keys or passwords. If needed, Secrets can
@@ -117,10 +126,22 @@ Features planned in the future
 
 # Hacking #
 If you want to develop and test on MacOS, you need:
-  - brew install offlineimap jq bash rsync
+  - brew install offlineimap jq bash rsync rclone
   - activated local ssh server
   - trust your own ssh key (e.g. ~/.ssh/id_rsa.pub must be in authorized_keys)
   - tested with docker desktop for Mac
+
+To run tests in test subdirectory you need to have some test data available. ATTENTION: Test data will be DELETED on every run, so make sure you don´t have any data on it!
+  - IMAP Test Account
+
+    Setup an IMAP Test Account and set Environment variables $MAIL_ADR, $MAIL_SRV and $MAIL_PW accordingly
+  - rclone Test Cloud
+
+    Setup a Test-Cloud (I use Microsoft OneDrive that is for free).
+    Create an rclone.cfg and pass its filename in $RCLONE_CONF and the Cloud config to be used in $RCLONE_NAME.
+    You may wan to use something like
+    ```rclone --config ./rclonf.conf config``` to create the file.
+
 start with running test/test to verify your environment
 
 # Reference #
@@ -132,5 +153,6 @@ License: GPLv3, see [LICENSE](LICENSE)
 Leveraging on 
   - [Rsync](https://rsync.samba.org/)
   - [Offlineimap](https://www.offlineimap.org/)
+  - [rclone](https://rclone.org/)
 
 [1]: backup-sample

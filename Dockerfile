@@ -2,8 +2,8 @@
 #
 # Backup solution in Docker leveraging on rsync
 #
-# (C) 2017 Stefan Schallenberg
-
+# (C) 2017-2021 Stefan Schallenberg
+FROM rclone/rclone:1.56.0 AS rclone
 FROM alpine:3.6
 
 RUN \
@@ -17,6 +17,8 @@ RUN \
 		rsync \
 		&& \
 	rm -rf /var/cache/apk/*
+
+COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
 
 # maybe include gigasync
 # https://github.com/noordawod/gigasync

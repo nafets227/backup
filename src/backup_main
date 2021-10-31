@@ -352,6 +352,8 @@ function backup {
 		return 1
 	elif [ "$bck_type" == imap ] ; then
 		:
+	elif [ "$bck_type" == rclone ] ; then
+		:
 	elif [ "$bck_type" == file ] ; then
 		:
 #	elif [ "$bck_type" != mysql-kube ] &&
