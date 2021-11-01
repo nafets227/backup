@@ -1,5 +1,8 @@
 # nafets227/backup CHANGELOG
 
+## 0.5 (2021-11-01)
+* Support Cloud backup leveraging rclone
+
 ## 0.4.2 (2021-06-03)
 * use tempdir on remote. Previously used fix path /usr/lib/nafets227.backup
   may not be writeable, especially for non-admin users.
