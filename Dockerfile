@@ -11,14 +11,34 @@ RUN \
 	apk add --no-cache \
 		bash \
 		ca-certificates \
+		krb5 \
 		mysql-client \
-		offlineimap \
 		openssh-client \
+		py3-pip \
 		rsync \
 		&& \
 	rm -rf /var/cache/apk/*
 
 COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
+
+# Download and install offlineimap3 (replaces offlineimap)
+# offlineimap3 is the successort of offlineimap,
+# migrated from python2.x to python 3
+RUN \
+	set -x && \
+	DEVPACKAGES="curl gcc krb5-dev python3-dev musl-dev" && \
+	apk add --no-cache $DEVPACKAGES && \
+	mkdir /offlineimap3 && cd /offlineimap3 && \
+	curl -L \
+		-o offlineimap3.tgz \
+		https://github.com/OfflineIMAP/offlineimap3/archive/refs/tags/v8.0.0.tar.gz && \
+	tar xvfz offlineimap3.tgz && cd offlineimap3-* && \
+	python3 -m pip install --upgrade pip && pip install -r requirements.txt && \
+	python3 setup.py install && \
+	cd && \
+	rm -rf /offlineimap3 && \
+	apk del $DEVPACKAGES && \
+	rm -rf /var/cache/apk/*
 
 # maybe include gigasync
 # https://github.com/noordawod/gigasync
