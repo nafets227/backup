@@ -34,7 +34,7 @@ function backup_remote {
 
 	local rc
 	printf "===== Start Executing on %s =====\n" "$remotemachine"
-	local remdir
+	local remdir rem_src_secret rem_dst_secret
 	remdir=$(ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF
 		# this mktemp call works on both Linux and MacOS with slightly different
 		# results:
@@ -48,25 +48,25 @@ function backup_remote {
 		-r "$0" "$(dirname "$0")"/*.sh $remotemachine:$remdir &&
 	{
 		if [ -z "$bck_src_secret" ] ; then
-			true
+			rem_src_secret=""
 		else
 			scp -o StrictHostKeyChecking=no -i $remotesecret \
 				$bck_src_secret \
 				$remotemachine:$remdir/srcsecret &&
-			bck_src_secret="--srcsecret $remdir/srcsecret"
+			rem_src_secret="--srcsecret $remdir/srcsecret"
 		fi
 	} &&
 	{
 		if [ -z "$bck_dst_secret" ] ; then
-			true
+			rem_dst_secret=""
 		else
 			scp -o StrictHostKeyChecking=no -i $remotesecret \
 				$bck_dst_secret \
 				$remotemachine:$remdir/dstsecret &&
-			bck_dst_secret="--dstsecret $remdir/dstsecret"
+			rem_dst_secret="--dstsecret $remdir/dstsecret"
 		fi
 	} &&
-	ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF
+	ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF &&
 		[[ x"$DEBUG" == x1 ]] && set -x
 		export DEBUG=$DEBUG
 		# please note the trick to have a correct quoting on the
@@ -75,8 +75,8 @@ function backup_remote {
 			"$bck_type" \
 			"$bck_src" \
 			"$bck_dst" \
-			$bck_src_secret \
-			$bck_dst_secret \
+			$rem_src_secret \
+			$rem_dst_secret \
 			$rem_hist \
 			$(
 			for s in "$@" ; do
@@ -85,6 +85,24 @@ function backup_remote {
 			)
 		exit \$?
 		EOF
+	{
+		if [ -z "$bck_src_secret" ] ; then
+			true
+		else
+			scp -o StrictHostKeyChecking=no -i $remotesecret \
+				$remotemachine:$remdir/srcsecret \
+				$bck_src_secret
+		fi
+	} &&
+	{
+		if [ -z "$bck_dst_secret" ] ; then
+			true
+		else
+			scp -o StrictHostKeyChecking=no -i $remotesecret \
+				$remotemachine:$remdir/dstsecret \
+				$bck_dst_secret
+		fi
+	}
 	rc=$?
 	printf "===== Returning with RC=%d from %s =====\n" \
 		"$rc" "$remotemachine"
