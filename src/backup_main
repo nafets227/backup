@@ -372,6 +372,8 @@ function backup {
 		:
 	elif [ "$bck_type" == rclone ] ; then
 		:
+	elif [ "$bck_type" == rclone_unittest_updateconf ] ; then
+		:
 	elif [ "$bck_type" == file ] ; then
 		:
 #	elif [ "$bck_type" != mysql-kube ] &&

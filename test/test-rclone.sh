@@ -122,6 +122,28 @@ function test_rclone {
 		) &&
 	test_expect_files "backup-rem/rclone" 0
 
+	# Verify modifying conf
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
+	eval $(test_exec_backupdocker 0 \
+		"backup rclone_unittest_updateconf" \
+		"$RCLONE_NAME" \
+		/backup/rclone \
+		--srcsecret /backup/rclone-update.conf
+		) &&
+	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
+
+	# Verify modifying conf - remote
+	$exec_remote &&
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
+	eval $(test_exec_backupdocker 0 \
+		"backup rclone_unittest_updateconf" \
+		"$RCLONE_NAME" \
+		$my_ip:$TESTSETDIR/backup-rem/rclone \
+		--srcsecret /backup/rclone-update.conf \
+		--dstsecret /secrets/id_rsa
+		) &&
+	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
+
 	# Store Testfiles
 	test_putRclone "${RCLONE_NAME}test.txt" "$RCLONE_CONF" &&
 	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" "$RCLONE_CONF" &&
