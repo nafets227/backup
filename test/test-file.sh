@@ -202,9 +202,6 @@ function test_file {
 	##### common tests for all variants source,dest in local,remote
 	for source in "/backup" "$my_ip:$TESTSETDIR/backup" ; do
 		for dest in "/backup" "$my_ip:$TESTSETDIR/backup" ; do
-#	for source in "$my_ip:$TESTSETDIR/backup" ; do
-#	for source in "/backup"  ; do
-#		for dest in "/backup" ; do
 			secretparm=""
 			[[ "$source" == *":"* ]] && 
 				secretparm+="--srcsecret /secrets/id_rsa "
