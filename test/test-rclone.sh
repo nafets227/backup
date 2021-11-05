@@ -68,7 +68,7 @@ function test_rclone {
 	eval $(test_exec_backupdocker 1 \
 		"backup rclone" \
 		"mydummyname" \
-		/backup/rclone
+		/backup/rclone \
 		)
 
 	# Wrong src, nothing after ":"
