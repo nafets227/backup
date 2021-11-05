@@ -6,8 +6,8 @@
 #
 # Test script for File in history mode
 
-##### test_file_srcdest ######################################################
-function test_file_srcdest {
+##### test_file_hist_srcdest #################################################
+function test_file_hist_srcdest {
 	local source="$1"
 	local dest="$2"
 	shift 2
@@ -46,12 +46,12 @@ function test_file_srcdest {
 		"$dest/thisdirdoesnotexist" \
 		"$@" \
 		) &&
-	test_expect_files "backup/file/dest/thisdirdoesnotexist/2020/06/10" 0 &&
+	test_expect_files "backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" 0 &&
 	rmdir \
-		"$TESTSETDIR/backup/file/dest/thisdirdoesnotexist/2020/06/10"
-		"$TESTSETDIR/backup/file/dest/thisdirdoesnotexist/2020/06"
-		"$TESTSETDIR/backup/file/dest/thisdirdoesnotexist/2020"
-		"$TESTSETDIR/backup/file/dest/thisdirdoesnotexist"
+		"$TESTSETDIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" \
+		"$TESTSETDIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10" \
+		"$TESTSETDIR/backup/file-hist/dest/thisdirdoesnotexist/2020" \
+		"$TESTSETDIR/backup/file-hist/dest/thisdirdoesnotexist"
 
 	# backup empty path
 	eval $(test_exec_backupdocker 0 \
@@ -64,7 +64,7 @@ function test_file_srcdest {
 		)
 
 	# backup one file
-	echo "Dummyfile" >$TESTSETDIR/backup/file/source/dummyfile || return 1
+	echo "Dummyfile" >$TESTSETDIR/backup/file-hist/source/dummyfile || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -75,8 +75,8 @@ function test_file_srcdest {
 		)
 
 	# backup additional file in subdirectory
-	mkdir $TESTSETDIR/backup/file/source/testsubdir || return 1
-	echo "Dummyfile2" >$TESTSETDIR/backup/file/source/testsubdir/dummyfile2 || return 1
+	mkdir $TESTSETDIR/backup/file-hist/source/testsubdir || return 1
+	echo "Dummyfile2" >$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2 || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -87,7 +87,7 @@ function test_file_srcdest {
 		)
 
 	# delete no longer existing file
-	rm $TESTSETDIR/backup/file/source/dummyfile || return 1
+	rm $TESTSETDIR/backup/file-hist/source/dummyfile || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -98,7 +98,7 @@ function test_file_srcdest {
 		)
 
 	# delete no longer existing file in subdir
-	rm $TESTSETDIR/backup/file/source/testsubdir/dummyfile2 || return 1
+	rm $TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2 || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -109,7 +109,7 @@ function test_file_srcdest {
 		)
 
 	# delete no longer existing subdir
-	rmdir $TESTSETDIR/backup/file/source/testsubdir || return 1
+	rmdir $TESTSETDIR/backup/file-hist/source/testsubdir || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -119,15 +119,15 @@ function test_file_srcdest {
 		"$@" \
 		)
 
-	test_expect_files "backup/file/dest/2020/06/11" 0
-	test_expect_files "backup/file/dest/2020/06/12" 1
-	test_expect_files "backup/file/dest/2020/06/13" 2 && # includes subdir!
-	test_expect_files "backup/file/dest/2020/06/13/testsubdir" 1
-	test_expect_files "backup/file/dest/2020/06/14" 1 && # includes subdir!
-	test_expect_files "backup/file/dest/2020/06/14/testsubdir" 1
-	test_expect_files "backup/file/dest/2020/06/15" 1 && # includes subdir!
-	test_expect_files "backup/file/dest/2020/06/15/testsubdir" 0
-	test_expect_files "backup/file/dest/2020/06/16" 0
+	test_expect_files "backup/file-hist/dest/2020/10/11" 0
+	test_expect_files "backup/file-hist/dest/2020/10/12" 1
+	test_expect_files "backup/file-hist/dest/2020/10/13" 2 && # includes subdir!
+	test_expect_files "backup/file-hist/dest/2020/10/13/testsubdir" 1
+	test_expect_files "backup/file-hist/dest/2020/10/14" 1 && # includes subdir!
+	test_expect_files "backup/file-hist/dest/2020/10/14/testsubdir" 1
+	test_expect_files "backup/file-hist/dest/2020/10/15" 1 && # includes subdir!
+	test_expect_files "backup/file-hist/dest/2020/10/15/testsubdir" 0
+	test_expect_files "backup/file-hist/dest/2020/10/16" 0
 
 	rm -rf \
 		"$TESTSETDIR/backup/file-hist/source" \
@@ -224,36 +224,51 @@ function test_file_hist {
 		$rsync_opt
 		)
 
-	rmdir "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2" || return 1
+	rmdir "$TESTSETDIR/backup/file-hist-1" "$TESTSETDIR/backup/file-hist-2" || return 1
 
 	##### common tests for all variants source,dest in local,remote
-	for source in "/backup" "$my_ip:$TESTSETDIR/backup" ; do
-		for dest in "/backup" "$my_ip:$TESTSETDIR/backup" ; do
-#	for source in "$my_ip:$TESTSETDIR/backup" ; do
-#	for source in "/backup"  ; do
-#		for dest in "/backup" ; do
+	for dest in "/backup" ; do
+		for source in "/backup" "$my_ip:$TESTSETDIR/backup" ; do
 			secretparm=""
 			[[ "$source" == *":"* ]] && 
 				secretparm+="--srcsecret /secrets/id_rsa "
-			[[ "$dest" == *":"* ]] && 
-				secretparm+="--dstsecret /secrets/id_rsa "
 
-			if [[ "$source" == *":"* ]] && [[ "$dest" == *":"* ]] ; then
-				test_file_srcdest \
-					"$source" \
-					"$dest" \
-					"$rsync_opt" \
-					--runonsrc \
-					$secretparm \
-				|| return 1
-
-				secretparm+="--runondst "
-			fi
-
-			test_file_srcdest \
+			test_file_hist_srcdest \
 				"$source" \
 				"$dest" \
 				"$rsync_opt" \
+				$secretparm \
+			|| return 1
+		done
+	done
+
+	for dest in "$my_ip:$TESTSETDIR/backup" ; do
+		for source in "/backup" ; do
+			# Backup to remote in history mod should fail
+			eval $(test_exec_backupdocker 1 \
+				"backup file" \
+				--hist \
+				--histdate "2020-10-01" \
+				"$source" \
+				"$dest" \
+				"$rsync_opt" \
+				--runonsrc \
+				--dstsecret /secrets/id_rsa \
+				)
+		done
+		for source in  "$my_ip:$TESTSETDIR/backup" ; do
+			secretparm="--srcsecret /secrets/id_rsa "
+			secretparm+="--dstsecret /secrets/id_rsa "
+
+			# Backup to remote in history mod should fail if running on src
+			# BUT since our src and dst are equal, we cannot test this situation
+
+			# Backup to remote in history mod should work if running on dst
+			test_file_hist_srcdest \
+				"$source" \
+				"$dest" \
+				"$rsync_opt" \
+				--runondst \
 				$secretparm \
 			|| return 1
 		done
