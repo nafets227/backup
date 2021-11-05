@@ -14,12 +14,12 @@ function test_init {
 		my_ip="$USER@$(set -o pipefail
 			ip -4 -j a show dev docker0 primary |
 			jq '.[].addr_info[0].local')" &&
-		my_ip=${my_ip//\"} \
-		|| return 1
+		my_ip=${my_ip//\"}
+		test_assert "$?" "Could not get IP with command ip" || return 1
 	elif which "ipconfig" >/dev/null ; then
 		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
-		test ! -z "$my_ip" \
-		|| return 1
+		test ! -z "$my_ip"
+		test_assert "$?" "Could not get IP with command ipconfig" || return 1
 	else
 		my_ip=""
 	fi
@@ -40,15 +40,14 @@ function test_init {
 #     2 - expected RC [default: 0]
 function test_exec_backupdocker {
 	if [ "$#" -lt 1 ] ; then
-		printf "Internal Error in %s - git %s parms (exp 1+)\n" \
-			"$FUNCNAME" "$#"
-		return 1
+		test_assert "1" "got %s parms (exp 1+)" >&2 || return 1
 	fi
 	rc_exp="$1"
 	shift
 
 	cat >$TESTSETDIR/backup/backup <<<"$@" &&
-	chmod +x $TESTSETDIR/backup/backup <<<"$@" || return 100
+	chmod +x $TESTSETDIR/backup/backup </dev/null
+	test_assert "$?" "Write backup script" >&2 || return 1
 
 	local docker_cmd=""
 	docker_cmd+="docker run"

@@ -12,18 +12,16 @@ function test_file_srcdest {
 	local dest="$2"
 	shift 2
 
-	if [ -z "$source" ] || [ -z "$dest" ] ; then
-		printf "Internal Error\n"
-		return 1
-	else
-		printf "Testing FILE Backup from %s to %s\n" \
-			"$source" "$dest"
-	fi
+	[ ! -z "$source" ] && [ ! -z "$dest" ]
+	test_assert "$?" "Internal Error" || return 1
+
+	printf "Testing FILE Backup from %s to %s\n" \
+		"$source" "$dest"
 
 	mkdir -p \
 		"$TESTSETDIR/backup/file/source" \
-		"$TESTSETDIR/backup/file/dest" \
-	|| return 1
+		"$TESTSETDIR/backup/file/dest"
+	test_assert "$?" "Creating directories" || return 1
 	source+="/file/source"
 	dest+="/file/dest"
 
@@ -66,7 +64,8 @@ function test_file_srcdest {
 	test_expect_files "backup/file/dest" 0
 
 	# backup one file
-	echo "Dummyfile" >$TESTSETDIR/backup/file/source/dummyfile || return 1
+	echo "Dummyfile" >$TESTSETDIR/backup/file/source/dummyfile
+	test_assert "$?" "Creating dummyfile" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
@@ -76,8 +75,10 @@ function test_file_srcdest {
 	test_expect_files "backup/file/source" 1
 
 	# backup additional file in subdirectory
-	mkdir $TESTSETDIR/backup/file/source/testsubdir || return 1
-	echo "Dummyfile2" >$TESTSETDIR/backup/file/source/testsubdir/dummyfile2 || return 1
+	mkdir $TESTSETDIR/backup/file/source/testsubdir
+	test_assert "$?" "Creating testsubdir" || return 1
+	echo "Dummyfile2" >$TESTSETDIR/backup/file/source/testsubdir/dummyfile2
+	test_assert "$?" "Creating dummyfile2" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
@@ -88,7 +89,8 @@ function test_file_srcdest {
 	test_expect_files "backup/file/dest/testsubdir" 1
 
 	# delete no longer existing file
-	rm $TESTSETDIR/backup/file/source/dummyfile || return 1
+	rm $TESTSETDIR/backup/file/source/dummyfile
+	test_assert "$?" "remove Dummyfile" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
@@ -99,7 +101,8 @@ function test_file_srcdest {
 	test_expect_files "backup/file/dest/testsubdir" 1
 
 	# delete no longer existing file in subdir
-	rm $TESTSETDIR/backup/file/source/testsubdir/dummyfile2 || return 1
+	rm $TESTSETDIR/backup/file/source/testsubdir/dummyfile2
+	test_assert "$?" "remove Dummyfile2" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
@@ -110,7 +113,8 @@ function test_file_srcdest {
 	test_expect_files "backup/file/dest/testsubdir" 0
 
 	# delete no longer existing subdir
-	rmdir $TESTSETDIR/backup/file/source/testsubdir || return 1
+	rmdir $TESTSETDIR/backup/file/source/testsubdir
+	test_assert "$?" "remove testsubdir" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
@@ -121,8 +125,8 @@ function test_file_srcdest {
 
 	rm -rf \
 		"$TESTSETDIR/backup/file/source" \
-		"$TESTSETDIR/backup/file/dest" \
-	|| return 1
+		"$TESTSETDIR/backup/file/dest"
+	test_assert "$?" "remove backupdirs" || return 1
 
 	return 0
 }
@@ -130,7 +134,8 @@ function test_file_srcdest {
 ##### Tests for File backup (rsync) ##########################################
 function test_file {
     ##### Specific tests for local/remote
-	mkdir -p "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2" || return 1
+	mkdir -p "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2"
+	test_assert "$?" "create testdirs" || return 1
 
 	# backup remote source without secret should fail
 	eval $(test_exec_backupdocker 1 \
@@ -197,7 +202,8 @@ function test_file {
 		$rsync_opt
 		)
 
-	rmdir "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2" || return 1
+	rmdir "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2"
+	test_assert "$?" "remove testdirs" || return 1
 
 	##### common tests for all variants source,dest in local,remote
 	for source in "/backup" "$my_ip:$TESTSETDIR/backup" ; do

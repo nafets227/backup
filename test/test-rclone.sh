@@ -60,9 +60,11 @@ function test_rclone {
 
 	printf "Testing rclone using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
 
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone.conf" &&
-	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF" &&
-	true || return 1
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone.conf"
+	test_assert "$?" "copy rclone.conf" || return 1
+
+	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
+	test_assert "$?" "clean rclone" || return 1
 
 	# Wrong src, no ":"
 	eval $(test_exec_backupdocker 1 \
@@ -123,7 +125,8 @@ function test_rclone {
 	test_expect_files "backup-rem/rclone" 0
 
 	# Verify modifying conf
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf"
+	test_assert "$?" "write rclone-update.conf" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup rclone_unittest_updateconf" \
 		"$RCLONE_NAME" \
@@ -133,8 +136,9 @@ function test_rclone {
 	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
 
 	# Verify modifying conf - remote
-	$exec_remote &&
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
+	test_assert "$?" "write rclone-update.conf" || return 1
+	$exec_remote &&
 	eval $(test_exec_backupdocker 0 \
 		"backup rclone_unittest_updateconf" \
 		"$RCLONE_NAME" \
@@ -145,9 +149,10 @@ function test_rclone {
 	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
 
 	# Store Testfiles
-	test_putRclone "${RCLONE_NAME}test.txt" "$RCLONE_CONF" &&
-	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" "$RCLONE_CONF" &&
-	true || return 1
+	test_putRclone "${RCLONE_NAME}test.txt" "$RCLONE_CONF"
+	test_assert "$?" "put test.txt on rclone" || return 1
+	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" "$RCLONE_CONF"
+	test_assert "$?" "put testdir/testfile.txt on rclone" || return 1
 
 	# rclone OK with files
 	eval $(test_exec_backupdocker 0 \
@@ -171,7 +176,8 @@ function test_rclone {
 	test_expect_files "backup-rem/rclone" 2 &&
 	test_expect_files "backup-rem/rclone/testdir" 1
 
-	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF" || return 1
+	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
+	test_assert "$?" "clean rclone" || return 1
 
 	# rclone OK with files deleted
 	eval $(test_exec_backupdocker 0 \

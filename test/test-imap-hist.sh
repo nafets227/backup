@@ -18,7 +18,7 @@ function test_imap_hist {
 	elif [ ! -z "$my_ip" ] ; then
 		exec_remote=true
 	else
-		printf "\tSkipping IMAP Remote Tests (ip/ipconfig).\n"
+		test_assert "1" "Skipping IMAP Remote Tests (ip/ipconfig)"
 		exec_remote=false
 	fi
 
@@ -26,10 +26,11 @@ function test_imap_hist {
 
 	local mail_smtpsrv=${MAIL_SRV%%:*}
 	cp "$MAIL_PW" \
-		$TESTSETDIR/backup/imap_password.password \
-	       || return 1
+		$TESTSETDIR/backup/imap_password.password
+	test_assert "$?" "copy imap password" || return 1
 
-	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$mail_smtpsrv" || return 1
+	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$mail_smtpsrv"
+	test_assert "$?" "clean imap target" || return 1
 
 	# IMAP OK with Empty Mailbox 2020-06-15
 	eval $(test_exec_backupdocker  0 \
@@ -61,7 +62,7 @@ function test_imap_hist {
 
 	# Store Testmail
 	test_putImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV" \
-		|| return 1
+	test_assert "$?" "store testmail" || return 1
 
 	# IMAP OK with 1 Mail overwrite 2020-06-15
 	eval $(test_exec_backupdocker  0 \
@@ -200,7 +201,8 @@ function test_imap_hist {
 		"backup-rem/imap-hist/2020/06/15/INBOX/cur/*"
 
 	# clear Emails
-	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$mail_smtpsrv" || return 1
+	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$mail_smtpsrv" 
+	test_assert "$?" "clean IMAP" || return 1
 
 	# IMAP OK with Empty Mailbox 2021-01-16
 	eval $(test_exec_backupdocker  0 \

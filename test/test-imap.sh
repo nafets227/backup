@@ -18,7 +18,7 @@ function test_imap {
 	elif [ ! -z "$my_ip" ] ; then
 		exec_remote=true
 	else
-		printf "\tSkipping IMAP Remote Tests (ip/ipconfig).\n"
+		test_assert "1" "Skipping IMAP Remote Tests (ip/ipconfig)"
 		exec_remote=false
 	fi
 
@@ -26,14 +26,16 @@ function test_imap {
 
 	local mail_smtpsrv=${MAIL_SRV%%:*}
 	echo "wrongpassword" \
-		>$TESTSETDIR/backup/imap_wrongpassword.password \
-	       || return 1
+		>$TESTSETDIR/backup/imap_wrongpassword.password
+	test_assert "$?" "write imap_wrongpassword.password" || return 1
+
 	cp "$MAIL_PW" \
-		$TESTSETDIR/backup/imap_password.password \
-	       || return 1
+		$TESTSETDIR/backup/imap_password.password
+	test_assert "$?" "write imap_password.password" || return 1
 
-	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$mail_smtpsrv" || return 1
-
+	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$mail_smtpsrv"
+	test_assert "$?" "clean IMAP" || return 1
+	
 	# No password and default does not exist
 	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
@@ -97,8 +99,8 @@ function test_imap {
 
 	# IMAP KO without password
 	cp "$MAIL_PW" \
-		$TESTSETDIR/backup/$MAIL_ADR.password \
-		|| return 1
+		$TESTSETDIR/backup/$MAIL_ADR.password
+	test_assert "$?" "copy mail password" || return 1
 	eval $(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
@@ -117,8 +119,8 @@ function test_imap {
 		)
 
 	# Store Testmail
-	test_putImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV" \
-		|| return 1
+	test_putImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV"
+	test_assert "$?" "store testmail" || return 1
 
 	# IMAP OK with one Mail
 	eval $(test_exec_backupdocker 0 \

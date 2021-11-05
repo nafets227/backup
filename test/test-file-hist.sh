@@ -12,18 +12,17 @@ function test_file_hist_srcdest {
 	local dest="$2"
 	shift 2
 
-	if [ -z "$source" ] || [ -z "$dest" ] ; then
-		printf "Internal Error\n"
-		return 1
-	else
-		printf "Testing FILE Backup from %s to %s\n" \
-			"$source" "$dest"
-	fi
+	[ ! -z "$source" ] && [ ! -z "$dest" ]
+	test_assert "$?" "Internal Error in $FUNCNAME" || return 1
+
+	printf "Testing FILE HISTORY Backup from %s to %s\n" \
+		"$source" "$dest"
 
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist/source" \
-		"$TESTSETDIR/backup/file-hist/dest" \
-	|| return 1
+		"$TESTSETDIR/backup/file-hist/dest"
+	test_assert "$?" "Creating directories in $FUNCNAME" || return 1
+
 	source+="/file-hist/source"
 	dest+="/file-hist/dest"
 
@@ -64,7 +63,8 @@ function test_file_hist_srcdest {
 		)
 
 	# backup one file
-	echo "Dummyfile" >$TESTSETDIR/backup/file-hist/source/dummyfile || return 1
+	echo "Dummyfile" >$TESTSETDIR/backup/file-hist/source/dummyfile
+	test_assert "$?" "Creating dummyfile" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -75,8 +75,10 @@ function test_file_hist_srcdest {
 		)
 
 	# backup additional file in subdirectory
-	mkdir $TESTSETDIR/backup/file-hist/source/testsubdir || return 1
-	echo "Dummyfile2" >$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2 || return 1
+	mkdir $TESTSETDIR/backup/file-hist/source/testsubdir
+	test_assert "$?" "Creating testsubdir" || return 1
+	echo "Dummyfile2" >$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2
+	test_assert "$?" "Creating dummyfile2" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -87,7 +89,8 @@ function test_file_hist_srcdest {
 		)
 
 	# delete no longer existing file
-	rm $TESTSETDIR/backup/file-hist/source/dummyfile || return 1
+	rm $TESTSETDIR/backup/file-hist/source/dummyfile
+	test_assert "$?" "remove Dummyfile" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -98,7 +101,8 @@ function test_file_hist_srcdest {
 		)
 
 	# delete no longer existing file in subdir
-	rm $TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2 || return 1
+	rm $TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2
+	test_assert "$?" "remove Dummyfile2" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -109,7 +113,8 @@ function test_file_hist_srcdest {
 		)
 
 	# delete no longer existing subdir
-	rmdir $TESTSETDIR/backup/file-hist/source/testsubdir || return 1
+	rmdir $TESTSETDIR/backup/file-hist/source/testsubdir
+	test_assert "$?" "remove testsubdir" || return 1
 	eval $(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -131,8 +136,8 @@ function test_file_hist_srcdest {
 
 	rm -rf \
 		"$TESTSETDIR/backup/file-hist/source" \
-		"$TESTSETDIR/backup/file-hist/dest" \
-	|| return 1
+		"$TESTSETDIR/backup/file-hist/dest"
+	test_assert "$?" "remove backupdirs" || return 1
 
 	return 0
 }
@@ -142,8 +147,8 @@ function test_file_hist {
     ##### Specific tests for local/remote
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist-1" \
-		"$TESTSETDIR/backup/file-hist-2" \
-	|| return 1
+		"$TESTSETDIR/backup/file-hist-2"
+	test_assert "$?" "Init $FUNCNAME" || return 1
 
 	# backup remote source without secret should fail
 	eval $(test_exec_backupdocker 1 \
@@ -224,7 +229,8 @@ function test_file_hist {
 		$rsync_opt
 		)
 
-	rmdir "$TESTSETDIR/backup/file-hist-1" "$TESTSETDIR/backup/file-hist-2" || return 1
+	rmdir "$TESTSETDIR/backup/file-hist-1" "$TESTSETDIR/backup/file-hist-2"
+	test_assert "$?" "remove testdirs in $FUNCNAME" || return 1
 
 	##### common tests for all variants source,dest in local,remote
 	for dest in "/backup" ; do
