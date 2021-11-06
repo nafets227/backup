@@ -1,5 +1,11 @@
 # nafets227/backup CHANGELOG
 
+## 0.5.1
+* backpropagate secret files (can be modified with rclone)
+* update to offlineimap3 based on python3
+* bump from alpine 3.6 to alpine 3.14.2
+* Improve tests
+
 ## 0.5 (2021-11-01)
 * Support Cloud backup leveraging rclone
 
