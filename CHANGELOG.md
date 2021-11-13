@@ -1,6 +1,11 @@
 # nafets227/backup CHANGELOG
 
-## 0.5.1
+## 0.5.2 (2021-11-13)
+* backpropagate secret files only if modified
+* bump from alpine 3.14.2 to alpine 3.14.3
+* improve tests
+
+## 0.5.1 (2021-11-06)
 * backpropagate secret files (can be modified with rclone)
 * update to offlineimap3 based on python3
 * bump from alpine 3.6 to alpine 3.14.2
