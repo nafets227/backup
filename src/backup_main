@@ -85,22 +85,43 @@ function backup_remote {
 			)
 		exit \$?
 		EOF
+	local bck_secret &&
 	{
 		if [ -z "$bck_src_secret" ] ; then
 			true
 		else
-			scp -o StrictHostKeyChecking=no -i $remotesecret \
-				$remotemachine:$remdir/srcsecret \
-				$bck_src_secret
+			bck_secret=$(ssh -o StrictHostKeyChecking=no -i $remotesecret \
+				$remotemachine cat $remdir/srcsecret)
+			if [ "$?" != "0" ] ; then
+				false
+			elif cmp $bck_src_secret - >/dev/null <<<"$bck_secret" ; then
+				printf "not updating untouched source secret %s locally\n" \
+					"$bck_src_secret"
+				true
+			else
+				printf "updating modified source secret %s locally\n" \
+					"$bck_src_secret"
+				cat >$bck_src_secret <<<"$bck_secret"
+			fi
 		fi
 	} &&
 	{
 		if [ -z "$bck_dst_secret" ] ; then
 			true
 		else
-			scp -o StrictHostKeyChecking=no -i $remotesecret \
-				$remotemachine:$remdir/dstsecret \
-				$bck_dst_secret
+			bck_secret=$(ssh -o StrictHostKeyChecking=no -i $remotesecret \
+				$remotemachine cat $remdir/dstsecret)
+			if [ "$?" != "0" ] ; then
+				false
+			elif cmp $bck_dst_secret - >/dev/null <<<"$bck_secret" ; then
+				printf "not updating untouched dest %s secret locally\n" \
+					"$bck_dst_secret"
+				true
+			else
+				printf "updating modified dest secret %s locally\n" \
+					"$bck_dst_secret"
+				cat >$bck_dst_secret <<<"$bck_secret"
+			fi
 		fi
 	}
 	rc=$?
