@@ -61,7 +61,7 @@ function test_imap_hist {
 	test_expect_files "backup-rem/imap-hist/2020/06/15/INBOX/cur" 0
 
 	# Store Testmail
-	test_putImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV" \
+	test_putImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV"
 	test_assert "$?" "store testmail" || return 1
 
 	# IMAP OK with 1 Mail overwrite 2020-06-15
