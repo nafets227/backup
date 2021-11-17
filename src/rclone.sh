@@ -13,10 +13,10 @@
 #	bck_src_secret	Source Secret Filename
 #	bck_dst_secret	Destination Secret Filename
 function backup2_rclone {
-        if [ "$#" -ne 4 ] ; then
-                printf "Error in custom config script. "
-                printf "Calling backup rclone with parms:\n\t%s\n" "$*"
-                return 1
+	if [ "$#" -ne 4 ] ; then
+		printf "Error in custom config script. "
+		printf "Calling backup rclone with parms:\n\t%s\n" "$*"
+			return 1
 	elif [ x"$DEBUG" == x1 ] ; then
 		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
 	fi
@@ -88,10 +88,10 @@ function backup2_rclone {
 # No action is being taken
 # Only limited parameter checks are done.
 function backup2_rclone_unittest_updateconf {
-        if [ "$#" -ne 4 ] ; then
-                printf "Error in custom config script. "
-                printf "Calling backup rclone with parms:\n\t%s\n" "$*"
-                return 1
+	if [ "$#" -ne 4 ] ; then
+		printf "Error in custom config script. "
+		printf "Calling backup rclone with parms:\n\t%s\n" "$*"
+			return 1
 	elif [ x"$DEBUG" == x1 ] ; then
 		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
 	fi
