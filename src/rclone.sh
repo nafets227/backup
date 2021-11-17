@@ -13,7 +13,7 @@
 #	bck_src_secret	Source Secret Filename
 #	bck_dst_secret	Destination Secret Filename
 function backup2_rclone {
-	if [ "$#" -ne 4 ] ; then
+	if [ "$#" -lt 4 ] ; then
 		printf "Error in custom config script. "
 		printf "Calling backup rclone with parms:\n\t%s\n" "$*"
 			return 1
@@ -25,6 +25,8 @@ function backup2_rclone {
 	local bckrclone_dst="$2"
 	local bckrclone_src_secret="$3"
 	local bckrclone_dst_secret="$4"
+	shift 4
+	local bckrclone_opts="$*"
 
 	local bckrclone_src_cloudname bckrclone_src_path &&
 	bckrclone_src_cloudname="${bckrclone_src%%:*}" &&
@@ -59,16 +61,19 @@ function backup2_rclone {
 		--config $bckrclone_src_secret \
 		sync \
 		$bckrclone_src \
-		$bckrclone_dst &&
+		$bckrclone_dst \
+		$bckrclone_opts &&
 	rclone \
 		--config $bckrclone_src_secret \
 		rmdirs --leave-root \
-		$bckrclone_dst &&
+		$bckrclone_dst \
+		$bckrclone_opts &&
 	rclone \
 		--config $bckrclone_src_secret \
 		sync --create-empty-src-dirs \
 		$bckrclone_src \
-		$bckrclone_dst
+		$bckrclone_dst \
+		$bckrclone_opts
 
 	rc=$?
 	if [ $rc -ne 0 ] ; then
