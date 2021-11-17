@@ -1,5 +1,8 @@
 # nafets227/backup CHANGELOG
 
+## 0.5.3 (2021-11-17)
+* Allow custom options in rclone
+
 ## 0.5.2 (2021-11-13)
 * backpropagate secret files only if modified
 * bump from alpine 3.14.2 to alpine 3.14.3
