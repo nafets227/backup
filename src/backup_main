@@ -532,7 +532,6 @@ fi
 
 #Source all modules in install.d
 for f in $(dirname $0)/*.sh ; do
-    echo "Loading Module $f"
     . $f
     if [ x$? != x0 ] ; then
 	    printf "Error loading module %s\n" "$f"
