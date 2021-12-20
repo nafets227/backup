@@ -115,6 +115,13 @@ Typical form of Secrets are public keys or passwords. If needed, Secrets can
 be defined with the --srcsecret or --dstsecret parameter. Starting from
 version 0.2.1 no Defaults are applied.
 
+# Rebasing history backups
+Rebasing a history backup in order to save space can be done. You need to start rebasing on the first backup that introduced the files to be based on other data
+and then rebase each of the existing backups up to the latest.
+a sample command could be:
+
+    rsync -v -aHX --delete --progress --link-dest=../../../../../user_home/2021/11/20 --link-dest=../20 20/ 20.rsync-rebase.tmp
+
 # Future Plans #
 Features planned in the future
   - can backup mysql databases
