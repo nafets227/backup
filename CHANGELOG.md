@@ -1,5 +1,8 @@
 # nafets227/backup CHANGELOG
 
+## 0.5.4 (2022-02-08)
+* bump to alpine 3.15.0
+
 ## 0.5.3 (2021-11-17)
 * Allow custom options in rclone
 
