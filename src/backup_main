@@ -505,7 +505,6 @@ printf "starting ENTRYPOINT backup_main\n"
 
 ##### Parse Configs / Envirionment ###########################################
 DEBUG=${DEBUG-0}
-debug=$DEBUG
 
 ##### Ensure running on bash v4+ #############################################
 if [[ ${BASH_VERSION:0:1} -lt "4" ]] ; then
