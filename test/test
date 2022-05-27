@@ -126,6 +126,7 @@ fi
 if test_build && test_init ; then
 	test_runempty
 	test_rclone
+	test_rclone_hist
 	test_file
 	test_file_hist
 	test_imap
