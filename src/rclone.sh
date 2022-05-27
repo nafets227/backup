@@ -62,24 +62,33 @@ function backup2_rclone {
 		sync \
 		$bckrclone_src \
 		$bckrclone_dst \
-		$bckrclone_opts &&
+		$bckrclone_opts \
+		--backup-dir=$bckrclone_dst.del &&
 	rclone \
 		--config $bckrclone_src_secret \
 		rmdirs --leave-root \
 		$bckrclone_dst \
-		$bckrclone_opts &&
+		$bckrclone_opts \
+		--backup-dir=$bckrclone_dst.del &&
 	rclone \
 		--config $bckrclone_src_secret \
 		sync --create-empty-src-dirs \
 		$bckrclone_src \
 		$bckrclone_dst \
-		$bckrclone_opts
+		$bckrclone_opts \
+		--backup-dir=$bckrclone_dst.del
 
 	rc=$?
 	if [ $rc -ne 0 ] ; then
 		printf "##### Error connecting to rclone %s. Config:\n" "$bckrclone_src"
 		cat $bckrclone_src_secret
 		printf "##### Enf od Config for rclone %s\n" "$bckrclone_src"
+		return 1
+	fi
+
+	rm -rf $bckrclone_dst.del
+	if [ $rc -ne 0 ] ; then
+		printf "Error removing del-dir %s.\n" "$bckrclone_dst.del"
 		return 1
 	fi
 
