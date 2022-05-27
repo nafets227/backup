@@ -33,7 +33,8 @@ function backup_remote {
 	fi
 
 	local rc
-	printf "===== Start Executing on %s =====\n" "$remotemachine"
+	printf "===== Start Executing on %s for %s %s =====\n" \
+		"$remotemachine" "$bck_type" "$bck_src"
 	local remdir rem_src_secret rem_dst_secret
 	remdir=$(ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF
 		# this mktemp call works on both Linux and MacOS with slightly different
@@ -125,8 +126,8 @@ function backup_remote {
 		fi
 	}
 	rc=$?
-	printf "===== Returning with RC=%d from %s =====\n" \
-		"$rc" "$remotemachine"
+	printf "===== Returning with RC=%d from %s for %s %s =====\n" \
+		"$rc" "$remotemachine" "$bck_type" "$bck_src"
 
 	return $rc
 }
