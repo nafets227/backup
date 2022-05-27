@@ -59,6 +59,8 @@ function backup2_rclone {
 
 	rclone \
 		--config $bckrclone_src_secret \
+		--stats-log-level NOTICE \
+		--stats-one-line \
 		sync \
 		$bckrclone_src \
 		$bckrclone_dst \
@@ -66,12 +68,16 @@ function backup2_rclone {
 		--backup-dir=$bckrclone_dst.del &&
 	rclone \
 		--config $bckrclone_src_secret \
+		--stats-log-level NOTICE \
+		--stats-one-line \
 		rmdirs --leave-root \
 		$bckrclone_dst \
 		$bckrclone_opts \
 		--backup-dir=$bckrclone_dst.del &&
 	rclone \
 		--config $bckrclone_src_secret \
+		--stats-log-level NOTICE \
+		--stats-one-line \
 		sync --create-empty-src-dirs \
 		$bckrclone_src \
 		$bckrclone_dst \
