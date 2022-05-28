@@ -292,7 +292,7 @@ function backup_default_runon {
 		elif [[ "$bck_dst" != *":"* ]] ; then
 			bck_runon=1
 		else
-			prinf "Internal Error at %s.\n" \
+			printf "Internal Error at %s.\n" \
 				"autodetecting runon" >&2
 			return 99
 		fi
