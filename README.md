@@ -18,7 +18,7 @@ With --histkeep also unsuccessful backups are reused in order to avoid double-do
 backup supports currently the following sources:
   - IMAP
   - File
-
+  - rclone
 # How to use #
 ## Easy use 
 Start a container and pass the parameters (see below) for one action to this container.  
@@ -35,7 +35,7 @@ other complex setups.
 
 ## parameters defining a backup action
   1. "backup" (fix)
-  2. Type (currently only "imap" or "file" supported)
+  2. Type (currently only "imap", "file" or "rclone" supported)
   3. Source
   4. Destination
   5. global options
