@@ -402,7 +402,6 @@ function backup {
 	elif [ "$bck_type" == file ] ; then
 		:
 #	elif [ "$bck_type" != mysql-kube ] &&
-#	elif [ "$bck_type" != notify ] &&
 	else
 		printf "Wrong backup type %s " "$type"
 		printf "when calling backup with\n\t%s\n" \
