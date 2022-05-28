@@ -280,6 +280,16 @@ function test_file_hist {
 		done
 	done
 
+	# Test --histkeep only with local/local
+	test_file_hist_srcdest \
+		"/backup" \
+		"/backup" \
+		"$rsync_opt" \
+		$secretparm \
+		--histkeep \
+	|| return 1
+
+
 	return 0
 }
 

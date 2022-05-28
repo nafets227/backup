@@ -336,6 +336,9 @@ function backup {
 			check_another_parm "$#" "$1" || return 1
 			bck_histdate="$2"
 			shift 2
+		elif [ "$1" == "--histkeep" ] ; then
+			bck_hist_keep=1
+			shift
 		elif [ "$1" == "--srcsecret" ] ; then
 			check_another_parm "$#" "$1" || return 1
 			bck_src_secret="$2"

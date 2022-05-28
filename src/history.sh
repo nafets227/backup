@@ -115,7 +115,13 @@ function backup_findlasthist {
 			# if not found continue with next month
 			dirs_day=$(ls -1rd $dir_month/* 2>/dev/null) # ignore not-found error
 			for dir_day in $dirs_day ; do
-				if [[ ! "$dir_day" =~ /[0-9]{2}$ ]] ; then
+				if  [[ "$dir_day" =~ /[0-9]{2}\.in-progress$ ]] ; then
+					if [ ! "$bck_hist_keep" == "1" ] ; then
+						printf "Warning: Ignoring in-progress Backup-Dir '%s'\n" \
+							"$dir_day" >&2
+						continue
+					fi
+				elif [[ ! "$dir_day" =~ /[0-9]{2}$ ]] ; then
 					printf "Warning: Ignoring Invalid day-dir-format in '%s'\n" \
 						"$dir_day" >&2
 					continue

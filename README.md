@@ -12,6 +12,7 @@ Destination can be anything that is reachable via rsync/ssh or a local disk moun
 History mode safes the backup to a subdirectory YYYY/mm/dd based on the backup
 date (today, unless --histdate is used). In order to save space, starting from
 the second backup we are hard-linking to unchanged filed of previous backup.
+With --histkeep also unsuccessful backups are reused in order to avoid double-downloading.
 
 # Sources #
 backup supports currently the following sources:
@@ -60,6 +61,9 @@ see also [Example][1].
     Backup in History Mode, using <date> instead of today. Not intended for production use, but mainly for testing 
   - --histraw <YYYY/mm/dd>
     Backup in History Mode, using fixed subdirectory as target. Only intended for internal use
+  - --histkeep
+    Reuse backup data of unsuccessful backups. This is especially useful for rclone 
+    backups from cloud providers like Microsoft OneDrive.
 
 ## Environment Parameters #
   - DEBUG: 0 or 1, defaults to 0
