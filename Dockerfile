@@ -16,6 +16,7 @@ RUN \
 		openssh-client \
 		py3-pip \
 		rsync \
+		s-nail \
 		&& \
 	rm -rf /var/cache/apk/*
 

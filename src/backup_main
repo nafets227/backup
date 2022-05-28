@@ -184,62 +184,42 @@ function backup_local {
 
 ##### Notify on Backup result and Deleted files via Email ####################
 function backup_notify {
-	# Options:
-	#	--deleted List deleted files on remote system
-	# Parms
-	# 	1 - Sender Email adress, e.g. "my name <no-reply@example.org"
-	#	2 - Recipient Email adress
+	if [ -z "$MAIL_TO" ] ; then
+		return 0 # no notification
+	elif [ -z "$MAIL_HOSTNAME" ] ; then
+		MAIL_HOSTNAME="$(hostname)"
+	fi
+
+	if [ -z "$MAIL_FROM" ] ; then
+		printf "Variable MAIL_FROM needs to be set if using Alerting indicated by MAIL_TO\n"
+		return 1
+	elif [ -z "$MAIL_URL" ] ; then
+		printf "Variable MAIL_URL needs to be set if using Alerting indicated by MAIL_TO\n"
+		return 1
+	fi
+
+	local MAIL_SUBJECT
+	if [ "x$NAFETS227BACKUP_GRC" == "x0" ] ; then
+		MAIL_SUBJECT="Backup successful"
+	else
+		MAIL_SUBJECT="Backup failed"
+		exit 1
+	fi
+
+	(
+		printf "Total Return Code (NAFETS227BACKUP_GRC): %d\n" \
+			"$NAFETS227BACKUP_GRC"
+		printf "For details see backup-log\n"
+	) | LC_ALL=C MAILRC=/dev/null mail \
+		-n -Sv15-compat -Ssendwait -Snosave -Sexpandaddr=fail,-all,+addr \
+		-S 'smtp-auth=none' \
+		-S "smtp=$MAIL_URL" \
+		-S "hostname=$MAIL_HOSTNAME" \
+		-s "$MAIL_SUBJECT" \
+		-r "$MAIL_FROM" $MAIL_TO \
+		|| return 1
 
 	return 0
-	# Old implementation as base follow
-	###################################
-
-	#if [ -s $LDIR/crypt.filestodelete ] ; then
-	#printf "Sending EMail with list of deleted files.\n"
-	#(
-	#    printf "%s finished at %s\n\n" "$0" "$(date +"%Y-%m-%d %H:%M:%S")"
-	#
-	#    backup_rsync_print \
-	#        $LDIR/crypt.filestodelete \
-	#        "/srv/backup/data.crypt" \
-	#        "remotebackup@stevro.dyndns.eu:/crypt"
-	#
-	#) 2>&1 </dev/null | mail \
-	#    -r "nafets-backup-upload <no-reply@nafets.dyndns.eu>" \
-	#    -s "Deleted files found" \
-	#    infos@nafets.de
-	#
-	#else
-	#    printf "No deleted Files. Not sending EMail.\n"
-	#fi
-	#
-	#if [ -s $LDIR/euserv.fotos.filestodelete ] ||
-	#   [ -s $LDIR/euserv.music.filestodelete ] ; then
-	#printf "Sending EMail with list of deleted files.\n"
-	#(
-	#    printf "%s finished at %s\n\n" "$0" "$(date +"%Y-%m-%d %H:%M:%S")"
-	#
-	#    backup_rsync_print \
-	#        $LDIR/euserv.fotos.filestodelete \
-	#        "/srv/samba/data/fotos" \
-	#        "remotebackup@stevro.dyndns.eu:/fotos"
-	#
-	#    backup_rsync_print \
-	#        $LDIR/euserv.music.filestodelete \
-	#        "/srv/samba/data/music" \
-	#        "remotebackup@stevro.dyndns.eu:/music"
-	#
-	#) 2>&1 </dev/null | mail \
-	#    -S smtp=smtp://mail.intranet.nafets.de \
-	#    -S hostname=$HOSTNAME.dom.nafets.de \
-	#    -r "nafets-backup-upload-euserv <no-reply@nafets.dyndns.eu>" \
-	#    -s "Deleted files found" \
-	#    infos@nafets.de
-	#
-	#else
-	#    printf "No deleted Files. Not sending EMail.\n"
-	#fi
-	#}
 }
 
 #### Helper: Check that runon is empty else print error ######################
@@ -554,6 +534,8 @@ fi
 
 printf "executing custom command %s\n" "$*"
 "$@" || NAFETS227BACKUP_GRC=3
+
+backup_notify || NAFETS227BACKUP_GRC=4
 
 if [ "x$NAFETS227BACKUP_GRC" == "x0" ] ; then
 	printf "Success: all Backup Tasks have been completed successfully.\n"

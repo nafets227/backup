@@ -67,6 +67,17 @@ see also [Example][1].
 
 ## Environment Parameters #
   - DEBUG: 0 or 1, defaults to 0
+  - MAIL_TO: EMail recipients 
+    Recipient(s) of Alerting E-Mails. If set, it also activates the alerting feature.
+  - MAIL_FROM: Email Sender
+    sender of the Alerting E-Mails
+  - MAIL_URL: Email Server
+     where to deliver the Alerting E-Mails like
+    'smtp[s]://user:password@some.host:port'
+  - MAIL_HOSTNAME: hostname reported in SMTP HELO
+    optionally give the hostname that we report to SMTP server in
+    HELO command. Usefule if the SMTP server requires a FQDN. Defaults to
+    hostname.
 
 # IMAP
 Backups data from an IMAP Server using offlineimap. This is done in a delta

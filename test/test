@@ -48,6 +48,10 @@ function test_exec_backupdocker {
 	docker_cmd+=" -v $TESTSETDIR/backup:/backup"
 	docker_cmd+=" -v ~/.ssh/id_rsa:/secrets/id_rsa:ro"
 	docker_cmd+=" -e DEBUG=1"
+	docker_cmd+=" -e MAIL_TO"
+	docker_cmd+=" -e MAIL_FROM"
+	docker_cmd+=" -e MAIL_URL"
+	docker_cmd+=" -e MAIL_HOSTNAME"
 	docker_cmd+=" nafets227/backup:test"
 	docker_cmd+=" . /backup/backup"
 
@@ -81,6 +85,48 @@ function test_runempty {
 	return $?
 }
 
+##### Test: Email alerting ###################################################
+function test_email {
+	if ! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" "MAIL_URL" ||
+	   ! test_assert_tools "curl" "$TEST_SNAIL" ; then
+		printf "\tSkipping IMAP Tests.\n"
+		return 0
+	fi
+
+	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV"
+	test_assert "$?" "clean IMAP" || return 1
+
+	# Trigger Error Email with empty command
+	export MAIL_TO=$MAIL_ADR
+	export MAIL_URL="smtp://$MAIL_URL"
+	eval $(test_exec_backupdocker 0 "")
+
+	sleep 10 # let mail be processed
+
+	mail_pwd="$($TEST_SNAIL -# <<<"urlcodec encode $(cat $MAIL_PW)")"
+	mailimapurl="imap://${MAIL_TO//@/%40}:$mail_pwd@$MAIL_SRV/INBOX"
+	test_exec_recvmail "$mailimapurl" 0 "-S 'imap-use-starttls'"
+	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV"
+
+	# @TODO execute test succeeding and verify EMail sent
+	#eval $(test_exec_backupdocker 0 \
+	#	"backup file" \
+	#	"$source" \
+	#	"$dest" \
+	#	"$@" \
+	#	) &&
+	#test_expect_files "backup/file/dest" 0
+	#
+	#sleep 10 &&
+	#
+	#test_exec_recvmail "$mailimapurl" 0 "-S 'imap-use-starttls'"
+	#test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV"
+
+	unset MAIL_TO MAIL_URL
+
+	return 0
+}
+
 ##### Main ###################################################################
 BASEDIR=$(dirname $BASH_SOURCE)
 . $BASEDIR/../util/test-functions.sh || exit 1
@@ -95,6 +141,7 @@ fi
 
 if test_build && test_init ; then
 	test_runempty
+	test_email
 	test_rclone
 	test_rclone_hist
 	test_file
