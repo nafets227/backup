@@ -9,7 +9,7 @@
 ##### Tests for IMAP with history ############################################
 function test_imap_hist {
 	if ! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" ||
-	   ! test_assert_tools "curl" "mailx" ; then
+	   ! test_assert_tools "curl" "$TEST_SNAIL" ; then
 		printf "\tSkipping IMAP History Tests.\n"
 		return 0
 	elif ! test_assert_tools "offlineimap" "jq" ; then

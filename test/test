@@ -25,13 +25,6 @@ function test_init {
 		my_ip=""
 	fi
 
-	if [[ "$OSTYPE" =~ darwin* ]] ; then
-		printf "Activate MacOS workaround - using /usr/local/bin/rsync\n"
-		rsync_opt="--rsync-path=/usr/local/bin/rsync"
-	else
-		rsync_opt=""
-	fi
-
 	return 0
 }
 

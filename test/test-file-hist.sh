@@ -157,7 +157,7 @@ function test_file_hist {
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
 		/backup/file2 \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	# backup remote dest without secret should fail
@@ -167,7 +167,7 @@ function test_file_hist {
 		--histdate "2020-09-01" \
 		/backup/file1 \
 		"$my_ip:$TESTSETDIR/backup/file-hist-2" \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	# backup remote source,dest without secret should fail
@@ -178,7 +178,7 @@ function test_file_hist {
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
 		"$myhost:$TESTSETDIR/backup/file-hist-2" \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	# backup remote source,dest with only source secret should work
@@ -191,7 +191,7 @@ function test_file_hist {
 		"$myhost:$TESTSETDIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	# backup remote source,dest with only source secret should fail
@@ -203,7 +203,7 @@ function test_file_hist {
 		"$myhost:$TESTSETDIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	# backup remote source,dest with only dest secret should fail
@@ -215,7 +215,7 @@ function test_file_hist {
 		"$myhost:$TESTSETDIR/backup/file-hist-2" \
 		--dstsecret /secrets/id_rsa \
 		--runonsrc \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 	# backup remote source,dest without runon should fail
 	eval $(test_exec_backupdocker 1 \
@@ -226,7 +226,7 @@ function test_file_hist {
 		"$myhost:$TESTSETDIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--dstsecret /secrets/id_rsa \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	rmdir "$TESTSETDIR/backup/file-hist-1" "$TESTSETDIR/backup/file-hist-2"
@@ -242,7 +242,7 @@ function test_file_hist {
 			test_file_hist_srcdest \
 				"$source" \
 				"$dest" \
-				"$rsync_opt" \
+				"$TEST_RSYNCOPT" \
 				$secretparm \
 			|| return 1
 		done
@@ -257,7 +257,7 @@ function test_file_hist {
 				--histdate "2020-10-01" \
 				"$source" \
 				"$dest" \
-				"$rsync_opt" \
+				"$TEST_RSYNCOPT" \
 				--runonsrc \
 				--dstsecret /secrets/id_rsa \
 				)
@@ -273,7 +273,7 @@ function test_file_hist {
 			test_file_hist_srcdest \
 				"$source" \
 				"$dest" \
-				"$rsync_opt" \
+				"$TEST_RSYNCOPT" \
 				--runondst \
 				$secretparm \
 			|| return 1
@@ -284,7 +284,7 @@ function test_file_hist {
 	test_file_hist_srcdest \
 		"/backup" \
 		"/backup" \
-		"$rsync_opt" \
+		"$TEST_RSYNCOPT" \
 		$secretparm \
 		--histkeep \
 	|| return 1

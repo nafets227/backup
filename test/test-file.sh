@@ -142,7 +142,7 @@ function test_file {
 		"backup file" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
 		/backup/file2 \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	# backup remote dest without secret should fail
@@ -150,7 +150,7 @@ function test_file {
 		"backup file" \
 		/backup/file1 \
 		"$my_ip:$TESTSETDIR/backup/file2" \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	# backup remote source,dest without secret should fail
@@ -159,7 +159,7 @@ function test_file {
 		"backup file" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
 		"$myhost:$TESTSETDIR/backup/file2" \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	# backup remote source,dest with only source secret should work
@@ -170,7 +170,7 @@ function test_file {
 		"$myhost:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	# backup remote source,dest with only source secret should fail
@@ -180,7 +180,7 @@ function test_file {
 		"$myhost:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	# backup remote source,dest with only dest secret should fail
@@ -190,7 +190,7 @@ function test_file {
 		"$myhost:$TESTSETDIR/backup/file2" \
 		--dstsecret /secrets/id_rsa \
 		--runonsrc \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 	# backup remote source,dest without runon should fail
 	eval $(test_exec_backupdocker 1 \
@@ -199,7 +199,7 @@ function test_file {
 		"$myhost:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--dstsecret /secrets/id_rsa \
-		$rsync_opt
+		$TEST_RSYNCOPT
 		)
 
 	rmdir "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2"
@@ -218,7 +218,7 @@ function test_file {
 				test_file_srcdest \
 					"$source" \
 					"$dest" \
-					"$rsync_opt" \
+					"$TEST_RSYNCOPT" \
 					--runonsrc \
 					$secretparm \
 				|| return 1
@@ -229,7 +229,7 @@ function test_file {
 			test_file_srcdest \
 				"$source" \
 				"$dest" \
-				"$rsync_opt" \
+				"$TEST_RSYNCOPT" \
 				$secretparm \
 			|| return 1
 		done
