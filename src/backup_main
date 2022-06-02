@@ -15,7 +15,8 @@ function backup_remote {
 	local bck_src_secret="$6"
 	local bck_dst_secret="$7"
 	local bck_histdate="$8"
-	shift 8
+	local bck_hist_keep="$9"
+	shift 9
 
 	if [ -z "$remotemachine" ] ||
 	   [ -z "$remotesecret" ] ; then
@@ -30,6 +31,9 @@ function backup_remote {
 	local rem_hist=""
 	if [ ! -z "$bck_histdate" ] ; then
 		rem_hist="--histraw \"$bck_histdate\""
+		if [ "$bck_hist_keep" == "1" ] ; then
+			rem_hist+=" --histkeep"
+		fi
 	fi
 
 	local rc
@@ -142,7 +146,9 @@ function backup_local {
 	local bck_src_secret="$4"
 	local bck_dst_secret="$5"
 	local bck_histdate="$6"
-	shift 6
+	local bck_hist_keep="$7"
+
+	shift 7
 
 	local bck_local_prm=()
 	local bck_dst_full
@@ -152,7 +158,9 @@ function backup_local {
 
 	if [ ! -z "$bck_histdate" ] ; then # History mode
 		# bck_dst_full="$bck_dst/$bck_histdate.in-progress"
-		bck_dst_full=$(backup_inithist "$bck_dst" "$bck_histdate" ) || return 1
+		bck_dst_full=$(
+			backup_inithist "$bck_dst" "$bck_histdate" "$bck_hist_keep"
+		) || return 1
 	else
 		bck_dst_full="$bck_dst"
 	fi
@@ -292,6 +300,7 @@ function backup {
 	local bck_runon=""
 	local bck_local_prm=()
 	local bck_histdate=""
+	local bck_hist_keep=0
 	while [ $# -gt 0 ] ; do
 		if [ "$1" == "--runonsrc" ] ; then # Execute on source
 			check_runon_empty "$bck_runon" || return 1
@@ -418,6 +427,7 @@ function backup {
 				"$bck_src_secret" \
 				"$bck_dst_secret" \
 				"$bck_histdate" \
+				"$bck_hist_keep" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		else
@@ -430,6 +440,7 @@ function backup {
 				"" \
 				"$bck_dst_secret" \
 				"$bck_histdate" \
+				"$bck_hist_keep" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		fi
@@ -441,6 +452,7 @@ function backup {
 				"$bck_src_secret" \
 				"$bck_dst_secret" \
 				"$bck_histdate" \
+				"$bck_hist_keep" \
 				"${bck_local_prm[@]}"
 			rc=$?
 	elif [ "$bck_runon" == "1" ] ; then
@@ -452,6 +464,7 @@ function backup {
 				"$bck_src_secret" \
 				"$bck_dst_secret" \
 				"$bck_histdate" \
+				"$bck_hist_keep" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		else
@@ -464,6 +477,7 @@ function backup {
 				"$bck_src_secret" \
 				"" \
 				"$bck_histdate" \
+				"$bck_hist_keep" \
 				"${bck_local_prm[@]}"
 			rc=$?
 		fi

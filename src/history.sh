@@ -20,12 +20,14 @@ function backup_inithist {
 	# Parm:
 	#     - backup destination (without YYYY/mm/dd)
 	#     - backup date in format of YYYY/mm/dd
+	#     - Flag is in-progress updates can be used as base (hist-keep)
 	# Output: Directory name of the prepared directory
 	#     (appending .in-progressXX to "backup dest/backup date" if needed)
 	local currback lastback
 
 	local bck_dst="$1"
 	local bck_histdate="$2"
+	local bck_hist_keep="$3"
 
 	if [[ "$bck_dst" == *":"* ]] ; then
 		printf "Error: cannot backup to remote %s in history mode\n" \
@@ -34,7 +36,7 @@ function backup_inithist {
 	fi
 
 	currback="$bck_dst/$bck_histdate"
-	lastback=$(backup_findlasthist "$bck_dst") || return 1
+	lastback=$(backup_findlasthist "$bck_dst" "$bck_hist_keep") || return 1
 
 	if [ -z "$lastback" ]; then
 		printf "Backing up in history mode to %s (Initial Backup)\n" "$currback" >&2
@@ -81,14 +83,16 @@ function backup_inithist {
 function backup_findlasthist {
 	# Parm:
 	#     backup destination, must be local, without YYYY/mm/dd
+	#     - Flag is in-progress updates can be used as base (hist-keep)
 	# Output:
 	#     Directory of last backup, "" if not found
 	local bck_dst="$1"
+	local bck_hist_keep="$2"
 
 	local dirs_year dir_year dirs_month dir_month dirs_day dir_day
 	local IFS=$'\n'
 
-	if [ -z "$bck_dst" ] ; then
+	if [ -z "$bck_dst" ] || [ -z "$bck_hist_keep" ]; then
 		printf "Internal Error: Empty Param\n" >&2
 		return 1
 	fi
