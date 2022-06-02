@@ -1,5 +1,15 @@
 # nafets227/backup CHANGELOG
 
+## 0.6 (2022-06-02)
+* Send Alert Emails with backup status (#12)
+* reuse in-progress backups if --histkeep parm is set (#8)
+* logg stats every minute in rclone (#11)
+* Improve Logging (#9)
+* fix an issue with rclone update in history mode (#7)
+* converge to DEBUG (eliminateing debug) (#1)
+* alpine 3.16.0
+* rclone 1.58.1
+
 ## 0.5.4 (2022-02-08)
 * bump to alpine 3.15.0
 
