@@ -163,6 +163,12 @@ To run tests in test subdirectory you need to have some test data available. ATT
     Create an rclone.cfg and pass its filename in $RCLONE_CONF and the Cloud config to be used in $RCLONE_NAME.
     You may wan to use something like
     ```rclone --config ./rclonf.conf config``` to create the file.
+  - alert test settings
+    
+    Set variables MAIL_ADR MAIL_PW MAIL_SRV MAIL_URL, see test/test for details.
+    Tests will use this vars to write alert logs to and check if they are there.
+    IMAP Test Account can be reused. be aware that ALL Emails in this account will
+    be deleted on every test run.
 
 start with running test/test to verify your environment
 
