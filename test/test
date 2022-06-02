@@ -16,7 +16,7 @@ function test_init {
 			ip -4 -j a show dev docker0 primary |
 			jq '.[].addr_info[0].local')" &&
 		my_ip=${my_ip//\"}
-		test_assert "$?" "Could not get IP with command ip" || return 1
+		test_assert "$?" "Could not get IP with command ip" || return 1
 	elif which "ipconfig" >/dev/null ; then
 		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
 		test ! -z "$my_ip"

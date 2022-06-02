@@ -21,7 +21,7 @@ function test_file_srcdest {
 	mkdir -p \
 		"$TESTSETDIR/backup/file/source" \
 		"$TESTSETDIR/backup/file/dest"
-	test_assert "$?" "Creating directories" || return 1
+	test_assert "$?" "Creating directories" || return 1
 	source+="/file/source"
 	dest+="/file/dest"
 
