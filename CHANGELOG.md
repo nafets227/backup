@@ -1,5 +1,9 @@
 # nafets227/backup CHANGELOG
 
+## 0.6.1 (2022-06-03)
+* Log Email Alerts
+* fix reuse in-progress backups with remote execution
+
 ## 0.6 (2022-06-02)
 * Send Alert Emails with backup status (#12)
 * reuse in-progress backups if --histkeep parm is set (#8)
