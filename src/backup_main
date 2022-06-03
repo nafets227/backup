@@ -193,6 +193,8 @@ function backup_local {
 ##### Notify on Backup result and Deleted files via Email ####################
 function backup_notify {
 	if [ -z "$MAIL_TO" ] ; then
+		printf "Mail Alerting not configured, not sending EMail (%s)\n" \
+			 "set MAIL_TO to enable"
 		return 0 # no notification
 	elif [ -z "$MAIL_HOSTNAME" ] ; then
 		MAIL_HOSTNAME="$(hostname)"
@@ -226,6 +228,8 @@ function backup_notify {
 		-s "$MAIL_SUBJECT" \
 		-r "$MAIL_FROM" $MAIL_TO \
 		|| return 1
+
+	printf "Sent Alerting email to %s\n" "$MAIL_TO"
 
 	return 0
 }
