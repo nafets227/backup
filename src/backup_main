@@ -213,7 +213,6 @@ function backup_notify {
 		MAIL_SUBJECT="Backup successful"
 	else
 		MAIL_SUBJECT="Backup failed"
-		exit 1
 	fi
 
 	(
