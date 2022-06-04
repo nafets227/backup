@@ -1,5 +1,8 @@
 # nafets227/backup CHANGELOG
 
+## 0.6.2 (2022-06-04)
+* fix Email Alerts if backup fails
+
 ## 0.6.1 (2022-06-03)
 * Log Email Alerts
 * fix reuse in-progress backups with remote execution
