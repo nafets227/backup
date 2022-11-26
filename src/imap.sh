@@ -90,8 +90,17 @@ function backup2_imap {
 		mkdir -p "$bckimap_dst" || return 1
 	fi
 
-	backup2_imap_mkconfig | offlineimap -c /dev/stdin
+	backup2_imap_mkconfig | offlineimap -c /dev/stdin 
 	rc=$?
+	if [ $rc -ne 0 ] ; then
+		# on first error delete the .offlineimap files to workaround the UID validity issue
+		# see http://www.offlineimap.org/doc/FAQ.html#what-is-the-uid-validity-problem-for-folder
+		printf "Error connecting to IMAP %s. Will delete .offlineimap and retry.\n" "$emailuser"
+		rm -rf $bckimap_dst/.offlineimap &&
+		backup2_imap_mkconfig | offlineimap -c /dev/stdin 
+		rc=$?
+	fi
+
 	if [ $rc -ne 0 ] ; then
 		printf "##### Error connecting to IMAP %s. Config:\n" "$emailuser"
 		backup2_imap_mkconfig
