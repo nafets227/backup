@@ -45,6 +45,11 @@ function backup_inithist {
 		fi
 		printf "%s" "$currback.in-progress"
 		return 0
+	elif [[ "$lastback" == "$currback.in-progress" ]] ; then
+		printf "Backing up in history mode to %s (Update existing partial Backup)\n" \
+			"$lastback" >&2
+		printf "%s" "$lastback"
+		return 0
 	elif [[ "$lastback" > "$currback" ]] ; then
 		printf "Error: Newer Backup %s found for %s\n" \
 			"$lastback" "$currback" >&2
@@ -59,7 +64,7 @@ function backup_inithist {
 			"$currback.in-progress" "$lastback" >&2
 
 		if [ -e "$currback.in-progress" ] ; then
-			rm -rf "$currback.in-progress" || return 1
+			rm -rf "$currback.in-progress" || return 1
 		fi
 
 		mkdir -p "$currback.in-progress" &&
