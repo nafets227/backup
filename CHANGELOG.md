@@ -1,5 +1,12 @@
 # nafets227/backup CHANGELOG
 
+## 0.7. (2022-11-26)
+* fix reusing .in-progress (#28)
+* retry imap to workaround uid validity issue
+* improve logging to list each backup
+* alpine 3.17.0
+* rclone 1.60.1
+
 ## 0.6.2 (2022-06-04)
 * fix Email Alerts if backup fails
 
