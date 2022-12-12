@@ -99,6 +99,7 @@ function test_email {
 	# Trigger Error Email with empty command
 	export MAIL_TO=$MAIL_ADR
 	export MAIL_URL="smtp://$MAIL_URL"
+	export MAIL_FROM
 	eval $(test_exec_backupdocker 0 "")
 
 	sleep 10 # let mail be processed
@@ -130,6 +131,15 @@ function test_email {
 ##### Main ###################################################################
 BASEDIR=$(dirname $BASH_SOURCE)
 . $BASEDIR/../util/test-functions.sh || exit 1
+
+MAIL_FROM="${MAIL_FROM:-"nafets227/backup CI <no-reply@nafets.de>"}"
+MAIL_ADR="${MAIL_ADR:-"nafets227.backup.test@nafets.de"}"
+MAIL_PW="${MAIL_PW:-"$BASEDIR/mail.password"}"
+MAIL_SRV="${MAIL_SRV:-nafets.de:143}"
+MAIL_URL="${MAIL_URL:-nafets.de}"
+RCLONE_CONF="${RCLONE_CONF:-"$BASEDIR/rclone.conf"}"
+RCLONE_NAME="${RCLONE_NAME:-"nafets227_nafets_de:/"}"
+
 for f in $BASEDIR/*.sh ; do
 	. $f || exit 1
 done
