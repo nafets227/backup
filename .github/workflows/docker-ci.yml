@@ -69,7 +69,7 @@ jobs:
           sudo bash -c 'cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys'
           sudo bash -c 'touch ~/.hushlogin'
 
-          sudo test/test
+          sudo test/test ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version}}
           
           gh secret set RCLONE_CONF < test/rclone.conf
           rm test/rclone.conf test/mail.password

@@ -52,7 +52,7 @@ function test_exec_backupdocker {
 	docker_cmd+=" -e MAIL_FROM"
 	docker_cmd+=" -e MAIL_URL"
 	docker_cmd+=" -e MAIL_HOSTNAME"
-	docker_cmd+=" nafets227/backup:test"
+	docker_cmd+=" $TESTIMG"
 	docker_cmd+=" . /backup/backup"
 
 	printf "test_exec_simple \"%s\" \"%s\" \"%s\"" \
@@ -66,12 +66,16 @@ function test_exec_backupdocker {
 ##### Test Build #############################################################
 function test_build {
 
-	# Compile / Build docker
-	test_exec_simple \
-		"docker build -t nafets227/backup:test $BASEDIR/.." \
-		0
-
-	[ $TESTRC -eq 0 ] || return 1
+	if [ -z "$1" ] ; then
+		# Compile / Build docker
+		test_exec_simple \
+			"docker build -t nafets227/backup:test $BASEDIR/.." \
+			0
+		[ $TESTRC -eq 0 ] || return 1
+		TESTIMG="nafets227/backup:test"
+	else
+		TESTIMG=$1
+	fi
 
 	return 0
 }
@@ -79,7 +83,7 @@ function test_build {
 ##### Test: no custom script #################################################
 function test_runempty {
 	test_exec_simple \
-		"docker run nafets227/backup:test" \
+		"docker run $TESTIMG" \
 		1
 	
 	return $?
@@ -149,7 +153,7 @@ if [ ! -d $TESTSETDIR/backup ] ; then
 	mkdir $TESTSETDIR/backup || return 1
 fi
 
-if test_build && test_init ; then
+if test_build "$1" && test_init ; then
 	test_runempty
 	test_email
 	test_rclone
