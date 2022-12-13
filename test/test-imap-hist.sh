@@ -273,6 +273,7 @@ function test_imap_hist {
 
 	# IMAP OK with Empty Mail and default date=today - remote backup dest
 	datedir="$(date +%Y/%m/%d)"
+	$exec_remote &&
 	eval $(test_exec_backupdocker 0 \
 		"backup imap" \
 		--hist \
