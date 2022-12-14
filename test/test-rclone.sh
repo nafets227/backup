@@ -51,8 +51,8 @@ function test_putRclone () {
 	return $?
 }
 
-##### Tests for rclone #######################################################
-function test_rclone {
+##### Tests for rclone2file ##################################################
+function test_rclone2file {
 	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
 	   ! test_assert_files "$RCLONE_CONF" ||
 	   ! test_assert_tools "rclone" ; then
@@ -60,71 +60,80 @@ function test_rclone {
 		return 0
 	fi
 
-	printf "Testing rclone using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
+	printf "Testing rclone2file using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
 
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone.conf"
-	test_assert "$?" "copy rclone.conf" || return 1
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file.conf"
+	test_assert "$?" "copy rclone2file.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
 	test_assert "$?" "clean rclone" || return 1
 
+	# rclone OK with Empty Cloud (compatibility "rclone")
+	eval $(test_exec_backupdocker  0 \
+		"backup rclone" \
+		"$RCLONE_NAME" \
+		/backup/rclone2file \
+		--srcsecret /backup/rclone2file.conf \
+		) &&
+	test_expect_files "backup/rclone2file" 0
+
 	# Wrong src, no ":"
 	eval $(test_exec_backupdocker 1 \
-		"backup rclone" \
+		"backup rclone2file" \
 		"mydummyname" \
-		/backup/rclone \
+		/backup/rclone2file \
 		)
 
 	# Wrong src, nothing after ":"
 	eval $(test_exec_backupdocker 1 \
-		"backup rclone" \
+		"backup rclone2file" \
 		"mydummyname:" \
-		/backup/rclone \
-		--srcsecret /backup/rclone.conf \
+		/backup/rclone2file \
+		--srcsecret /backup/rclone2file.conf \
 		)
 
 	# Wrong src, nothing before ":"
 	eval $(test_exec_backupdocker 1 \
-		"backup rclone" \
+		"backup rclone2file" \
 		":mydummyname" \
-		/backup/rclone \
-		--srcsecret /backup/rclone.conf \
+		/backup/rclone2file \
+		--srcsecret /backup/rclone2file.conf \
 		)
 
 	# No password
 	eval $(test_exec_backupdocker 1 \
-		"backup rclone" \
+		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		/backup/rclone \
+		/backup/rclone2file \
 		)
 
 	# Not existing password file
 	eval $(test_exec_backupdocker 1 \
-		"backup rclone" \
+		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		/backup/rclone \
+		/backup/rclone2file \
 		--srcsecret "filedoesnotexist"
 		)
 
 	# rclone OK with Empty Cloud
 	eval $(test_exec_backupdocker  0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		/backup/rclone \
-		--srcsecret /backup/rclone.conf \
+		/backup/rclone2file \
+		--srcsecret /backup/rclone2file.conf \
 		) &&
-	test_expect_files "backup/rclone" 0
+	test_expect_files "backup/rclone2file" 0
 
 	# rclone OK with Empty Cloud - remote backup dest
 	$exec_remote &&
 	eval $(test_exec_backupdocker 0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		$my_ip:$TESTSETDIR/backup-rem/rclone \
-		--srcsecret /backup/rclone.conf \
+		$my_ip:$TESTSETDIR/backup-rem/rclone2file \
+		--srcsecret /backup/rclone2file.conf \
 		--dstsecret /secrets/id_rsa
 		) &&
-	test_expect_files "backup-rem/rclone" 0
+	test_expect_files "backup-rem/rclone2file" 0
 
 	# Verify modifying conf
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf"
@@ -132,7 +141,7 @@ function test_rclone {
 	eval $(test_exec_backupdocker 0 \
 		"backup rclone_unittest_updateconf" \
 		"$RCLONE_NAME" \
-		/backup/rclone \
+		/backup/rclone2file \
 		--srcsecret /backup/rclone-update.conf
 		) &&
 	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
@@ -144,7 +153,7 @@ function test_rclone {
 	eval $(test_exec_backupdocker 0 \
 		"backup rclone_unittest_updateconf" \
 		"$RCLONE_NAME" \
-		$my_ip:$TESTSETDIR/backup-rem/rclone \
+		$my_ip:$TESTSETDIR/backup-rem/rclone2file \
 		--srcsecret /backup/rclone-update.conf \
 		--dstsecret /secrets/id_rsa
 		) &&
@@ -158,54 +167,54 @@ function test_rclone {
 
 	# rclone OK with files
 	eval $(test_exec_backupdocker 0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		/backup/rclone \
-		--srcsecret /backup/rclone.conf
+		/backup/rclone2file \
+		--srcsecret /backup/rclone2file.conf
 		) &&
-	test_expect_files "backup/rclone" 2 &&
-	test_expect_files "backup/rclone/testdir" 1
+	test_expect_files "backup/rclone2file" 2 &&
+	test_expect_files "backup/rclone2file/testdir" 1
 
 	# rclone OK with files - remote backup dest
 	$exec_remote &&
 	eval $(test_exec_backupdocker 0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		$my_ip:$TESTSETDIR/backup-rem/rclone \
-		--srcsecret /backup/rclone.conf \
+		$my_ip:$TESTSETDIR/backup-rem/rclone2file \
+		--srcsecret /backup/rclone2file.conf \
 		--dstsecret /secrets/id_rsa
 		) &&
-	test_expect_files "backup-rem/rclone" 2 &&
-	test_expect_files "backup-rem/rclone/testdir" 1
+	test_expect_files "backup-rem/rclone2file" 2 &&
+	test_expect_files "backup-rem/rclone2file/testdir" 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
 	test_assert "$?" "clean rclone" || return 1
 
 	# rclone OK with files deleted
 	eval $(test_exec_backupdocker 0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		/backup/rclone \
-		--srcsecret /backup/rclone.conf
+		/backup/rclone2file \
+		--srcsecret /backup/rclone2file.conf
 		) &&
-	test_expect_files "backup/rclone" 0
+	test_expect_files "backup/rclone2file" 0
 
 	# rclone OK with files deleted - remote backup dest
 	$exec_remote &&
 	eval $(test_exec_backupdocker 0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		$my_ip:$TESTSETDIR/backup-rem/rclone \
-		--srcsecret /backup/rclone.conf \
+		$my_ip:$TESTSETDIR/backup-rem/rclone2file \
+		--srcsecret /backup/rclone2file.conf \
 		--dstsecret /secrets/id_rsa
 		) &&
-	test_expect_files "backup-rem/rclone" 0
+	test_expect_files "backup-rem/rclone2file" 0
 
 	return 0
 }
 
-##### Tests for rclone history ###############################################
-function test_rclone_hist {
+##### Tests for rclone2file history ##########################################
+function test_rclone2file_hist {
 	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
 	   ! test_assert_files "$RCLONE_CONF" ||
 	   ! test_assert_tools "rclone" ; then
@@ -215,7 +224,7 @@ function test_rclone_hist {
 
 	printf "Testing rclone history using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
 
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-hist.conf"
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file-hist.conf"
 	test_assert "$?" "copy rclone.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
@@ -223,20 +232,20 @@ function test_rclone_hist {
 
 	# Time 1+2: Empty Cloud
 	eval $(test_exec_backupdocker  0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-01" \
 		"$RCLONE_NAME" \
-		/backup/rclone-hist \
-		--srcsecret /backup/rclone-hist.conf \
+		/backup/rclone2file-hist \
+		--srcsecret /backup/rclone2file-hist.conf \
 		)
 	eval $(test_exec_backupdocker  0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-02" \
 		"$RCLONE_NAME" \
-		/backup/rclone-hist \
-		--srcsecret /backup/rclone-hist.conf \
+		/backup/rclone2file-hist \
+		--srcsecret /backup/rclone2file-hist.conf \
 		)
 
 	# Time 10+11: Added file
@@ -245,20 +254,20 @@ function test_rclone_hist {
 	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" "$RCLONE_CONF" "rclone-hist-1"
 	test_assert "$?" "put testdir/testfile.txt on rclone" || return 1
 	eval $(test_exec_backupdocker  0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-10" \
 		"$RCLONE_NAME" \
-		/backup/rclone-hist \
-		--srcsecret /backup/rclone-hist.conf \
+		/backup/rclone2file-hist \
+		--srcsecret /backup/rclone2file-hist.conf \
 		)
 	eval $(test_exec_backupdocker  0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-11" \
 		"$RCLONE_NAME" \
-		/backup/rclone-hist \
-		--srcsecret /backup/rclone-hist.conf \
+		/backup/rclone2file-hist \
+		--srcsecret /backup/rclone2file-hist.conf \
 		)
 
 	# Time 20+21: modified file
@@ -267,78 +276,78 @@ function test_rclone_hist {
 	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" "$RCLONE_CONF" "rclone-hist-2"
 	test_assert "$?" "put testdir/testfile.txt on rclone" || return 1
 	eval $(test_exec_backupdocker  0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-20" \
 		"$RCLONE_NAME" \
-		/backup/rclone-hist \
-		--srcsecret /backup/rclone-hist.conf \
+		/backup/rclone2file-hist \
+		--srcsecret /backup/rclone2file-hist.conf \
 		)
 	eval $(test_exec_backupdocker  0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-21" \
 		"$RCLONE_NAME" \
-		/backup/rclone-hist \
-		--srcsecret /backup/rclone-hist.conf \
+		/backup/rclone2file-hist \
+		--srcsecret /backup/rclone2file-hist.conf \
 		)
 
 	# Time 30: deleted file
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
 	test_assert "$?" "clean rclone" || return 1
 	eval $(test_exec_backupdocker  0 \
-		"backup rclone" \
+		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-30" \
 		"$RCLONE_NAME" \
-		/backup/rclone-hist \
-		--srcsecret /backup/rclone-hist.conf \
+		/backup/rclone2file-hist \
+		--srcsecret /backup/rclone2file-hist.conf \
 		)
 
 	# Finally check:
-	test_expect_files "backup/rclone-hist/2022/03/01" 0
-	test_expect_files "backup/rclone-hist/2022/03/02" 0
+	test_expect_files "backup/rclone2file-hist/2022/03/01" 0
+	test_expect_files "backup/rclone2file-hist/2022/03/02" 0
 
-	test_expect_files "backup/rclone-hist/2022/03/10" 2
-	test_expect_files "backup/rclone-hist/2022/03/11" 2
+	test_expect_files "backup/rclone2file-hist/2022/03/10" 2
+	test_expect_files "backup/rclone2file-hist/2022/03/11" 2
 	test_expect_linkedfiles \
-		"backup/rclone-hist/2022/03/10/test.txt" \
-		"backup/rclone-hist/2022/03/11/test.txt"
+		"backup/rclone2file-hist/2022/03/10/test.txt" \
+		"backup/rclone2file-hist/2022/03/11/test.txt"
 	test_expect_linkedfiles \
-		"backup/rclone-hist/2022/03/10/testdir/testfile.txt" \
-		"backup/rclone-hist/2022/03/11/testdir/testfile.txt"
+		"backup/rclone2file-hist/2022/03/10/testdir/testfile.txt" \
+		"backup/rclone2file-hist/2022/03/11/testdir/testfile.txt"
 	test_expect_file_contains \
-		"backup/rclone-hist/2022/03/10/test.txt" \
+		"backup/rclone2file-hist/2022/03/10/test.txt" \
 		rclone-hist-1
 	test_expect_file_contains \
-		"backup/rclone-hist/2022/03/10/testdir/testfile.txt" \
+		"backup/rclone2file-hist/2022/03/10/testdir/testfile.txt" \
 		rclone-hist-1
 	test_expect_file_contains \
-		"backup/rclone-hist/2022/03/11/test.txt" \
+		"backup/rclone2file-hist/2022/03/11/test.txt" \
 		rclone-hist-1
 	test_expect_file_contains \
-		"backup/rclone-hist/2022/03/11/testdir/testfile.txt" \
+		"backup/rclone2file-hist/2022/03/11/testdir/testfile.txt" \
 		rclone-hist-1
 
-	test_expect_files "backup/rclone-hist/2022/03/20" 2
-	test_expect_files "backup/rclone-hist/2022/03/21" 2
+	test_expect_files "backup/rclone2file-hist/2022/03/20" 2
+	test_expect_files "backup/rclone2file-hist/2022/03/21" 2
 	test_expect_linkedfiles \
-		"backup/rclone-hist/2022/03/20/test.txt" \
-		"backup/rclone-hist/2022/03/21/test.txt"
+		"backup/rclone2file-hist/2022/03/20/test.txt" \
+		"backup/rclone2file-hist/2022/03/21/test.txt"
 	test_expect_linkedfiles \
-		"backup/rclone-hist/2022/03/20/testdir/testfile.txt" \
-		"backup/rclone-hist/2022/03/21/testdir/testfile.txt"
+		"backup/rclone2file-hist/2022/03/20/testdir/testfile.txt" \
+		"backup/rclone2file-hist/2022/03/21/testdir/testfile.txt"
 	test_expect_file_contains \
-		"backup/rclone-hist/2022/03/20/test.txt" \
+		"backup/rclone2file-hist/2022/03/20/test.txt" \
 		rclone-hist-2
 	test_expect_file_contains \
-		"backup/rclone-hist/2022/03/20/testdir/testfile.txt" \
+		"backup/rclone2file-hist/2022/03/20/testdir/testfile.txt" \
 		rclone-hist-2
 	test_expect_file_contains \
-		"backup/rclone-hist/2022/03/21/test.txt" \
+		"backup/rclone2file-hist/2022/03/21/test.txt" \
 		rclone-hist-2
 	test_expect_file_contains \
-		"backup/rclone-hist/2022/03/21/testdir/testfile.txt" \
+		"backup/rclone2file-hist/2022/03/21/testdir/testfile.txt" \
 		rclone-hist-2
 
 	test_expect_files "backup/rclone-hist/2022/03/30" 0

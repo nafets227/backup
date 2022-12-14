@@ -156,8 +156,8 @@ fi
 if test_build "$1" && test_init ; then
 	test_runempty
 	test_email
-	test_rclone
-	test_rclone_hist
+	test_rclone2file
+	test_rclone2file_hist
 	test_file
 	test_file_hist
 	test_imap

@@ -5,14 +5,14 @@
 # (C) 2021 Stefan Schallenberg
 #
 
-##### backup2_rclone ###########################################################
+##### backup2_rclone2file ####################################################
 # Interface to type_specific drivers:
 #	backup2_<type>	function name
 #	bck_src		rclone URL, as used with rclone sync (e.g. MyCloud:/)
 #	bck_dst		Destination URL
 #	bck_src_secret	Source Secret Filename
 #	bck_dst_secret	Destination Secret Filename
-function backup2_rclone {
+function backup2_rclone2file {
 	if [ "$#" -lt 4 ] ; then
 		printf "Error in custom config script. "
 		printf "Calling backup rclone with parms:\n\t%s\n" "$*"

@@ -35,7 +35,7 @@ other complex setups.
 
 ## parameters defining a backup action
   1. "backup" (fix)
-  2. Type (currently only "imap", "file" or "rclone" supported)
+  2. Type (currently only "imap", "file" or "rclone2file" supported)
   3. Source
   4. Destination
   5. global options
@@ -115,10 +115,10 @@ files are deleted in the target.
     is the password to connect to the target server \[optional\]
     mandatory if the Destination is remote
 
-# rclone
+# rclone2file
 Backups data from various Clouds, leveraging [rclone](https://rclone.org/).
 
-### rcone Global paramaters
+### rclone2file Global paramaters
   * Source - Name of the cloud in rclone config
   * Destination - Directory where to store the download.
     Optionally prefixed by Server name followed by a colon.
