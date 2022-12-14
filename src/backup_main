@@ -270,7 +270,9 @@ function backup_default_runon {
 	local bck_src="$3"
 	local bck_runon=""
 
-	if [ "$bck_type" != file ] ; then
+	if [ "$bck_type" == file2rclone ] ; then
+		bck_runon=-1 # can only run on source
+	elif [ "$bck_type" != file ] ; then
 		bck_runon=1 # can only run on destination
 	else
 		if   [[ "$bck_dst" == *":"* ]] &&
@@ -396,6 +398,8 @@ function backup {
 		bck_type=rclone2file
 	elif [ "$bck_type" == rclone2file ] ; then
 		:
+	elif [ "$bck_type" == file2rclone ] ; then
+		:
 	elif [ "$bck_type" == rclone_unittest_updateconf ] ; then
 		:
 	elif [ "$bck_type" == file ] ; then
@@ -419,8 +423,19 @@ function backup {
 	fi
 
 	#----- Validation 2 after runon detection ----------------------------
-	if [ "$bck_type" != file ] &&
-	   [ "$bck_runon" == -1 ] ; then
+	if
+		[ "$bck_type" == file2rclone ] &&
+		[ "$bck_runon" == 1 ]
+	then
+		printf "Error: cannot run on dest with type %s\n" \
+			"$bck_type"
+		NAFETS227BACKUP_GRC=1
+		return 1
+	elif
+		[ "$bck_type" != file2rclone ] &&
+		[ "$bck_type" != file ] &&
+		[ "$bck_runon" == -1 ]
+	then
 		printf "Error: cannot run on source with type %s\n" \
 			"$bck_type"
 		NAFETS227BACKUP_GRC=1

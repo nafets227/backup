@@ -124,6 +124,15 @@ Backups data from various Clouds, leveraging [rclone](https://rclone.org/).
     Optionally prefixed by Server name followed by a colon.
   * Source Secret - rclone.conf file to be used
 
+# file2rclone
+Backups data from local to various Clouds, leveraging [rclone](https://rclone.org/).
+
+### file2rclone Global paramaters
+  * Source - Name of the cloud in rclone config
+  * Destination - Directory where to store the download.
+    Optionally prefixed by Server name followed by a colon.
+  * Source Secret - rclone.conf file to be used
+
 # Security (Secrets)
 Each remote system needs a Secret for Authentication and authorisation.
 Typical form of Secrets are public keys or passwords. If needed, Secrets can
