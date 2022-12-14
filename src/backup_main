@@ -371,7 +371,7 @@ function backup {
 			"when calling backup with parms" \
 			"$*" \
 			"Missing non-option parms" \
-			"(type, source, dest) - got "
+			"(type, source, dest) - got " \
 			"$bck_global_prm"
 		NAFETS227BACKUP_GRC=1
 		return 1
