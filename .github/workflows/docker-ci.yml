@@ -11,6 +11,9 @@ on:
     branches:
       - '*'
 
+# avoid to run multiple jobs in parallel that would interfere with each other
+# in the test step, since they would use the same test Email and OneDrive.
+concurrency: ci
 
 jobs:
   docker-build-ci:
