@@ -51,6 +51,47 @@ function test_putRclone () {
 	return $?
 }
 
+function test_expect_rclone_files {
+	testnr=$(( ${testnr-0} + 1))
+	# not increasing testexecnr
+
+	local rclone_namepath="$1"
+	local rclone_conf="$2"
+	local testexpected="$3"
+	shift 3
+
+	testresult=$(
+		set -o pipefail
+		rclone \
+			--config $rclone_conf \
+			lsf $rclone_namepath "$@" 2>/dev/null |
+		wc -l
+		)
+
+	rc=$?
+
+	if [ "$rc" != 0 ] ; then
+		printf "\tCHECK %s FAILED. Cannot get files in '%s'\n" \
+			"$testnr" "$rclone_namepath"
+		testsetfailed="$testsetfailed $testnr"
+		return 1
+	elif [ $testresult != $testexpected ] ; then
+		# nr of files differ from expected
+		printf "\tCHECK %s FAILED. nr of files in '%s' is %s (exp=%s)\n" \
+			"$testnr" "$rclone_namepath" "$testresult" "$testexpected"
+		testsetfailed="$testsetfailed $testnr"
+		return 0
+	else
+		printf "\tCHECK %s OK.\n" "$testnr"
+		testsetok=$(( ${testsetok-0} + 1))
+		return 0
+	fi
+
+	# should not reach this
+	return 99
+}
+
+
 ##### Tests for rclone2file ##################################################
 function test_rclone2file {
 	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
@@ -350,7 +391,189 @@ function test_rclone2file_hist {
 		"backup/rclone2file-hist/2022/03/21/testdir/testfile.txt" \
 		rclone-hist-2
 
-	test_expect_files "backup/rclone-hist/2022/03/30" 0
+	test_expect_files "backup/rclone2file-hist/2022/03/30" 0
+
+	return 0
+}
+
+##### Tests for file2rclone ##################################################
+function test_file2rclone {
+	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
+	   ! test_assert_files "$RCLONE_CONF" ||
+	   ! test_assert_tools "rclone" ; then
+		printf "\tSkipping file2rclone Tests.\n"
+		return 0
+	fi
+
+	printf "Testing file2rclone using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
+
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/file2rclone.conf"
+	test_assert "$?" "copy file2rclone.conf" || return 1
+
+	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
+	test_assert "$?" "clean rclone" || return 1
+
+	mkdir -p \
+		"$TESTSETDIR/backup/file2rclone"
+	test_assert "$?" "Creating directories" || return 1
+
+	# Wrong dst, no ":"
+	eval $(test_exec_backupdocker 1 \
+		"backup file2rclone" \
+		/backup/file2rclone \
+		"mydummyname" \
+		)
+
+	# Wrong dst, nothing after ":"
+	eval $(test_exec_backupdocker 1 \
+		"backup file2rclone" \
+		/backup/file2rclone \
+		"mydummyname:" \
+		--dstsecret /backup/file2rclone.conf \
+		)
+
+	# Wrong dst, nothing before ":"
+	eval $(test_exec_backupdocker 1 \
+		"backup file2rclone" \
+		/backup/file2rclone \
+		":mydummyname" \
+		--dstsecret /backup/file2rclone.conf \
+		)
+
+	# No password
+	eval $(test_exec_backupdocker 1 \
+		"backup file2rclone" \
+		/backup/file2rclone \
+		"$RCLONE_NAME" \
+		)
+
+	# Not existing password file
+	eval $(test_exec_backupdocker 1 \
+		"backup file2rclone" \
+		/backup/file2rclone \
+		"$RCLONE_NAME" \
+		--dstsecret "filedoesnotexist" \
+		)
+
+	# remote source without source secret
+	eval $(test_exec_backupdocker 1 \
+		"backup file2rclone" \
+		$my_ip:$TESTSETDIR/backup/file2rclone \
+		"$RCLONE_NAME" \
+		--dstsecret /backup/file2rclone.conf \
+		)
+
+	for source in "/backup/file2rclone" "$my_ip:$TESTSETDIR/backup/file2rclone" ; do
+		secretparm=""
+		if [[ "$source" == *":"* ]] ; then
+			secretparm+="--srcsecret /secrets/id_rsa "
+		fi
+
+		test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
+		test_assert "$?" "clean rclone" || return 1
+
+		# backup from non-existing source should fail
+		eval $(test_exec_backupdocker 1 \
+			"backup file2rclone" \
+			"$source/thisdirdoesnotexist" \
+			"$RCLONE_NAME" \
+			--dstsecret /backup/file2rclone.conf \
+			$secretparm \
+			)
+
+		# history backup should fail
+		eval $(test_exec_backupdocker 1 \
+			"backup file2rclone" \
+			"$source" \
+			"$RCLONE_NAME" \
+			--dstsecret /backup/file2rclone.conf \
+			$secretparm \
+			--hist
+			)
+
+		# rclone OK with Empty Dir
+		eval $(test_exec_backupdocker 0 \
+			"backup file2rclone" \
+			"$source" \
+			"$RCLONE_NAME" \
+			--dstsecret /backup/file2rclone.conf \
+			$secretparm \
+			) &&
+		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 0
+
+		# backup one file
+		echo "Dummyfile" >$TESTSETDIR/backup/file2rclone/dummyfile
+		test_assert "$?" "Creating dummyfile" || return 1
+		eval $(test_exec_backupdocker 0 \
+			"backup file2rclone" \
+			"$source" \
+			"$RCLONE_NAME" \
+			--dstsecret /backup/file2rclone.conf \
+			$secretparm \
+			"$@" \
+			) &&
+		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 1
+
+		# backup additional file in subdirectory
+		mkdir $TESTSETDIR/backup/file2rclone/testsubdir
+		test_assert "$?" "Creating testsubdir" || return 1
+		echo "Dummyfile2" >$TESTSETDIR/backup/file2rclone/testsubdir/dummyfile2
+		test_assert "$?" "Creating dummyfile2" || return 1
+		eval $(test_exec_backupdocker 0 \
+			"backup file2rclone" \
+			"$source" \
+			"$RCLONE_NAME" \
+			--dstsecret /backup/file2rclone.conf \
+			$secretparm \
+			"$@" \
+			) &&
+		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 2 && # includes subdir!
+		test_expect_rclone_files "${RCLONE_NAME}testsubdir" "$RCLONE_CONF" 1
+
+		# delete no longer existing file
+		rm $TESTSETDIR/backup/file2rclone/dummyfile
+		test_assert "$?" "remove Dummyfile" || return 1
+		eval $(test_exec_backupdocker 0 \
+			"backup file2rclone" \
+			"$source" \
+			"$RCLONE_NAME" \
+			--dstsecret /backup/file2rclone.conf \
+			$secretparm \
+			"$@" \
+			) &&
+		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 1 && # includes subdir!
+		test_expect_rclone_files "${RCLONE_NAME}testsubdir" "$RCLONE_CONF" 1
+
+		# delete no longer existing file in subdir
+		rm $TESTSETDIR/backup/file2rclone/testsubdir/dummyfile2
+		test_assert "$?" "remove Dummyfile2" || return 1
+		eval $(test_exec_backupdocker 0 \
+			"backup file2rclone" \
+			"$source" \
+			"$RCLONE_NAME" \
+			--dstsecret /backup/file2rclone.conf \
+			$secretparm \
+			"$@" \
+			) &&
+		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 1 && # includes subdir!
+		test_expect_rclone_files "${RCLONE_NAME}testsubdir" "$RCLONE_CONF" 0
+
+		# delete no longer existing subdir
+		rmdir $TESTSETDIR/backup/file2rclone/testsubdir
+		test_assert "$?" "remove testsubdir" || return 1
+		eval $(test_exec_backupdocker 0 \
+			"backup file2rclone" \
+			"$source" \
+			"$RCLONE_NAME" \
+			--dstsecret /backup/file2rclone.conf \
+			$secretparm \
+			"$@" \
+			) &&
+		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 0
+
+		true || return 1
+
+	done
 
 	return 0
 }

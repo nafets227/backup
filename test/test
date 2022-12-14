@@ -158,6 +158,7 @@ if test_build "$1" && test_init ; then
 	test_email
 	test_rclone2file
 	test_rclone2file_hist
+	test_file2rclone
 	test_file
 	test_file_hist
 	test_imap
