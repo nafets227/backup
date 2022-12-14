@@ -1,5 +1,9 @@
 # nafets227/backup CHANGELOG
 
+## 0.7.1 (2022-12-14)
+* improve CI by using github actions also for testing
+* BREAKING CHANGE: focus on ghcr.io registry, stop updating docker hub (docker.io/nafets227/backup)
+
 ## 0.7. (2022-11-26)
 * fix reusing .in-progress (#28)
 * retry imap to workaround uid validity issue
