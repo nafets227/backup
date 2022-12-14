@@ -20,6 +20,8 @@ function backup_remote {
 
 	if [ -z "$remotemachine" ] ||
 	   [ -z "$remotesecret" ] ; then
+		printf "Error: %s without machine (%s) and/or secret (%s)\n" \
+			"trying to connect to remote" "$remotemachine" "$remotesecret"
 		return 1
 	fi
 
