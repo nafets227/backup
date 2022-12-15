@@ -1,5 +1,12 @@
 # nafets227/backup CHANGELOG
 
+## 0.8 (2022-12-15)
+* add new backup type file2rclone to backup local files onto cloud
+* rename backup type rclone to rclone2file, making clear it
+  downloads files from the cloud to a local directory.
+* deprecate backup typ rclone, that is replaced by rclone2file.
+  It will be removed in future versions.
+   
 ## 0.7.1 (2022-12-14)
 * improve CI by using github actions also for testing
 * BREAKING CHANGE: focus on ghcr.io registry, stop updating docker hub (docker.io/nafets227/backup)
