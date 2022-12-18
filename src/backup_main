@@ -393,7 +393,7 @@ function backup {
 	elif [ "$bck_type" == imap ] ; then
 		:
 	elif [ "$bck_type" == rclone ] ; then
-		printf "WARNING: backup-type %s is deprecated, use %s instead.\n"
+		printf "WARNING: backup-type %s is deprecated, use %s instead.\n" \
 			"rclone" "rclone2file"
 		bck_type=rclone2file
 	elif [ "$bck_type" == rclone2file ] ; then
