@@ -1,5 +1,8 @@
 # nafets227/backup CHANGELOG
 
+## 0.8.1 (2022-12-18)
+* fix compatibility for backup type "rclone"
+
 ## 0.8 (2022-12-15)
 * add new backup type file2rclone to backup local files onto cloud
 * rename backup type rclone to rclone2file, making clear it
