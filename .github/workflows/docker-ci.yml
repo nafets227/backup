@@ -45,7 +45,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
 
       - name: Build Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           cache-from: type=gha
@@ -81,7 +81,7 @@ jobs:
           rm test/rclone.conf test/mail.password
 
       - name: Push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           cache-from: type=gha
