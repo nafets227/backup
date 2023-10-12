@@ -67,6 +67,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_SECRET_ADMIN_TOKEN }}
           MAIL_PW: ${{ secrets.MAIL_PW }}
         run: |
+          [ "$RUNNER_DEBUG" == 1 ] && DEBUGSH="set -x ; " && set -x
+
           cat >test/rclone.conf <<<"$RCLONE_CONF"
           cat >test/mail.password <<<"$MAIL_PW"
           unset RCLONE_CONF MAIL_PW
@@ -75,7 +77,7 @@ jobs:
           sudo bash -c 'cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys'
           sudo bash -c 'touch ~/.hushlogin'
 
-          sudo test/test ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version}}
+          sudo bash -c "$DEBUGSH . test/test ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version}}"
           
           gh secret set RCLONE_CONF < test/rclone.conf
           rm test/rclone.conf test/mail.password
