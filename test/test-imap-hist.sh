@@ -105,8 +105,8 @@ function test_imap_hist {
 	test_expect_files "backup/imap-hist/2020/06/16/INBOX/new" 0 &&
 	test_expect_files "backup/imap-hist/2020/06/16/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"backup/imap-hist/2020/06/16/INBOX/cur/*" \
-		"backup/imap-hist/2020/06/15/INBOX/cur/*"
+		"$TESTSETDIR/backup/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSETDIR/backup/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# IMAP OK with 1 Mail 2020-06-16 - remote backup dest
 	$exec_remote &&
@@ -123,8 +123,8 @@ function test_imap_hist {
 	test_expect_files "backup-rem/imap-hist/2020/06/16/INBOX/new" 0 &&
 	test_expect_files "backup-rem/imap-hist/2020/06/16/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"backup-rem/imap-hist/2020/06/16/INBOX/cur/*" \
-		"backup-rem/imap-hist/2020/06/15/INBOX/cur/*"
+		"$TESTSETDIR/backup-rem/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSETDIR/backup-rem/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# IMAP OK with 1 Mail 2020-07-15
 	eval $(test_exec_backupdocker  0 \
@@ -139,9 +139,9 @@ function test_imap_hist {
 	test_expect_files "backup/imap-hist/2020/07/15/INBOX/new" 0 &&
 	test_expect_files "backup/imap-hist/2020/07/15/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"backup/imap-hist/2020/07/15/INBOX/cur/*" \
-		"backup/imap-hist/2020/06/16/INBOX/cur/*" \
-		"backup/imap-hist/2020/06/15/INBOX/cur/*"
+		"$TESTSETDIR/backup/imap-hist/2020/07/15/INBOX/cur"/* \
+		"$TESTSETDIR/backup/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSETDIR/backup/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# IMAP OK with 1 Mail 2020-07-15 - remote backup dest
 	$exec_remote &&
@@ -158,9 +158,9 @@ function test_imap_hist {
 	test_expect_files "backup-rem/imap-hist/2020/07/15/INBOX/new" 0 &&
 	test_expect_files "backup-rem/imap-hist/2020/07/15/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"backup-rem/imap-hist/2020/07/15/INBOX/cur/*" \
-		"backup-rem/imap-hist/2020/06/16/INBOX/cur/*" \
-		"backup-rem/imap-hist/2020/06/15/INBOX/cur/*"
+		"$TESTSETDIR/backup-rem/imap-hist/2020/07/15/INBOX/cur"/* \
+		"$TESTSETDIR/backup-rem/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSETDIR/backup-rem/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# IMAP OK with one Mail 2021-01-15
 	eval $(test_exec_backupdocker  0 \
@@ -175,10 +175,10 @@ function test_imap_hist {
 	test_expect_files "backup/imap-hist/2021/01/15/INBOX/new" 0 &&
 	test_expect_files "backup/imap-hist/2021/01/15/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"backup/imap-hist/2021/01/15/INBOX/cur/*" \
-		"backup/imap-hist/2020/07/15/INBOX/cur/*" \
-		"backup/imap-hist/2020/06/16/INBOX/cur/*" \
-		"backup/imap-hist/2020/06/15/INBOX/cur/*"
+		"$TESTSETDIR/backup/imap-hist/2021/01/15/INBOX/cur"/* \
+		"$TESTSETDIR/backup/imap-hist/2020/07/15/INBOX/cur"/* \
+		"$TESTSETDIR/backup/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSETDIR/backup/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# IMAP OK with one Mail 2021-01-15 - remote backup dest
 	$exec_remote &&
@@ -195,10 +195,10 @@ function test_imap_hist {
 	test_expect_files "backup-rem/imap-hist/2021/01/15/INBOX/new" 0 &&
 	test_expect_files "backup-rem/imap-hist/2021/01/15/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"backup-rem/imap-hist/2021/01/15/INBOX/cur/*" \
-		"backup-rem/imap-hist/2020/07/15/INBOX/cur/*" \
-		"backup-rem/imap-hist/2020/06/16/INBOX/cur/*" \
-		"backup-rem/imap-hist/2020/06/15/INBOX/cur/*"
+		"$TESTSETDIR/backup-rem/imap-hist/2021/01/15/INBOX/cur"/* \
+		"$TESTSETDIR/backup-rem/imap-hist/2020/07/15/INBOX/cur"/* \
+		"$TESTSETDIR/backup-rem/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSETDIR/backup-rem/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# clear Emails
 	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$mail_smtpsrv" 
