@@ -7,10 +7,11 @@ on:
       - '*'
     tags: 
       - 'v*'
-  pull_request:
-    branches:
-      - '*'
-
+  workflow_run:
+    workflows: ["Dependabot PR Check"]
+    types: 
+      - completed
+    
 # avoid to run multiple jobs in parallel that would interfere with each other
 # in the test step, since they would use the same test Email and OneDrive.
 concurrency: ci
