@@ -7,11 +7,10 @@ on:
       - '*'
     tags: 
       - 'v*'
-  workflow_run:
-    workflows: ["Dependabot PR Check"]
-    types: 
-      - completed
-    
+  pull_request:
+    branches:
+      - '*'
+
 # avoid to run multiple jobs in parallel that would interfere with each other
 # in the test step, since they would use the same test Email and OneDrive.
 concurrency: ci
@@ -28,7 +27,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: true
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
