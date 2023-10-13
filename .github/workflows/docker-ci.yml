@@ -69,6 +69,17 @@ jobs:
         run: |
           [ "$RUNNER_DEBUG" == 1 ] && DEBUGSH="set -x ; " && set -x
 
+          if [ -z "$RCLONE_CONF" ] ; then
+            printf "secret variable RCLONE_CONF not set\n"
+            exit 1
+          elif [ -z "$GH_TOKEN" ] ; then
+            printf "secret variable GH_SECRET_ADMIN_TOKEN not set\n"
+            exit 1
+          elif [ -z "$MAIL_PW" ] ; then
+            printf "secret variable MAIL_PW not set\n"
+            exit 1
+          fi
+
           cat >test/rclone.conf <<<"$RCLONE_CONF"
           cat >test/mail.password <<<"$MAIL_PW"
           unset RCLONE_CONF MAIL_PW
