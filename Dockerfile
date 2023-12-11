@@ -34,7 +34,9 @@ RUN \
 		-o offlineimap3.tgz \
 		https://github.com/OfflineIMAP/offlineimap3/archive/refs/tags/v8.0.0.tar.gz && \
 	tar xvfz offlineimap3.tgz && cd offlineimap3-* && \
-	python3 -m pip install --upgrade pip && pip install -r requirements.txt && \
+	python3 -m venv /usr/local && \
+	. /usr/local/bin/activate && \
+	pip install -r requirements.txt && \
 	python3 setup.py install && \
 	cd && \
 	rm -rf /offlineimap3 && \
