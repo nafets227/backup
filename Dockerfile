@@ -4,7 +4,7 @@
 #
 # (C) 2017-2021 Stefan Schallenberg
 FROM rclone/rclone:1.65.0 AS rclone
-FROM alpine:3.17.2
+FROM alpine:3.19.0
 
 RUN \
 	apk update && \
