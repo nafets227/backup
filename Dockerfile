@@ -4,6 +4,22 @@
 #
 # (C) 2017-2021 Stefan Schallenberg
 FROM rclone/rclone:1.65.0 AS rclone
+
+FROM alpine:3.19.0 AS offlineimap3
+# Copy and install offlineimap3 (replaces offlineimap)
+# offlineimap3 is the successort of offlineimap,
+# migrated from python2.x to python 3
+COPY ./offlineimap3 /offlineimap3
+RUN \
+	apk add --no-cache curl gcc git krb5-dev python3-dev musl-dev py3-pip
+RUN \
+	set -x && \
+	cd /offlineimap3 && \
+	python3 -m venv /usr/local && \
+	. /usr/local/bin/activate && \
+	pip install -r requirements.txt && \
+	python3 setup.py install
+
 FROM alpine:3.19.0
 
 RUN \
@@ -20,28 +36,8 @@ RUN \
 		&& \
 	rm -rf /var/cache/apk/*
 
+COPY --from=offlineimap3 /usr/local /usr/local/
 COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
-
-# Download and install offlineimap3 (replaces offlineimap)
-# offlineimap3 is the successort of offlineimap,
-# migrated from python2.x to python 3
-RUN \
-	set -x && \
-	DEVPACKAGES="curl gcc krb5-dev python3-dev musl-dev" && \
-	apk add --no-cache $DEVPACKAGES && \
-	mkdir /offlineimap3 && cd /offlineimap3 && \
-	curl -L \
-		-o offlineimap3.tgz \
-		https://github.com/OfflineIMAP/offlineimap3/archive/refs/tags/v8.0.0.tar.gz && \
-	tar xvfz offlineimap3.tgz && cd offlineimap3-* && \
-	python3 -m venv /usr/local && \
-	. /usr/local/bin/activate && \
-	pip install -r requirements.txt && \
-	python3 setup.py install && \
-	cd && \
-	rm -rf /offlineimap3 && \
-	apk del $DEVPACKAGES && \
-	rm -rf /var/cache/apk/*
 
 # maybe include gigasync
 # https://github.com/noordawod/gigasync
