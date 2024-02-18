@@ -3,7 +3,7 @@
 # Backup solution in Docker leveraging on rsync
 #
 # (C) 2017-2021 Stefan Schallenberg
-FROM rclone/rclone:1.65.0 AS rclone
+FROM rclone/rclone:1.65.2 AS rclone
 
 FROM alpine:3.19.1 AS offlineimap3
 # Copy and install offlineimap3 (replaces offlineimap)
