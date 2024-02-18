@@ -181,6 +181,25 @@ To run tests in test subdirectory you need to have some test data available. ATT
 
 start with running test/test to verify your environment
 
+## Github actions setup
+Github actions are setup in this repo to test against a dummy OneDrive 
+(nafets227@nafets.de) and Mailbox (nafets227.backup.test@nafets.de).
+Dependabot triggered pull requests (e.g. to update actions or git subrepos)
+automatically trigger a github action. However, dependatbot triggered actions
+cannot access the "normal" action secrets in Github. In order to overcome this
+limitations, relevant secrets have been copied into the special dependabot
+area of secrets:
+- GH_SECRETS_ADMIN_TOKEN hold the value of the token named 
+  [dependabot_ghaction_nafet227backup](https://github.com/settings/personal-access-tokens/2796058)
+  This is needed to let the action update RCLONE config after re-authentication.
+- MAIL_PW holds the mail password of the dummy accounts 
+  nafets227.backup.test@nafets.de. This account has limited send-rate to
+  reduce the risk of being used as spam sender in case anyone steals the 
+  secret.
+- RCLONE_CONF holds the rclone config of the dummy OneDrive
+  nafets227@nafets.de. It is updated after every run, since authentication
+  needs to be re-evaluated according to oauth technology.
+
 # Reference #
 [Source](https://github.com/nafets227/backup)
 
