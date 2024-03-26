@@ -48,4 +48,7 @@ ADD backup-sample /backup/backup-sample
 ADD backup.d /usr/lib/nafets227.backup
 ADD src /usr/lib/nafets227.backup
 
+RUN adduser --no-create-home --disabled-password backupuser
+USER backupuser
+
 ENTRYPOINT ["/usr/lib/nafets227.backup/backup_main"]
