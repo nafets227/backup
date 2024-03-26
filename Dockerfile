@@ -59,4 +59,8 @@ COPY backup-sample /backup/backup-sample
 COPY backup.d /usr/lib/nafets227.backup
 COPY src /usr/lib/nafets227.backup
 
+# using UID 41598 is a random number
+RUN adduser --uid 41598 --no-create-home --disabled-password backupuser
+USER 41598
+
 ENTRYPOINT ["/usr/lib/nafets227.backup/backup_main"]
