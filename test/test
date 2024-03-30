@@ -43,10 +43,14 @@ function test_exec_backupdocker {
 	chmod +x "$TESTSETDIR/backup/backup"
 	test_assert "$?" "Write backup script" >&2 || return 1
 
+	cp ~/.ssh/id_rsa "$TESTSETDIR/id_rsa" &&
+	chown 41598:41598 "$TESTSETDIR/id_rsa"
+	test_assert "$?" "Copy SSH Key" >&2 || return 1
+
 	local docker_cmd=""
 	docker_cmd+="docker run"
 	docker_cmd+=" -v $TESTSETDIR/backup:/backup"
-	docker_cmd+=" -v ~/.ssh/id_rsa:/secrets/id_rsa:ro"
+	docker_cmd+=" -v $TESTSETDIR/id_rsa:/secrets/id_rsa:ro"
 	docker_cmd+=" -e DEBUG=1"
 	docker_cmd+=" -e MAIL_TO"
 	docker_cmd+=" -e MAIL_FROM"
@@ -152,6 +156,7 @@ testset_init || exit 1
 if [ ! -d "$TESTSETDIR/backup" ] ; then
 	mkdir "$TESTSETDIR/backup" || return 1
 fi
+chown 41598:41598 "$TESTSETDIR/backup" "$RCLONE_CONF"
 
 if test_build "$1" && test_init ; then
 	test_runempty
