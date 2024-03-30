@@ -42,7 +42,8 @@ function backup_remote {
 	printf "===== Start Executing on %s for %s %s =====\n" \
 		"$remotemachine" "$bck_type" "$bck_src"
 	local remdir rem_src_secret rem_dst_secret
-	remdir=$(ssh -o StrictHostKeyChecking=no "$remotemachine" -i "$remotesecret"<<-EOF
+	remdir=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+			"$remotemachine" -i "$remotesecret"<<-EOF
 		# this mktemp call works on both Linux and MacOS with slightly different
 		# results:
 		# Linux: nafets227.backup.<random>
@@ -51,13 +52,15 @@ function backup_remote {
 		mktemp -d -t nafets227.backup.XXXXXXXXXX
 		EOF
 		) &&
-	scp -o StrictHostKeyChecking=no -i "$remotesecret" \
+	scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+		-i "$remotesecret" \
 		-r "$0" "$(dirname "$0")"/*.sh "$remotemachine:$remdir" &&
 	{
 		if [ -z "$bck_src_secret" ] ; then
 			rem_src_secret=""
 		else
-			scp -o StrictHostKeyChecking=no -i "$remotesecret" \
+			scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+				-i "$remotesecret" \
 				"$bck_src_secret" \
 				"$remotemachine:$remdir/srcsecret" &&
 			rem_src_secret="--srcsecret $remdir/srcsecret"
@@ -67,15 +70,17 @@ function backup_remote {
 		if [ -z "$bck_dst_secret" ] ; then
 			rem_dst_secret=""
 		else
-			scp -o StrictHostKeyChecking=no -i "$remotesecret" \
+			scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+				-i "$remotesecret" \
 				"$bck_dst_secret" \
 				"$remotemachine:$remdir/dstsecret" &&
 			rem_dst_secret="--dstsecret $remdir/dstsecret"
 		fi
 	} &&
 	{
-	#shellcheck disable=SC2087 # intentionally making here-document expansion on server side
-		ssh -o StrictHostKeyChecking=no "$remotemachine" -i "$remotesecret" <<-EOF
+		#shellcheck disable=SC2087 # intentionally making here-document expansion on server side
+		ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+				"$remotemachine" -i "$remotesecret" <<-EOF
 			[[ x"$DEBUG" == x1 ]] && set -x
 			export DEBUG=$DEBUG
 			# please note the trick to have a correct quoting on the
@@ -100,7 +105,8 @@ function backup_remote {
 		if [ -z "$bck_src_secret" ] ; then
 			true
 		else
-			if ! bck_secret=$(ssh -o StrictHostKeyChecking=no -i "$remotesecret" \
+			if ! bck_secret=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+				-i "$remotesecret" \
 				"$remotemachine" cat "$remdir/srcsecret")
 			then
 				false
@@ -119,7 +125,8 @@ function backup_remote {
 		if [ -z "$bck_dst_secret" ] ; then
 			true
 		else
-			if ! bck_secret=$(ssh -o StrictHostKeyChecking=no -i "$remotesecret" \
+			if ! bck_secret=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+				-i "$remotesecret" \
 				"$remotemachine" cat "$remdir/dstsecret")
 			then
 				false
