@@ -20,6 +20,10 @@ function test_file_srcdest {
 
 	mkdir -p \
 		"$TESTSETDIR/backup/file/source" \
+		"$TESTSETDIR/backup/file/dest" &&
+	chown 41598:41598 \
+		"$TESTSETDIR/backup/file" \
+		"$TESTSETDIR/backup/file/source" \
 		"$TESTSETDIR/backup/file/dest"
 	test_assert "$?" "Creating directories" || return 1
 	source+="/file/source"

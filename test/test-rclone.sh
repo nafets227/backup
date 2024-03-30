@@ -116,7 +116,8 @@ function test_rclone2file {
 
 	printf "Testing rclone2file using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
 
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file.conf"
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file.conf" &&
+	chown 41598:41598 "$TESTSETDIR/backup/rclone2file.conf"
 	test_assert "$?" "copy rclone2file.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
@@ -190,7 +191,8 @@ function test_rclone2file {
 	test_expect_files "backup-rem/rclone2file" 0
 
 	# Verify modifying conf
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf"
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
+	chown 41598:41598 "$TESTSETDIR/backup/rclone-update.conf"
 	test_assert "$?" "write rclone-update.conf" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup rclone_unittest_updateconf" \
@@ -202,6 +204,7 @@ function test_rclone2file {
 
 	# Verify modifying conf - remote
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
+	chown 41598:41598 "$TESTSETDIR/backup/rclone-update.conf"
 	test_assert "$?" "write rclone-update.conf" || return 1
 	$exec_remote &&
 	eval "$(test_exec_backupdocker 0 \
@@ -278,7 +281,8 @@ function test_rclone2file_hist {
 
 	printf "Testing rclone history using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
 
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file-hist.conf"
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file-hist.conf" &&
+	chown 41598:41598 "$TESTSETDIR/backup/rclone2file-hist.conf"
 	test_assert "$?" "copy rclone.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
@@ -420,7 +424,8 @@ function test_file2rclone {
 
 	printf "Testing file2rclone using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
 
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/file2rclone.conf"
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/file2rclone.conf" &&
+	chown 41598:41598 "$TESTSETDIR/backup/file2rclone.conf"
 	test_assert "$?" "copy file2rclone.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
