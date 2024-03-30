@@ -91,9 +91,9 @@ function backup2_file {
 	printf "Backing up Files %s to %s\n" "$bckfile_src" "$bckfile_dst"
 
 	if	[[ "$bckfile_src" == *":"* ]] ; then
-		sshopt="ssh -o StrictHostKeyChecking=no -i $bckfile_src_secret"
+		sshopt="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $bckfile_src_secret"
 	elif [[ "$bckfile_dst" == *":"* ]] ; then
-		sshopt="ssh -o StrictHostKeyChecking=no -i $bckfile_dst_secret"
+		sshopt="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $bckfile_dst_secret"
 	else
 		sshopt="ssh"
 	fi
