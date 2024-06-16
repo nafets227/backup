@@ -3,6 +3,11 @@
 # Backup solution in Docker leveraging on rsync
 #
 # (C) 2017-2021 Stefan Schallenberg
+
+#checkov:skip=CKV_DOCKER_3: using root intentionally
+#checkov:skip=CKV_DOCKER_2: HEALTHCHECK should be in kubernetes
+# hadolint global ignore=DL3018,SC1091
+
 FROM rclone/rclone:1.66.0 AS rclone
 
 FROM alpine:3.20.0 AS offlineimap3
@@ -17,16 +22,16 @@ RUN \
 # patching offlineimap to Python 3.12 of Alping 3.20+:
 #     replace distutils.core by setuptools
 
+WORKDIR /offlineimap3
 RUN \
 	set -x && \
-	cd /offlineimap3 && \
 	python3 -m venv /usr/local && \
 	. /usr/local/bin/activate && \
 	sed -i 's:^.*portalocker.*$:setuptools:' requirements.txt && \
 	sed -i "s:, 'portalocker\[cygwin\]'::" setup.py && \
 	sed -i "s:, 'gssapi\[kerberos\]':, 'gssapi':" setup.py && \
 	sed -i 's:from distutils.core :from setuptools :' setup.py && \
-	pip install -r requirements.txt && \
+	pip install --no-cache-dir -r requirements.txt && \
 	python3 setup.py install
 
 FROM alpine:3.20.0
@@ -52,9 +57,9 @@ COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
 # https://github.com/noordawod/gigasync
 # to speedup rsync
 
-ADD backup-error /backup/backup
-ADD backup-sample /backup/backup-sample
-ADD backup.d /usr/lib/nafets227.backup
-ADD src /usr/lib/nafets227.backup
+COPY backup-error /backup/backup
+COPY backup-sample /backup/backup-sample
+COPY backup.d /usr/lib/nafets227.backup
+COPY src /usr/lib/nafets227.backup
 
 ENTRYPOINT ["/usr/lib/nafets227.backup/backup_main"]
