@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Backup Files
 #
@@ -20,8 +20,8 @@ function backup2_file {
         printf "Error in custom config script. "
         printf "Calling backup file with parms:\n\t%s\n" "$*"
         return 1
-	elif [ x"$DEBUG" == x1 ] ; then
-		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+	elif [ "$DEBUG" == 1 ] ; then
+		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"
 	fi
 
 	#### NB: %/ removes a trailing slash if it exists
@@ -31,7 +31,7 @@ function backup2_file {
 	local bckfile_dst_secret="$4"
     shift 4
 
-    local opt prm start_date rsync_rc diff_date elapsed sshopt
+    local opt prm rsync_rc elapsed sshopt # start_date diff_date  
 
     if [ "$1" == "--inet" ] ; then
 		opt="-rLt --size-only --partial"
@@ -58,14 +58,14 @@ function backup2_file {
 		if [ -z "$bckfile_src_secret" ] ; then
 			printf "ERROR: No secret for remote src file given.\n"
 			return 1
-        elif [ x"$DEBUG" == x1 ] ; then
+        elif [ "$DEBUG" == 1 ] ; then
             printf "DEBUG: Source Directory not checked, its on another computer.\n"
         fi
 	elif [ ! -d "$bckfile_src" ]; then
 		printf "Error: Source Directory %s does not exist\n" "$bckfile_src"
 		return 1
 	else
-		if [ x"$DEBUG" == x1 ] ; then
+		if [ "$DEBUG" == 1 ] ; then
 			printf "DEBUG: Source Directory OK.\n"
 		fi
 	fi
@@ -74,16 +74,16 @@ function backup2_file {
 		if [ -z "$bckfile_dst_secret" ] ; then
 			printf "ERROR: No secret for remote dst file given.\n"
 			return 1
-        elif [ x"$DEBUG" == x1 ] ; then
+        elif [ "$DEBUG" == 1 ] ; then
             printf "DEBUG: Dest Directory not checked, its on another computer.\n"
         fi
 	elif [ ! -d "$bckfile_dst" ]; then
 		mkdir -p "$bckfile_dst" || return 1
-		if [ x"$DEBUG" == x1 ] ; then
+		if [ "$DEBUG" == 1 ] ; then
 			printf "DEBUG: Dest Directory has been created.\n"
 		fi
 	else
-		if [ x"$DEBUG" == x1 ] ; then
+		if [ "$DEBUG" == 1 ] ; then
 			printf "DEBUG: Dest Directory OK.\n"
 		fi
 	fi
@@ -98,7 +98,7 @@ function backup2_file {
 		sshopt="ssh"
 	fi
 
-	if [ x"$DEBUG" == x1 ] ; then
+	if [ "$DEBUG" == 1 ] ; then
 		opt="$opt --verbose --progress"
 	fi
 
@@ -107,11 +107,12 @@ function backup2_file {
 	# in the destination folder but sync all files inside source directory
 	# into the target directory
 #	start_date="$(date -u +"%s")" || return 1
-	if [ x"$DEBUG" == x1 ] ; then
+	if [ "$DEBUG" == 1 ] ; then
 		printf "Executing rsync -e \"%s\" %s %s %s %s/ %s\n" \
             "$sshopt" "$opt" "$prm" "$bckfile_src" "$bckfile_dst"
 	fi
-	rsync -e "$sshopt" $opt $prm $bckfile_src/ $bckfile_dst
+	#shellcheck disable=SC2086 # intentionally opt+prm can contain >1 word 
+	rsync -e "$sshopt" $opt $prm "$bckfile_src/" "$bckfile_dst"
 	rsync_rc="$?"
 
 #	diff_date=$(( $(date -u +"%s") - $start_date )) || return 1
@@ -130,5 +131,6 @@ function backup2_file {
         return 1
     fi
 
+	#shellcheck disable=2317 # intentionally not reachable
     return 99 # should never be reached
 }
