@@ -410,7 +410,7 @@ function backup {
 		:
 #	elif [ "$bck_type" != mysql-kube ] &&
 	else
-		printf "Wrong backup type %s " "$type"
+		printf "Wrong backup type %s " "$bck_type"
 		printf "when calling backup with\n\t%s\n" \
 			"$*"
 		NAFETS227BACKUP_GRC=1
