@@ -41,7 +41,7 @@ function backup_inithist {
 	if [ -z "$lastback" ]; then
 		printf "Backing up in history mode to %s (Initial Backup)\n" "$currback" >&2
 		if [ -e "$currback.in-progress" ] ; then
-			rm -rf "$currback.in-progress" || return 1
+			rm -rf "$currback.in-progress" || return 1
 		fi
 		printf "%s" "$currback.in-progress"
 		return 0
@@ -81,6 +81,7 @@ function backup_inithist {
 		return 0
 	fi
 
+	#shellcheck disable=SC2317 # intentionallx not reachable
 	return 99 # should never reach this.
 }
 
@@ -103,7 +104,7 @@ function backup_findlasthist {
 	fi
 
 	#----- check year --------------------------------------------------------
-	dirs_year=$(ls -1rd $bck_dst/2* 2>/dev/null) # ignore not-found error
+	dirs_year=$(ls -1rd "$bck_dst"/2* 2>/dev/null) # ignore not-found error
 
 	for dir_year in $dirs_year ; do
 		if [[ ! "$dir_year" =~ /[0-9]{4}$ ]] ; then
@@ -112,7 +113,7 @@ function backup_findlasthist {
 			continue
 		fi
 
-		dirs_month=$(ls -1rd $dir_year/* 2>/dev/null) # ignore not-found error
+		dirs_month=$(ls -1rd "$dir_year"/* 2>/dev/null) # ignore not-found error
 		for dir_month in $dirs_month ; do
 			if [[ ! "$dir_month" =~ /[0-9]{2}$ ]] ; then
 				printf "Warning: Ignoring Invalid month-dir-format in '%s'\n" \
@@ -122,7 +123,7 @@ function backup_findlasthist {
 
 			# month is valid -> search for backups in it.
 			# if not found continue with next month
-			dirs_day=$(ls -1rd $dir_month/* 2>/dev/null) # ignore not-found error
+			dirs_day=$(ls -1rd "$dir_month"/* 2>/dev/null) # ignore not-found error
 			for dir_day in $dirs_day ; do
 				if  [[ "$dir_day" =~ /[0-9]{2}\.in-progress$ ]] ; then
 					if [ ! "$bck_hist_keep" == "1" ] ; then
