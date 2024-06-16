@@ -108,7 +108,7 @@ function backup2_file {
 	# into the target directory
 #	start_date="$(date -u +"%s")" || return 1
 	if [ "$DEBUG" == 1 ] ; then
-		printf "Executing rsync -e \"%s\" %s %s %s %s/ %s\n" \
+		printf "Executing rsync -e \"%s\" %s %s %s/ %s\n" \
             "$sshopt" "$opt" "$prm" "$bckfile_src" "$bckfile_dst"
 	fi
 	#shellcheck disable=SC2086 # intentionally opt+prm can contain >1 word 
