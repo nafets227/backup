@@ -21,12 +21,29 @@ jobs:
     permissions:
       contents: read
       packages: write
+      statuses: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: true
+  
+      - name: SuperLint
+        uses: super-linter/super-linter/slim@v6.6.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: true
+          USE_FIND_ALGORITHM: true
+          FILTER_REGEX_EXCLUDE: ".*/(offlineimap3|util)/.*"
+          VALIDATE_SHELL_SHFMT: false
+          #DEFAULT_BRANCH: master
+          #KUBERNETES_KUBECONFORM_OPTIONS: "
+          #  -ignore-filename-pattern util/kube/helmupdate-cronjob-template.yaml
+          #  -ignore-filename-pattern kube/haproxy-helm-values-template.yaml
+          #  -ignore-filename-pattern ghrunner/kube/ghrunner-template.yaml
+          #  -ignore-filename-pattern kube/kube-auth.template.yaml
+          #  "
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
