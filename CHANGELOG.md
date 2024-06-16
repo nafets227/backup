@@ -9,9 +9,9 @@
   downloads files from the cloud to a local directory.
 * deprecate backup typ rclone, that is replaced by rclone2file.
   It will be removed in future versions.
-   
+
 ## 0.7.1 (2022-12-14)
-* improve CI by using github actions also for testing
+* improve CI by using GitHub actions also for testing
 * BREAKING CHANGE: focus on ghcr.io registry, stop updating docker hub (docker.io/nafets227/backup)
 
 ## 0.7. (2022-11-26)
@@ -90,7 +90,7 @@
 * Implement Secrets (INCOMPATIBLE CHANGE)
 * No longer Support Password parameter in IMAP. Replaced by Secret.
 * renamed Target to Destination in Doku
-* make tests run on MacOS
+* make tests run on macOS
 * Stability enhancements
 
 ## 0.1.1 (2020-07-17)
