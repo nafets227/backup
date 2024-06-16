@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Backup Files
 #
@@ -59,14 +59,14 @@ function backup2_imap {
                 printf "Error in custom config script. "
                 printf "Calling backup imap with parms:\n\t%s\n" "$*"
                 return 1
-	elif [ x"$DEBUG" == x1 ] ; then
-		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+	elif [ "$DEBUG" == 1 ] ; then
+		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"
 	fi
 
 	local bckimap_src="$1"
 	local bckimap_dst="$2"
 	local bckimap_src_secret="$3"
-	local bckimap_dst_secret="$4"
+	#unused: local bckimap_dst_secret="$4"
 	local bckimap_srv="$5"
 
 	local emailuser bckimapo_srv_server bckimap_srv_port
@@ -96,7 +96,7 @@ function backup2_imap {
 		# on first error delete the .offlineimap files to workaround the UID validity issue
 		# see http://www.offlineimap.org/doc/FAQ.html#what-is-the-uid-validity-problem-for-folder
 		printf "Error connecting to IMAP %s. Will delete .offlineimap and retry.\n" "$emailuser"
-		rm -rf $bckimap_dst/.offlineimap &&
+		rm -rf "$bckimap_dst/.offlineimap" &&
 		backup2_imap_mkconfig | offlineimap -c /dev/stdin 
 		rc=$?
 	fi
