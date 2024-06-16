@@ -47,8 +47,8 @@ function backup2_rclone2file {
 	elif [ -z "$bckrclone_src_secret" ] ; then
 		printf "Error: No rclone Secret given.\n"
 		return 1
-	elif [ ! -f "$bckrclone_src_secret" ] ; then
-		printf "Error: rclone Secret file \"%s\" does not exist.\n" \
+	elif [ ! -w "$bckrclone_src_secret" ] ; then
+		printf "Error: rclone Secret file \"%s\" does not exist or is not writable.\n" \
 			"$bckrclone_src_secret"
 		return 1
 	fi
