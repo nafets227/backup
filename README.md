@@ -80,6 +80,12 @@ see also [Example][1].
   HELO command. Usefule if the SMTP server requires a FQDN. Defaults to
   hostname.
 
+## UserID´s in this Non-root image
+This image is using non-root user "backupuser" with UID 41598.
+Using a diffferent non-root user is not supported (email wont work), so
+if you need to specify the user for the container runtime
+(e.g. in Kubernetes "runAsUser") you MUST use 41598.
+
 ## IMAP
 Backups data from an IMAP Server using offlineimap. This is done in a delta
 approach, so only modified Emails are downloaded whereas deleted EMails are
