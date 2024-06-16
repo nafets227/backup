@@ -49,7 +49,7 @@ function backup2_file {
 
 	if		[[ "$bckfile_src" == *":"* ]] &&
 			[[ "$bckfile_dst" == *":"* ]] ; then
-		printf "Error: cannot copy from remote to remote - '%s' '%s'\n"
+		printf "Error: cannot copy from remote to remote - '%s' '%s'\n" \
 			"$bckfile_src" "$bckfile_dst"
 		return 1
 	fi
