@@ -1,5 +1,5 @@
+---
 name: Docker-ci
-
 
 on:
   push:
@@ -10,6 +10,8 @@ on:
   pull_request:
     branches:
       - '*'
+
+permissions: read-all
 
 # avoid to run multiple jobs in parallel that would interfere with each other
 # in the test step, since they would use the same test Email and OneDrive.
@@ -83,6 +85,7 @@ jobs:
           RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
           GH_TOKEN: ${{ secrets.GH_SECRET_ADMIN_TOKEN }}
           MAIL_PW: ${{ secrets.MAIL_PW }}
+          IMGURL: "ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version}}"
         run: |
           [ "$RUNNER_DEBUG" == 1 ] && DEBUGSH="set -x ; " && set -x
 
@@ -105,7 +108,7 @@ jobs:
           sudo bash -c 'cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys'
           sudo bash -c 'touch ~/.hushlogin'
 
-          sudo bash -c "$DEBUGSH . test/test ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version}}"
+          sudo bash -c "$DEBUGSH . test/test $IMG_URL"
           
           gh secret set RCLONE_CONF < test/rclone.conf
           rm test/rclone.conf test/mail.password
