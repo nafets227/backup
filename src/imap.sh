@@ -69,7 +69,7 @@ function backup2_imap {
 	#unused: local bckimap_dst_secret="$4"
 	local bckimap_srv="$5"
 
-	local emailuser bckimapo_srv_server bckimap_srv_port
+	local emailuser bckimap_srv_server bckimap_srv_port
 	emailuser="${bckimap_src%%@*}" &&
 	# convert to lowercase
 	emailuser="${emailuser,,}" &&
