@@ -11,7 +11,7 @@ FROM alpine:3.19.1 AS offlineimap3
 # migrated from python2.x to python 3
 COPY ./offlineimap3 /offlineimap3
 RUN \
-	apk add --no-cache curl gcc git krb5-dev python3-dev musl-dev py3-pip
+	apk add --no-cache curl gcc git krb5-dev python3-dev musl-dev py3-pip py3-distutils-extra
 RUN \
 	set -x && \
 	cd /offlineimap3 && \
