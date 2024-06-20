@@ -34,14 +34,14 @@ function test_init {
 #     2 - expected RC [default: 0]
 function test_exec_backupdocker {
 	if [ "$#" -lt 1 ] ; then
-		test_assert "1" "got %s parms (exp 1+)" >&2 || return 1
+		test_assert "1" "got %s parms (exp 1+)" >&2 || return 1
 	fi
 	rc_exp="$1"
 	shift
 
-	cat >$TESTSETDIR/backup/backup <<<"$@" &&
-	chmod +x $TESTSETDIR/backup/backup </dev/null
-	test_assert "$?" "Write backup script" >&2 || return 1
+	cat >"$TESTSETDIR/backup/backup" <<<"$@" &&
+	chmod +x "$TESTSETDIR/backup/backup"
+	test_assert "$?" "Write backup script" >&2 || return 1
 
 	local docker_cmd=""
 	docker_cmd+="docker run"
@@ -60,7 +60,7 @@ function test_exec_backupdocker {
 		"$rc_exp" \
 		"Backup Command $*"
 
-	return $TESTRC
+	return "$TESTRC"
 }
 
 ##### Test Build #############################################################
@@ -71,7 +71,7 @@ function test_build {
 		test_exec_simple \
 			"docker build -t nafets227/backup:test $BASEDIR/.." \
 			0
-		[ $TESTRC -eq 0 ] || return 1
+		[ "$TESTRC" -eq 0 ] || return 1
 		TESTIMG="nafets227/backup:test"
 	else
 		TESTIMG=$1
@@ -97,21 +97,21 @@ function test_email {
 		return 0
 	fi
 
-	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV"
+	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$MAIL_SRV"
 	test_assert "$?" "clean IMAP" || return 1
 
 	# Trigger Error Email with empty command
 	export MAIL_TO=$MAIL_ADR
 	export MAIL_URL="smtp://$MAIL_URL"
 	export MAIL_FROM
-	eval $(test_exec_backupdocker 0 "")
+	eval "$(test_exec_backupdocker 0 "")"
 
 	sleep 10 # let mail be processed
 
-	mail_pwd="$($TEST_SNAIL -# <<<"urlcodec encode $(cat $MAIL_PW)")"
+	mail_pwd="$($TEST_SNAIL -# <<<"urlcodec encode $(cat "$MAIL_PW")")"
 	mailimapurl="imap://${MAIL_TO//@/%40}:$mail_pwd@$MAIL_SRV/INBOX"
 	test_exec_recvmail "$mailimapurl" 0 "-S 'imap-use-starttls'"
-	test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV"
+	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$MAIL_SRV"
 
 	# @TODO execute test succeeding and verify EMail sent
 	#eval $(test_exec_backupdocker 0 \
@@ -133,8 +133,9 @@ function test_email {
 }
 
 ##### Main ###################################################################
-BASEDIR=$(dirname $BASH_SOURCE)
-. $BASEDIR/../util/test-functions.sh || exit 1
+BASEDIR=$(dirname "${BASH_SOURCE[0]}")
+#shellcheck disable=SC1091 # shellcheck cannot follow link
+. "$BASEDIR/../util/test-functions.sh" || exit 1
 
 MAIL_FROM="${MAIL_FROM:-"nafets227/backup CI <no-reply@nafets.de>"}"
 MAIL_ADR="${MAIL_ADR:-"nafets227.backup.test@nafets.de"}"
@@ -144,13 +145,14 @@ MAIL_URL="${MAIL_URL:-nafets.de}"
 RCLONE_CONF="${RCLONE_CONF:-"$BASEDIR/rclone.conf"}"
 RCLONE_NAME="${RCLONE_NAME:-"nafets227_nafets_de:/"}"
 
-for f in $BASEDIR/*.sh ; do
-	. $f || exit 1
+for f in "$BASEDIR"/*.sh ; do
+	#shellcheck disable=SC1090 # shellcheck cant follow dynamic includes
+	. "$f" || exit 1
 done
 
 testset_init || exit 1
-if [ ! -d $TESTSETDIR/backup ] ; then
-	mkdir $TESTSETDIR/backup || return 1
+if [ ! -d "$TESTSETDIR/backup" ] ; then
+	mkdir "$TESTSETDIR/backup" || return 1
 fi
 
 if test_build "$1" && test_init ; then

@@ -9,7 +9,7 @@
 function test_cleanRclone () {
 	if [ "$#" -ne 2 ] ; then
 		printf "%s: Internal Error. Got %s parms (exp=3)\n" \
-			"$FUNCNAME" "$#"
+			"${FUNCNAME[0]}" "$#"
 		return 1
 	fi
 
@@ -20,8 +20,8 @@ function test_cleanRclone () {
 		"$rclone_name" "$rclone_conf"
 
 	rclone \
-		--config $rclone_conf \
-		delete $rclone_name --rmdirs
+		--config "$rclone_conf" \
+		delete "$rclone_name" --rmdirs
 
 	return $?
 }
@@ -29,7 +29,7 @@ function test_cleanRclone () {
 function test_putRclone () {
 	if [ "$#" -lt 2 ] ; then
 		printf "%s: Internal Error. Got %s parms (exp=2+)\n" \
-			"$FUNCNAME" "$#"
+			"${FUNCNAME[0]}" "$#"
 		return 1
 	fi
 
@@ -41,8 +41,8 @@ function test_putRclone () {
 		"$rclone_namepath" "$rclone_conf"
 
 	rclone \
-		--config $rclone_conf \
-		rcat $rclone_namepath <<-EOF
+		--config "$rclone_conf" \
+		rcat "$rclone_namepath" <<-EOF
 			TestFile on Cloud for testing of nafets227
 			see https://github.com/nafets227/util
 			$*
@@ -63,8 +63,8 @@ function test_expect_rclone_files {
 	testresult=$(
 		set -o pipefail
 		rclone \
-			--config $rclone_conf \
-			lsf $rclone_namepath "$@" 2>/dev/null |
+			--config "$rclone_conf" \
+			lsf "$rclone_namepath" "$@" 2>/dev/null |
 		wc -l
 		)
 
@@ -75,7 +75,7 @@ function test_expect_rclone_files {
 			"$testnr" "$rclone_namepath"
 		testsetfailed="$testsetfailed $testnr"
 		return 1
-	elif [ $testresult != $testexpected ] ; then
+	elif [ "$testresult" != "$testexpected" ] ; then
 		# nr of files differ from expected
 		printf "\tCHECK %s FAILED. nr of files in '%s' is %s (exp=%s)\n" \
 			"$testnr" "$rclone_namepath" "$testresult" "$testexpected"
@@ -88,6 +88,7 @@ function test_expect_rclone_files {
 	fi
 
 	# should not reach this
+	#shellcheck disable=SC2317 # intentionally not reachable
 	return 99
 }
 
@@ -96,9 +97,21 @@ function test_expect_rclone_files {
 function test_rclone2file {
 	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
 	   ! test_assert_files "$RCLONE_CONF" ||
-	   ! test_assert_tools "rclone" ; then
+	   ! test_assert_tools "rclone"
+	then
 		printf "\tSkipping rclone Tests.\n"
 		return 0
+	elif [ -n "$RCLONE_CONF" ] || [ -n "$RCLONE_NAME" ]
+	then
+		printf "internal Error: RCLONE_CONF or RCLONE_NAME missing\n"
+		return 1
+	fi
+
+	if [ -n "$my_ip" ] ; then
+		exec_remote=true
+	else
+		test_assert "1" "Skipping IMAP Remote Tests (ip/ipconfig)"
+		exec_remote=false
 	fi
 
 	printf "Testing rclone2file using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
@@ -110,94 +123,94 @@ function test_rclone2file {
 	test_assert "$?" "clean rclone" || return 1
 
 	# rclone OK with Empty Cloud (compatibility "rclone")
-	eval $(test_exec_backupdocker  0 \
+	eval "$(test_exec_backupdocker  0 \
 		"backup rclone" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
 		--srcsecret /backup/rclone2file.conf \
-		) &&
+		)" &&
 	test_expect_files "backup/rclone2file" 0
 
 	# Wrong src, no ":"
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup rclone2file" \
 		"mydummyname" \
 		/backup/rclone2file \
-		)
+		)"
 
 	# Wrong src, nothing after ":"
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup rclone2file" \
 		"mydummyname:" \
 		/backup/rclone2file \
 		--srcsecret /backup/rclone2file.conf \
-		)
+		)"
 
 	# Wrong src, nothing before ":"
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup rclone2file" \
 		":mydummyname" \
 		/backup/rclone2file \
 		--srcsecret /backup/rclone2file.conf \
-		)
+		)"
 
 	# No password
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup rclone2file" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
-		)
+		)"
 
 	# Not existing password file
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup rclone2file" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
 		--srcsecret "filedoesnotexist"
-		)
+		)"
 
 	# rclone OK with Empty Cloud
-	eval $(test_exec_backupdocker  0 \
+	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
 		--srcsecret /backup/rclone2file.conf \
-		) &&
+		)" &&
 	test_expect_files "backup/rclone2file" 0
 
 	# rclone OK with Empty Cloud - remote backup dest
 	$exec_remote &&
-	eval $(test_exec_backupdocker 0 \
+	eval "$(test_exec_backupdocker 0 \
 		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		$my_ip:$TESTSETDIR/backup-rem/rclone2file \
+		"$my_ip:$TESTSETDIR/backup-rem/rclone2file" \
 		--srcsecret /backup/rclone2file.conf \
 		--dstsecret /secrets/id_rsa
-		) &&
+		)" &&
 	test_expect_files "backup-rem/rclone2file" 0
 
 	# Verify modifying conf
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf"
 	test_assert "$?" "write rclone-update.conf" || return 1
-	eval $(test_exec_backupdocker 0 \
+	eval "$(test_exec_backupdocker 0 \
 		"backup rclone_unittest_updateconf" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
 		--srcsecret /backup/rclone-update.conf
-		) &&
+		)" &&
 	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
 
 	# Verify modifying conf - remote
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
 	test_assert "$?" "write rclone-update.conf" || return 1
 	$exec_remote &&
-	eval $(test_exec_backupdocker 0 \
+	eval "$(test_exec_backupdocker 0 \
 		"backup rclone_unittest_updateconf" \
 		"$RCLONE_NAME" \
-		$my_ip:$TESTSETDIR/backup-rem/rclone2file \
+		"$my_ip:$TESTSETDIR/backup-rem/rclone2file" \
 		--srcsecret /backup/rclone-update.conf \
 		--dstsecret /secrets/id_rsa
-		) &&
+		)" &&
 	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
 
 	# Store Testfiles
@@ -207,24 +220,24 @@ function test_rclone2file {
 	test_assert "$?" "put testdir/testfile.txt on rclone" || return 1
 
 	# rclone OK with files
-	eval $(test_exec_backupdocker 0 \
+	eval "$(test_exec_backupdocker 0 \
 		"backup rclone2file" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
 		--srcsecret /backup/rclone2file.conf
-		) &&
+		)" &&
 	test_expect_files "backup/rclone2file" 2 &&
 	test_expect_files "backup/rclone2file/testdir" 1
 
 	# rclone OK with files - remote backup dest
 	$exec_remote &&
-	eval $(test_exec_backupdocker 0 \
+	eval "$(test_exec_backupdocker 0 \
 		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		$my_ip:$TESTSETDIR/backup-rem/rclone2file \
+		"$my_ip:$TESTSETDIR/backup-rem/rclone2file" \
 		--srcsecret /backup/rclone2file.conf \
 		--dstsecret /secrets/id_rsa
-		) &&
+		)" &&
 	test_expect_files "backup-rem/rclone2file" 2 &&
 	test_expect_files "backup-rem/rclone2file/testdir" 1
 
@@ -232,23 +245,23 @@ function test_rclone2file {
 	test_assert "$?" "clean rclone" || return 1
 
 	# rclone OK with files deleted
-	eval $(test_exec_backupdocker 0 \
+	eval "$(test_exec_backupdocker 0 \
 		"backup rclone2file" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
 		--srcsecret /backup/rclone2file.conf
-		) &&
+		)" &&
 	test_expect_files "backup/rclone2file" 0
 
 	# rclone OK with files deleted - remote backup dest
 	$exec_remote &&
-	eval $(test_exec_backupdocker 0 \
+	eval "$(test_exec_backupdocker 0 \
 		"backup rclone2file" \
 		"$RCLONE_NAME" \
-		$my_ip:$TESTSETDIR/backup-rem/rclone2file \
+		"$my_ip:$TESTSETDIR/backup-rem/rclone2file" \
 		--srcsecret /backup/rclone2file.conf \
 		--dstsecret /secrets/id_rsa
-		) &&
+		)" &&
 	test_expect_files "backup-rem/rclone2file" 0
 
 	return 0
@@ -272,78 +285,78 @@ function test_rclone2file_hist {
 	test_assert "$?" "clean rclone" || return 1
 
 	# Time 1+2: Empty Cloud
-	eval $(test_exec_backupdocker  0 \
+	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-01" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
-		)
-	eval $(test_exec_backupdocker  0 \
+		)"
+	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-02" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
-		)
+		)"
 
 	# Time 10+11: Added file
 	test_putRclone "${RCLONE_NAME}test.txt" "$RCLONE_CONF" "rclone-hist-1"
 	test_assert "$?" "put test.txt on rclone" || return 1
 	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" "$RCLONE_CONF" "rclone-hist-1"
 	test_assert "$?" "put testdir/testfile.txt on rclone" || return 1
-	eval $(test_exec_backupdocker  0 \
+	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-10" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
-		)
-	eval $(test_exec_backupdocker  0 \
+		)"
+	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-11" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
-		)
+		)"
 
 	# Time 20+21: modified file
 	test_putRclone "${RCLONE_NAME}test.txt" "$RCLONE_CONF" "rclone-hist-2"
 	test_assert "$?" "put test.txt on rclone" || return 1
 	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" "$RCLONE_CONF" "rclone-hist-2"
 	test_assert "$?" "put testdir/testfile.txt on rclone" || return 1
-	eval $(test_exec_backupdocker  0 \
+	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-20" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
-		)
-	eval $(test_exec_backupdocker  0 \
+		)"
+	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-21" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
-		)
+		)"
 
 	# Time 30: deleted file
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
 	test_assert "$?" "clean rclone" || return 1
-	eval $(test_exec_backupdocker  0 \
+	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
 		--hist \
 		--histdate "2022-03-30" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
-		)
+		)"
 
 	# Finally check:
 	test_expect_files "backup/rclone2file-hist/2022/03/01" 0
@@ -418,50 +431,50 @@ function test_file2rclone {
 	test_assert "$?" "Creating directories" || return 1
 
 	# Wrong dst, no ":"
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup file2rclone" \
 		/backup/file2rclone \
 		"mydummyname" \
-		)
+		)"
 
 	# Wrong dst, nothing after ":"
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup file2rclone" \
 		/backup/file2rclone \
 		"mydummyname:" \
 		--dstsecret /backup/file2rclone.conf \
-		)
+		)"
 
 	# Wrong dst, nothing before ":"
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup file2rclone" \
 		/backup/file2rclone \
 		":mydummyname" \
 		--dstsecret /backup/file2rclone.conf \
-		)
+		)"
 
 	# No password
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup file2rclone" \
 		/backup/file2rclone \
 		"$RCLONE_NAME" \
-		)
+		)"
 
 	# Not existing password file
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup file2rclone" \
 		/backup/file2rclone \
 		"$RCLONE_NAME" \
 		--dstsecret "filedoesnotexist" \
-		)
+		)"
 
 	# remote source without source secret
-	eval $(test_exec_backupdocker 1 \
+	eval "$(test_exec_backupdocker 1 \
 		"backup file2rclone" \
-		$my_ip:$TESTSETDIR/backup/file2rclone \
+		"$my_ip:$TESTSETDIR/backup/file2rclone" \
 		"$RCLONE_NAME" \
 		--dstsecret /backup/file2rclone.conf \
-		)
+		)"
 
 	for source in "/backup/file2rclone" "$my_ip:$TESTSETDIR/backup/file2rclone" ; do
 		secretparm=""
@@ -473,102 +486,110 @@ function test_file2rclone {
 		test_assert "$?" "clean rclone" || return 1
 
 		# backup from non-existing source should fail
-		eval $(test_exec_backupdocker 1 \
+		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		eval "$(test_exec_backupdocker 1 \
 			"backup file2rclone" \
 			"$source/thisdirdoesnotexist" \
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
-			)
+			)"
 
 		# history backup should fail
-		eval $(test_exec_backupdocker 1 \
+		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		eval "$(test_exec_backupdocker 1 \
 			"backup file2rclone" \
 			"$source" \
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			--hist
-			)
+			)"
 
 		# rclone OK with Empty Dir
-		eval $(test_exec_backupdocker 0 \
+		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
-			) &&
+			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 0
 
 		# backup one file
-		echo "Dummyfile" >$TESTSETDIR/backup/file2rclone/dummyfile
+		cat >"$TESTSETDIR/backup/file2rclone/dummyfile" <<<"Dummyfile"
 		test_assert "$?" "Creating dummyfile" || return 1
-		eval $(test_exec_backupdocker 0 \
+		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			"$@" \
-			) &&
+			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 1
 
 		# backup additional file in subdirectory
-		mkdir $TESTSETDIR/backup/file2rclone/testsubdir
+		mkdir "$TESTSETDIR/backup/file2rclone/testsubdir"
 		test_assert "$?" "Creating testsubdir" || return 1
-		echo "Dummyfile2" >$TESTSETDIR/backup/file2rclone/testsubdir/dummyfile2
+		cat >"$TESTSETDIR/backup/file2rclone/testsubdir/dummyfile2" <<<"Dummyfile2"
 		test_assert "$?" "Creating dummyfile2" || return 1
-		eval $(test_exec_backupdocker 0 \
+		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			"$@" \
-			) &&
+			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 2 && # includes subdir!
 		test_expect_rclone_files "${RCLONE_NAME}testsubdir" "$RCLONE_CONF" 1
 
 		# delete no longer existing file
-		rm $TESTSETDIR/backup/file2rclone/dummyfile
+		rm "$TESTSETDIR/backup/file2rclone/dummyfile"
 		test_assert "$?" "remove Dummyfile" || return 1
-		eval $(test_exec_backupdocker 0 \
+		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			"$@" \
-			) &&
+			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 1 && # includes subdir!
 		test_expect_rclone_files "${RCLONE_NAME}testsubdir" "$RCLONE_CONF" 1
 
 		# delete no longer existing file in subdir
-		rm $TESTSETDIR/backup/file2rclone/testsubdir/dummyfile2
+		rm "$TESTSETDIR/backup/file2rclone/testsubdir/dummyfile2"
 		test_assert "$?" "remove Dummyfile2" || return 1
-		eval $(test_exec_backupdocker 0 \
+		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			"$@" \
-			) &&
+			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 1 && # includes subdir!
 		test_expect_rclone_files "${RCLONE_NAME}testsubdir" "$RCLONE_CONF" 0
 
 		# delete no longer existing subdir
-		rmdir $TESTSETDIR/backup/file2rclone/testsubdir
+		rmdir "$TESTSETDIR/backup/file2rclone/testsubdir"
 		test_assert "$?" "remove testsubdir" || return 1
-		eval $(test_exec_backupdocker 0 \
+		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			"$@" \
-			) &&
+			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 0
 
 		true || return 1

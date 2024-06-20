@@ -1,5 +1,5 @@
+---
 name: Docker-ci
-
 
 on:
   push:
@@ -11,6 +11,8 @@ on:
     branches:
       - '*'
 
+permissions: read-all
+
 # avoid to run multiple jobs in parallel that would interfere with each other
 # in the test step, since they would use the same test Email and OneDrive.
 concurrency: ci
@@ -21,12 +23,29 @@ jobs:
     permissions:
       contents: read
       packages: write
+      statuses: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: true
+  
+      - name: SuperLint
+        uses: super-linter/super-linter/slim@v6.6.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: true
+          USE_FIND_ALGORITHM: true
+          FILTER_REGEX_EXCLUDE: ".*/(offlineimap3|util)/.*"
+          VALIDATE_SHELL_SHFMT: false
+          #DEFAULT_BRANCH: master
+          #KUBERNETES_KUBECONFORM_OPTIONS: "
+          #  -ignore-filename-pattern util/kube/helmupdate-cronjob-template.yaml
+          #  -ignore-filename-pattern kube/haproxy-helm-values-template.yaml
+          #  -ignore-filename-pattern ghrunner/kube/ghrunner-template.yaml
+          #  -ignore-filename-pattern kube/kube-auth.template.yaml
+          #  "
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -66,6 +85,7 @@ jobs:
           RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
           GH_TOKEN: ${{ secrets.GH_SECRET_ADMIN_TOKEN }}
           MAIL_PW: ${{ secrets.MAIL_PW }}
+          IMGURL: "ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version}}"
         run: |
           [ "$RUNNER_DEBUG" == 1 ] && DEBUGSH="set -x ; " && set -x
 
@@ -88,7 +108,7 @@ jobs:
           sudo bash -c 'cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys'
           sudo bash -c 'touch ~/.hushlogin'
 
-          sudo bash -c "$DEBUGSH . test/test ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version}}"
+          sudo bash -c "$DEBUGSH . test/test $IMG_URL"
           
           gh secret set RCLONE_CONF < test/rclone.conf
           rm test/rclone.conf test/mail.password

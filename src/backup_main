@@ -26,12 +26,12 @@ function backup_remote {
 	fi
 
 	#----- remove remotemachine from URL ---------------------------------
-	bck_src="${bck_src##$remotemachine:}"
-	bck_dst="${bck_dst##$remotemachine:}"
+	bck_src="${bck_src##"$remotemachine":}"
+	bck_dst="${bck_dst##"$remotemachine":}"
 
 	#----- set hist parm if present ------
 	local rem_hist=""
-	if [ ! -z "$bck_histdate" ] ; then
+	if [ -n "$bck_histdate" ] ; then
 		rem_hist="--histraw \"$bck_histdate\""
 		if [ "$bck_hist_keep" == "1" ] ; then
 			rem_hist+=" --histkeep"
@@ -42,7 +42,7 @@ function backup_remote {
 	printf "===== Start Executing on %s for %s %s =====\n" \
 		"$remotemachine" "$bck_type" "$bck_src"
 	local remdir rem_src_secret rem_dst_secret
-	remdir=$(ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF
+	remdir=$(ssh -o StrictHostKeyChecking=no "$remotemachine" -i "$remotesecret"<<-EOF
 		# this mktemp call works on both Linux and MacOS with slightly different
 		# results:
 		# Linux: nafets227.backup.<random>
@@ -51,15 +51,15 @@ function backup_remote {
 		mktemp -d -t nafets227.backup.XXXXXXXXXX
 		EOF
 		) &&
-	scp -o StrictHostKeyChecking=no -i $remotesecret \
-		-r "$0" "$(dirname "$0")"/*.sh $remotemachine:$remdir &&
+	scp -o StrictHostKeyChecking=no -i "$remotesecret" \
+		-r "$0" "$(dirname "$0")"/*.sh "$remotemachine:$remdir" &&
 	{
 		if [ -z "$bck_src_secret" ] ; then
 			rem_src_secret=""
 		else
-			scp -o StrictHostKeyChecking=no -i $remotesecret \
-				$bck_src_secret \
-				$remotemachine:$remdir/srcsecret &&
+			scp -o StrictHostKeyChecking=no -i "$remotesecret" \
+				"$bck_src_secret" \
+				"$remotemachine:$remdir/srcsecret" &&
 			rem_src_secret="--srcsecret $remdir/srcsecret"
 		fi
 	} &&
@@ -67,48 +67,51 @@ function backup_remote {
 		if [ -z "$bck_dst_secret" ] ; then
 			rem_dst_secret=""
 		else
-			scp -o StrictHostKeyChecking=no -i $remotesecret \
-				$bck_dst_secret \
-				$remotemachine:$remdir/dstsecret &&
+			scp -o StrictHostKeyChecking=no -i "$remotesecret" \
+				"$bck_dst_secret" \
+				"$remotemachine:$remdir/dstsecret" &&
 			rem_dst_secret="--dstsecret $remdir/dstsecret"
 		fi
 	} &&
-	ssh -o StrictHostKeyChecking=no $remotemachine -i $remotesecret<<-EOF &&
-		[[ x"$DEBUG" == x1 ]] && set -x
-		export DEBUG=$DEBUG
-		# please note the trick to have a correct quoting on the
-		# destination machine. Simply using \"\$@\" does not work.
-		$remdir/backup_main backup --local \
-			"$bck_type" \
-			"$bck_src" \
-			"$bck_dst" \
-			$rem_src_secret \
-			$rem_dst_secret \
-			$rem_hist \
-			$(
-			for s in "$@" ; do
-				printf " \"%s\"" "$s"
-			done
-			)
-		exit \$?
-		EOF
+	{
+	#shellcheck disable=SC2087 # intentionally making here-document expansion on server side
+		ssh -o StrictHostKeyChecking=no "$remotemachine" -i "$remotesecret" <<-EOF
+			[[ x"$DEBUG" == x1 ]] && set -x
+			export DEBUG=$DEBUG
+			# please note the trick to have a correct quoting on the
+			# destination machine. Simply using \"\$@\" does not work.
+			$remdir/backup_main backup --local \
+				"$bck_type" \
+				"$bck_src" \
+				"$bck_dst" \
+				$rem_src_secret \
+				$rem_dst_secret \
+				$rem_hist \
+				$(
+				for s in "$@" ; do
+					printf " \"%s\"" "$s"
+				done
+				)
+			exit \$?
+			EOF
+	} &&
 	local bck_secret &&
 	{
 		if [ -z "$bck_src_secret" ] ; then
 			true
 		else
-			bck_secret=$(ssh -o StrictHostKeyChecking=no -i $remotesecret \
-				$remotemachine cat $remdir/srcsecret)
-			if [ "$?" != "0" ] ; then
+			if ! bck_secret=$(ssh -o StrictHostKeyChecking=no -i "$remotesecret" \
+				"$remotemachine" cat "$remdir/srcsecret")
+			then
 				false
-			elif cmp $bck_src_secret - >/dev/null <<<"$bck_secret" ; then
+			elif cmp "$bck_src_secret" - >/dev/null <<<"$bck_secret" ; then
 				printf "not updating untouched source secret %s locally\n" \
 					"$bck_src_secret"
 				true
 			else
 				printf "updating modified source secret %s locally\n" \
 					"$bck_src_secret"
-				cat >$bck_src_secret <<<"$bck_secret"
+				cat >"$bck_src_secret" <<<"$bck_secret"
 			fi
 		fi
 	} &&
@@ -116,18 +119,18 @@ function backup_remote {
 		if [ -z "$bck_dst_secret" ] ; then
 			true
 		else
-			bck_secret=$(ssh -o StrictHostKeyChecking=no -i $remotesecret \
-				$remotemachine cat $remdir/dstsecret)
-			if [ "$?" != "0" ] ; then
+			if ! bck_secret=$(ssh -o StrictHostKeyChecking=no -i "$remotesecret" \
+				"$remotemachine" cat "$remdir/dstsecret")
+			then
 				false
-			elif cmp $bck_dst_secret - >/dev/null <<<"$bck_secret" ; then
+			elif cmp "$bck_dst_secret" - >/dev/null <<<"$bck_secret" ; then
 				printf "not updating untouched dest %s secret locally\n" \
 					"$bck_dst_secret"
 				true
 			else
 				printf "updating modified dest secret %s locally\n" \
 					"$bck_dst_secret"
-				cat >$bck_dst_secret <<<"$bck_secret"
+				cat >"$bck_dst_secret" <<<"$bck_secret"
 			fi
 		fi
 	}
@@ -158,7 +161,7 @@ function backup_local {
 	bck_local_prm+=( "$@" )
 	shift $#
 
-	if [ ! -z "$bck_histdate" ] ; then # History mode
+	if [ -n "$bck_histdate" ] ; then # History mode
 		# bck_dst_full="$bck_dst/$bck_histdate.in-progress"
 		bck_dst_full=$(
 			backup_inithist "$bck_dst" "$bck_histdate" "$bck_hist_keep"
@@ -174,7 +177,7 @@ function backup_local {
 	#	bck_src_secret	Source Secret Filename
 	#	bck_dst_secret	Destination Secret Filename
 	#	[ ...]		type specific futher options
-	backup2_$bck_type \
+	"backup2_$bck_type" \
 		"$bck_src" \
 		"$bck_dst_full" \
 		"$bck_src_secret" \
@@ -182,7 +185,7 @@ function backup_local {
 		"${bck_local_prm[@]}" \
 		|| return 1
 
-	if [ ! -z "$bck_histdate" ] && [ "$bck_dst_full" != "$bck_dst/$bck_histdate" ] ; then
+	if [ -n "$bck_histdate" ] && [ "$bck_dst_full" != "$bck_dst/$bck_histdate" ] ; then
 		# History mode and we used a temporary dir for backup (.in-progress)
 		mv "$bck_dst_full" "$bck_dst/$bck_histdate" || return 1
 		printf "Backup in history mode successful - renamed to %s\n" \
@@ -211,12 +214,13 @@ function backup_notify {
 	fi
 
 	local MAIL_SUBJECT
-	if [ "x$NAFETS227BACKUP_GRC" == "x0" ] ; then
+	if [ "$NAFETS227BACKUP_GRC" == "0" ] ; then
 		MAIL_SUBJECT="Backup successful"
 	else
 		MAIL_SUBJECT="Backup failed"
 	fi
 
+	#shellcheck disable=SC2086 # MAIL_TO intentionally may contain more than one word
 	(
 		printf "Total Return Code (NAFETS227BACKUP_GRC): %d\n" \
 			"$NAFETS227BACKUP_GRC"
@@ -239,7 +243,7 @@ function backup_notify {
 #### Helper: Check that runon is empty else print error ######################
 function check_runon_empty {
 	local bck_runon="$1"
-	if [ ! -z "$bck_runon" ] ; then
+	if [ -n "$bck_runon" ] ; then
 		printf "Parm Conflict: More than one of %s\n" \
 			"--runonsrc --runondst --local"
 		return 1
@@ -323,7 +327,7 @@ function backup {
 			bck_runon=0
 			shift
 		elif [ "$1" == "--hist" ] ; then # Backup in history mode
-			bck_histdate="$(date +%Y/%m/%d)" || return 1
+			bck_histdate="$(date +%Y/%m/%d)" || return 1
 			shift
 		elif [ "$1" == "--histdate" ] ; then
 			check_another_parm "$#" "$1" || return 1
@@ -377,15 +381,15 @@ function backup {
 			"$bck_global_prm"
 		NAFETS227BACKUP_GRC=1
 		return 1
-	elif [ ! -z "$bck_src_secret" ] && [ ! -f "$bck_src_secret" ] ; then
+	elif [ -n "$bck_src_secret" ] && [ ! -f "$bck_src_secret" ] ; then
 		printf "Error: Source Secret File %s not found.\n" \
 			"$bck_src_secret"
 		return 1
-	elif [ ! -z "$bck_tgt_secret" ] && [ ! -f "$bck_tgt_secret" ] ; then
+	elif [ -n "$bck_tgt_secret" ] && [ ! -f "$bck_tgt_secret" ] ; then
 		printf "Error: Target Secret File %s not found.\n" \
 			"$bck_tgt_secret"
 		return 1
-	elif	[ ! -z "$bck_histdate" ] && 
+	elif	[ -n "$bck_histdate" ] && 
 			[[ ! "$bck_histdate" =~ [0-9]{4}/[0-9]{2}/[0-9]{2} ]] ; then
 		printf "Error: Invalid format %s in --hist* (not YYYY/MM/DD).\n" \
 			"$bck_histdate"
@@ -406,7 +410,7 @@ function backup {
 		:
 #	elif [ "$bck_type" != mysql-kube ] &&
 	else
-		printf "Wrong backup type %s " "$type"
+		printf "Wrong backup type %s " "$bck_type"
 		printf "when calling backup with\n\t%s\n" \
 			"$*"
 		NAFETS227BACKUP_GRC=1
@@ -415,8 +419,8 @@ function backup {
 
 	#----- Autodetect where to run ---------------------------------------
 	if [ -z "$bck_runon" ] ; then
-		bck_runon=$(backup_default_runon $bck_type $bck_dst $bck_src)
-		if [ "$?" != "0" ] ; then
+		if ! bck_runon=$(backup_default_runon "$bck_type" "$bck_dst" "$bck_src")
+		then
 			NAFETS227BACKUP_GRC=1
 			return 1
 		fi
@@ -523,6 +527,7 @@ function backup {
 	fi
 
 	# should not reach this
+	#shellcheck disable=SC2317 # intentionally not reachable
 	return 99
 }
 
@@ -556,15 +561,16 @@ elif ! which true &>/dev/null || ! which false &>/dev/null ; then
 fi
 
 #Source all modules in install.d
-for f in $(dirname $0)/*.sh ; do
-    . $f
+for f in "$(dirname "$0")"/*.sh ; do
+	#shellcheck disable=SC1090 # shellcheck cannot follow dynamic sources
+    . "$f"
     if [ x$? != x0 ] ; then
 	    printf "Error loading module %s\n" "$f"
 	    exit 1
     fi
 done
 
-if [ x"$DEBUG" == x1 ] ; then
+if [ "$DEBUG" == 1 ] ; then
 	set -x
 fi
 
@@ -576,12 +582,17 @@ if [ $# == 0 ] ; then
 	exit 1
 fi
 
+# make shellcheck happy and prevent backup appear as unused
+if false ; then
+	backup dummytype dummysource dummydest dummyopt1 dummyopt2
+fi
+
 printf "executing custom command %s\n" "$*"
 "$@" || NAFETS227BACKUP_GRC=3
 
 backup_notify || NAFETS227BACKUP_GRC=4
 
-if [ "x$NAFETS227BACKUP_GRC" == "x0" ] ; then
+if [ "$NAFETS227BACKUP_GRC" == "0" ] ; then
 	printf "Success: all Backup Tasks have been completed successfully.\n%s\n" \
 		"$NAFETS227BACKUP_GMSG"
 	exit 0

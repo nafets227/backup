@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Backup rclone
 #
@@ -13,12 +13,13 @@
 #	bck_src_secret	Source Secret Filename
 #	bck_dst_secret	Destination Secret Filename
 function backup2_rclone2file {
+	# jscpd:ignore-start
 	if [ "$#" -lt 4 ] ; then
 		printf "Error in custom config script. "
 		printf "Calling backup rclone with parms:\n\t%s\n" "$*"
 			return 1
-	elif [ x"$DEBUG" == x1 ] ; then
-		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+	elif [ "$DEBUG" == 1 ] ; then
+		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"
 	fi
 
 	local bckrclone_src="$1"
@@ -27,6 +28,7 @@ function backup2_rclone2file {
 	local bckrclone_dst_secret="$4"
 	shift 4
 	local bckrclone_opts="$*"
+	# jscpd:ignore-end
 
 	local bckrclone_src_cloudname bckrclone_src_path &&
 	bckrclone_src_cloudname="${bckrclone_src%%:*}" &&
@@ -57,42 +59,43 @@ function backup2_rclone2file {
 		mkdir -p "$bckrclone_dst" || return 1
 	fi
 
+	#shellcheck disable=SC2086 # backrclone_opts can intentionally contain >1 word
 	rclone \
 		--config $bckrclone_src_secret \
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		sync \
-		$bckrclone_src \
-		$bckrclone_dst \
+		"$bckrclone_src" \
+		"$bckrclone_dst" \
 		$bckrclone_opts \
-		--backup-dir=$bckrclone_dst.del &&
+		--backup-dir="$bckrclone_dst.del" &&
 	rclone \
-		--config $bckrclone_src_secret \
+		--config "$bckrclone_src_secret" \
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		rmdirs --leave-root \
-		$bckrclone_dst \
+		"$bckrclone_dst" \
 		$bckrclone_opts \
-		--backup-dir=$bckrclone_dst.del &&
+		--backup-dir="$bckrclone_dst.del" &&
 	rclone \
-		--config $bckrclone_src_secret \
+		--config "$bckrclone_src_secret" \
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		sync --create-empty-src-dirs \
-		$bckrclone_src \
-		$bckrclone_dst \
+		"$bckrclone_src" \
+		"$bckrclone_dst" \
 		$bckrclone_opts \
-		--backup-dir=$bckrclone_dst.del
+		--backup-dir="$bckrclone_dst.del"
 
 	rc=$?
 	if [ $rc -ne 0 ] ; then
 		printf "##### Error connecting to rclone %s. Config:\n" "$bckrclone_src"
-		cat $bckrclone_src_secret
+		cat "$bckrclone_src_secret"
 		printf "##### Enf od Config for rclone %s\n" "$bckrclone_src"
 		return 1
 	fi
 
-	rm -rf $bckrclone_dst.del
+	rm -rf "$bckrclone_dst.del"
 	if [ $rc -ne 0 ] ; then
 		printf "Error removing del-dir %s.\n" "$bckrclone_dst.del"
 		return 1
@@ -109,12 +112,13 @@ function backup2_rclone2file {
 #	bck_src_secret	Source Secret Filename
 #	bck_dst_secret	Destination Secret Filename
 function backup2_file2rclone {	
+	# jscpd:ignore-start
 	if [ "$#" -lt 4 ] ; then
 		printf "Error in custom config script. "
 		printf "Calling backup rclone with parms:\n\t%s\n" "$*"
 			return 1
-	elif [ x"$DEBUG" == x1 ] ; then
-		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+	elif [ "$DEBUG" == 1 ] ; then
+		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"
 	fi
 
 	local bckrclone_src="$1"
@@ -123,6 +127,7 @@ function backup2_file2rclone {
 	local bckrclone_dst_secret="$4"
 	shift 4
 	local bckrclone_opts="$*"
+	# jscpd:ignore-end
 
 	local bckrclone_dst_cloudname bckrclone_dst_path &&
 	bckrclone_dst_cloudname="${bckrclone_dst%%:*}" &&
@@ -154,34 +159,35 @@ function backup2_file2rclone {
 		return 1
 	fi
 
+	#shellcheck disable=SC2086 # backrclone_opts can intentionally contain >1 word
 	rclone \
-		--config $bckrclone_dst_secret \
+		--config "$bckrclone_dst_secret" \
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		sync \
-		$bckrclone_src \
-		$bckrclone_dst \
+		"$bckrclone_src" \
+		"$bckrclone_dst" \
 		$bckrclone_opts &&
 	rclone \
-		--config $bckrclone_dst_secret \
+		--config "$bckrclone_dst_secret" \
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		rmdirs --leave-root \
-		$bckrclone_dst \
+		"$bckrclone_dst" \
 		$bckrclone_opts &&
 	rclone \
-		--config $bckrclone_dst_secret \
+		--config "$bckrclone_dst_secret" \
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		sync --create-empty-src-dirs \
-		$bckrclone_src \
-		$bckrclone_dst \
+		"$bckrclone_src" \
+		"$bckrclone_dst" \
 		$bckrclone_opts
 
 	rc=$?
 	if [ $rc -ne 0 ] ; then
 		printf "##### Error connecting to rclone %s. Config:\n" "$bckrclone_dst"
-		cat $bckrclone_dst_secret
+		cat "$bckrclone_dst_secret"
 		printf "##### Enf od Config for rclone %s\n" "$bckrclone_dst"
 		return 1
 	fi
@@ -196,12 +202,13 @@ function backup2_file2rclone {
 # No action is being taken
 # Only limited parameter checks are done.
 function backup2_rclone_unittest_updateconf {
+	# jscpd:ignore-start
 	if [ "$#" -ne 4 ] ; then
 		printf "Error in custom config script. "
 		printf "Calling backup rclone with parms:\n\t%s\n" "$*"
 			return 1
-	elif [ x"$DEBUG" == x1 ] ; then
-		printf "DEBUG: %s %s\n" "$FUNCNAME" "$*"
+	elif [ "$DEBUG" == 1 ] ; then
+		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"
 	fi
 
 	local bckrclone_src="$1"
@@ -233,8 +240,9 @@ function backup2_rclone_unittest_updateconf {
 			"$bckrclone_src_secret"
 		return 1
 	fi
+	# jscpd:ignore-end
 
-	cat >>$bckrclone_src_secret <<-EOF &&
+	cat >>"$bckrclone_src_secret" <<-EOF &&
 		[rclone-unittest-dummy]
 		EOF
 	true || return 1
