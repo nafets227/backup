@@ -6,7 +6,7 @@ Container based implementation of backup. Features:
 - History Mode preserves deleted files or old versions optimizing space by using hard links
 
 ## Destinations
-Destination can be anything that is reachable via rsync/ssh or a local disk mounted in the container. Copying via internet is supported.
+Destination can be anything that is reachable via rsync/SSH or a local disk mounted in the container. Copying via internet is supported.
 
 ## History Mode
 History mode safes the backup to a subdirectory YYYY/mm/dd based on the backup
@@ -100,7 +100,7 @@ deleted on the file directory
      \[mandatory\]
 
 ## File
-Backups data from any server reachable via rsync and/or ssh. It is based on
+Backups data from any server reachable via rsync and/or SSH. It is based on
 rsync, so only modified files are copied (delta-approach). No more existing
 files are deleted in the target.
 
@@ -149,7 +149,7 @@ a sample command could be:
 
 ## Future Plans
 Features planned in the future
-- can backup mysql databases
+- can backup MySQL databases
 - can backup Samba configuration
 - Find a way to improve sync to cloud when files / directories have
   been moved. It would be fantastic if we can reuse files that are
@@ -159,8 +159,8 @@ Features planned in the future
 ## Hacking
 If you want to develop and test on macOS, you need:
 - brew install offlineimap jq bash rsync rclone
-- activated local ssh server
-- trust your own ssh key (e.g. ~/.ssh/id_rsa.pub must be in authorized_keys)
+- activated local SSH server
+- trust your own SSH key (e.g. ~/.ssh/id_rsa.pub must be in authorized_keys)
 - tested with docker desktop for Mac
 
 To run tests in test subdirectory you need to have some test data available. ATTENTION: Test data will be DELETED on every run, so make sure you don´t have any data on it!
@@ -182,11 +182,11 @@ To run tests in test subdirectory you need to have some test data available. ATT
 
 start with running test/test to verify your environment
 
-### GitHub actions setup
-GitHub actions are setup in this repository to test against a dummy OneDrive
+### GitHub Actions setup
+GitHub Actions are setup in this repository to test against a dummy OneDrive
 (`<nafets227@nafets.de>`) and Mailbox (<`nafets227.backup.test@nafets.de>`).
-Dependabot triggered pull requests (e.g. to update actions or git subrepos)
-automatically trigger a GitHub action. However, dependatbot triggered actions
+Dependabot triggered pull requests (e.g. to update actions or Git subrepos)
+automatically trigger a GitHub Action. However, dependatbot triggered actions
 cannot access the "normal" action secrets in GitHub. In order to overcome this
 limitations, relevant secrets have been copied into the special dependabot
 area of secrets:
