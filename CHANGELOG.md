@@ -11,7 +11,7 @@
   It will be removed in future versions.
 
 ## 0.7.1 (2022-12-14)
-* improve CI by using GitHub actions also for testing
+* improve CI by using GitHub Actions also for testing
 * BREAKING CHANGE: focus on ghcr.io registry, stop updating docker hub (docker.io/nafets227/backup)
 
 ## 0.7. (2022-11-26)
@@ -73,10 +73,10 @@
 * History Mode
 
 ## 0.2.3 (2021-04-26)
-* Adopt to new kubectl version (mysql - currently unused)
+* Adopt to new kubectl version (MySQL - currently unused)
 * test: MAIL_ADR to point to a password file instead of containing the
   password itself
-* Documentation Updates (CHANGELOG, README)
+* Documentation Updates
 
 ## 0.2.2 (2020-09-28)
 * Enhance Tracing on IMAP error (print offlineimap config)
