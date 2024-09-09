@@ -10,7 +10,7 @@
 
 FROM rclone/rclone:1.67.0 AS rclone
 
-FROM alpine:3.20.2 AS offlineimap3
+FROM alpine:3.20.3 AS offlineimap3
 # Copy and install offlineimap3 (replaces offlineimap)
 # offlineimap3 is the successort of offlineimap,
 # migrated from python2.x to python 3
@@ -34,7 +34,7 @@ RUN \
 	pip install --no-cache-dir -r requirements.txt && \
 	python3 setup.py install
 
-FROM alpine:3.20.2
+FROM alpine:3.20.3
 
 RUN \
 	apk update && \
