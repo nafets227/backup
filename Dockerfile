@@ -27,11 +27,8 @@ RUN \
 	set -x && \
 	python3 -m venv /usr/local && \
 	. /usr/local/bin/activate && \
-	sed -i 's:^.*portalocker.*$:setuptools:' requirements.txt && \
-	sed -i "s:, 'portalocker\[cygwin\]'::" setup.py && \
-	sed -i "s:, 'gssapi\[kerberos\]':, 'gssapi':" setup.py && \
-	sed -i 's:from distutils.core :from setuptools :' setup.py && \
 	pip install --no-cache-dir -r requirements.txt && \
+	pip install --no-cache-dir setuptools==75.8.2 && \
 	python3 setup.py install
 
 FROM alpine:3.20.3
