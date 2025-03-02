@@ -150,7 +150,7 @@ function test_file_hist {
 		return 1
 	fi
 
-    ##### Specific tests for local/remote
+	##### Specific tests for local/remote
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist-1" \
 		"$TESTSETDIR/backup/file-hist-2"

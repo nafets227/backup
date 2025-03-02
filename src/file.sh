@@ -31,7 +31,7 @@ function backup2_file {
 	local bckfile_dst_secret="$4"
     shift 4
 
-    local opt prm rsync_rc elapsed sshopt # start_date diff_date  
+    local opt prm rsync_rc elapsed sshopt # start_date diff_date
 
     if [ "$1" == "--inet" ] ; then
 		opt="-rLt --size-only --partial"
@@ -111,7 +111,7 @@ function backup2_file {
 		printf "Executing rsync -e \"%s\" %s %s %s/ %s\n" \
             "$sshopt" "$opt" "$prm" "$bckfile_src" "$bckfile_dst"
 	fi
-	#shellcheck disable=SC2086 # intentionally opt+prm can contain >1 word 
+	#shellcheck disable=SC2086 # intentionally opt+prm can contain >1 word
 	rsync -e "$sshopt" $opt $prm "$bckfile_src/" "$bckfile_dst"
 	rsync_rc="$?"
 
@@ -121,7 +121,7 @@ function backup2_file {
 #	else
 #		elapsed=$(date +%H:%M:%S -u -d @"$diff_date") || return 1
 #	fi
-    
+
     if [ $rsync_rc -eq 0 ] ; then
         printf "Backup of %s completed (%s).\n" "$bckfile_src" "$elapsed"
         return 0

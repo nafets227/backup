@@ -111,7 +111,7 @@ function backup2_rclone2file {
 #	bck_dst		rclone URL, as used with rclone sync (e.g. MyCloud:/)
 #	bck_src_secret	Source Secret Filename
 #	bck_dst_secret	Destination Secret Filename
-function backup2_file2rclone {	
+function backup2_file2rclone {
 	# jscpd:ignore-start
 	if [ "$#" -lt 4 ] ; then
 		printf "Error in custom config script. "

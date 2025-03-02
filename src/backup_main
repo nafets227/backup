@@ -389,7 +389,7 @@ function backup {
 		printf "Error: Target Secret File %s not found.\n" \
 			"$bck_tgt_secret"
 		return 1
-	elif	[ -n "$bck_histdate" ] && 
+	elif	[ -n "$bck_histdate" ] &&
 			[[ ! "$bck_histdate" =~ [0-9]{4}/[0-9]{2}/[0-9]{2} ]] ; then
 		printf "Error: Invalid format %s in --hist* (not YYYY/MM/DD).\n" \
 			"$bck_histdate"

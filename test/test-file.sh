@@ -139,7 +139,7 @@ function test_file {
 		return 1
 	fi
 
-    ##### Specific tests for local/remote
+	##### Specific tests for local/remote
 	mkdir -p "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2"
 	test_assert "$?" "create testdirs" || return 1
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # (C) 2021 Stefan Schallenberg
-# 
+#
 # History mode for Backup
 #
 # How it works:
@@ -12,7 +12,7 @@
 #     the files. If it does not, because the file is still present and
 #     unchanged in the source, the hard link will remain. After successful
 #     Backup, YYYY/MM/YY.in-progress is renamed to YYYY/MM/DD.
-#     Only compliant directories are considered as previous backup, 
+#     Only compliant directories are considered as previous backup,
 #     exluding .in-progress dirs.
 
 ##### Initialise history backup ##############################################

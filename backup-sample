@@ -16,7 +16,7 @@ backup imap "example@mydomain.xxx" "$MY_DEST:/imap/example@mydomain.xxx" "imap.m
 backup file "/mydir" "$MY_DEST:/mydir-backup" --dstsecret "/backup/tgt.id_rsa"
 # you can use rsync options after --:
 backup file "/mydir2" "$MY_DEST:/mydir2-backup" --dstsecret "/backup/tgt.id_rsa" \
-    --hist \
+	--hist \
 	-- "--exclude=/file-not-to-be-backuped"
 
 ###### Not implemented in this version yet ###################################
