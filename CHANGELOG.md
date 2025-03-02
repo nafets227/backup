@@ -1,5 +1,14 @@
 # nafets227/backup CHANGELOG
 
+## 0.8.2 (2025-03-02)
+
+- alpine 3.21.3
+- rclone 1.69.1
+- offlineimap3 07f8d72
+- CI: CodeCheck with SuperLinter
+- remove Build-dependency to nafets227/util (copy the one file we need)
+- removed dead code for samba, its no longer on our todo list
+
 ## 0.8.1 (2022-12-18)
 
 - fix compatibility for backup type "rclone"
