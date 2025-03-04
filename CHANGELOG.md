@@ -1,5 +1,12 @@
 # nafets227/backup CHANGELOG
 
+## 0.9 (2025-03-04) Incompatible
+
+Move to non-root container
+
+see README.md for more details on how to specify
+user "backupuser" with UID 41598.
+
 ## 0.8.2 (2025-03-02)
 
 - alpine 3.21.3
