@@ -20,6 +20,10 @@ function test_file_hist_srcdest {
 
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist/source" \
+		"$TESTSETDIR/backup/file-hist/dest" &&
+	chown 41598:41598 \
+		"$TESTSETDIR/backup/file-hist" \
+		"$TESTSETDIR/backup/file-hist/source" \
 		"$TESTSETDIR/backup/file-hist/dest"
 	test_assert "$?" "Creating directories in ${FUNCNAME[0]}" || return 1
 
@@ -63,7 +67,8 @@ function test_file_hist_srcdest {
 		)"
 
 	# backup one file
-	cat >"$TESTSETDIR/backup/file-hist/source/dummyfile" <<<"Dummyfile"
+	cat >"$TESTSETDIR/backup/file-hist/source/dummyfile" <<<"Dummyfile" &&
+	chown 41598:41598 "$TESTSETDIR/backup/file-hist/source/dummyfile"
 	test_assert "$?" "Creating dummyfile" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -75,9 +80,11 @@ function test_file_hist_srcdest {
 		)"
 
 	# backup additional file in subdirectory
-	mkdir "$TESTSETDIR/backup/file-hist/source/testsubdir"
+	mkdir "$TESTSETDIR/backup/file-hist/source/testsubdir" &&
+	chown 41598:41598 "$TESTSETDIR/backup/file-hist/source/testsubdir"
 	test_assert "$?" "Creating testsubdir" || return 1
-	cat >"$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2" <<<"Dummyfile2"
+	cat >"$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2" <<<"Dummyfile2" &&
+	chown 41598:41598 "$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2"
 	test_assert "$?" "Creating dummyfile2" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -153,7 +160,10 @@ function test_file_hist {
 	##### Specific tests for local/remote
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist-1" \
-		"$TESTSETDIR/backup/file-hist-2"
+		"$TESTSETDIR/backup/file-hist-2" &&
+	chown 41598:41598 \
+		"$TESTSETDIR/backup/file-hist-1" \
+		"$TESTSETDIR/backup/file-hist-2" &&
 	test_assert "$?" "Init ${FUNCNAME[0]}" || return 1
 
 	# backup remote source without secret should fail
