@@ -21,7 +21,7 @@ function test_cleanImap {
 		"$mail_adr" "$mail_srv"
 
 	imapstatus=$(
-		curl --ssl --silent --show-error \
+		curl --ssl-reqd --silent --show-error \
 		"imap://$mail_srv" \
 		--user "$mail_adr:$mail_pw" \
 		--request 'STATUS INBOX (MESSAGES)'
@@ -39,14 +39,14 @@ function test_cleanImap {
 	fi
 
 	imapstatus=$(
-		curl --ssl --silent --show-error \
+		curl --ssl-reqd --silent --show-error \
 		"imap://$mail_srv/INBOX" \
 		--user "$mail_adr:$mail_pw" \
 		--request 'STORE 1:* +FLAGS \Deleted'
 	) || return 1
 
 	imapstatus=$(
-		curl --ssl --silent --show-error \
+		curl --ssl-reqd --silent --show-error \
 		"imap://$mail_srv/INBOX" \
 		--user "$mail_adr:$mail_pw" \
 		--request 'EXPUNGE'
@@ -82,12 +82,12 @@ function test_putImap {
 		Test
 		EOF
 
-	curl --ssl --silent --show-error \
+	curl --ssl-reqd --silent --show-error \
 		"imap://$mail_srv/INBOX" \
 		--user "$mail_adr:$mail_pw" \
 		-T "$TESTSETDIR/testmsg" &&
 
-	curl --ssl --silent --show-error \
+	curl --ssl-reqd --silent --show-error \
 		"imap://$mail_srv/INBOX" \
 		--user "$mail_adr:$mail_pw" \
 		--request 'STORE 1 -Flags /Seen' &&
