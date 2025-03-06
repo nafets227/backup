@@ -65,7 +65,7 @@ function backup2_rclone2file {
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		sync \
-		"$bckrclone_src" \
+		"$bckrclone_src:ro" \
 		"$bckrclone_dst" \
 		$bckrclone_opts \
 		--backup-dir="$bckrclone_dst.del" &&
@@ -82,7 +82,7 @@ function backup2_rclone2file {
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		sync --create-empty-src-dirs \
-		"$bckrclone_src" \
+		"$bckrclone_src:ro" \
 		"$bckrclone_dst" \
 		$bckrclone_opts \
 		--backup-dir="$bckrclone_dst.del"
@@ -165,7 +165,7 @@ function backup2_file2rclone {
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		sync \
-		"$bckrclone_src" \
+		"$bckrclone_src:ro" \
 		"$bckrclone_dst" \
 		$bckrclone_opts &&
 	$RCLONE_BIN \
@@ -180,7 +180,7 @@ function backup2_file2rclone {
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		sync --create-empty-src-dirs \
-		"$bckrclone_src" \
+		"$bckrclone_src:ro" \
 		"$bckrclone_dst" \
 		$bckrclone_opts
 
