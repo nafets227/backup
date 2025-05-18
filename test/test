@@ -11,18 +11,22 @@
 # Initialise tests including any necessary workaround
 function test_init {
 
-	if which "ip" >/dev/null ; then
+	if 	[[ "$OSTYPE" =~ darwin* ]] ; then
+		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
+		test ! -z "$my_ip"
+		test_assert "$?" "Could not get IP with command ipconfig on MacOS" \
+		|| return 1
+	elif which "ip" >/dev/null ; then
 		my_ip="$USER@$(set -o pipefail
 			ip -4 -j a show dev docker0 primary |
 			jq '.[].addr_info[0].local')" &&
 		my_ip=${my_ip//\"}
-		test_assert "$?" "Could not get IP with command ip" || return 1
-	elif which "ipconfig" >/dev/null ; then
-		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
-		test ! -z "$my_ip"
-		test_assert "$?" "Could not get IP with command ipconfig" || return 1
+		test_assert "$?" "Could not get IP with command ip" \
+		|| return 1
 	else
 		my_ip=""
+		test_assert "1" "Could not get IP (not on MacO and command ip missing)"
+		return 1
 	fi
 
 	my_host="$HOSTNAME" &&
