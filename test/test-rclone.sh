@@ -101,10 +101,10 @@ function test_rclone2file {
 	then
 		printf "\tSkipping rclone Tests.\n"
 		return 0
-	elif [ -n "$RCLONE_CONF" ] ; then
+	elif [ -z "$RCLONE_CONF" ] ; then
 		test_assert 1 "internal Error: RCLONE_CONF is empty"
 		return 1
-	elif [ -n "$RCLONE_NAME" ] ; then
+	elif [ -z "$RCLONE_NAME" ] ; then
 		test_assert 1 "internal Error: RCLONE_NAME is empty"
 		return 1
 	fi
