@@ -151,12 +151,7 @@ function test_file_hist_srcdest {
 
 ##### Tests for File backup (rsync) ##########################################
 function test_file_hist {
-	if [ -n "$my_ip" ] || [ -n "$myhost" ]
-	then
-		printf "internal Error: my_ip or myhost missing\n"
-		return 1
-	fi
-
+	: "${my_ip:=""} ${my_host:=""}"
 	##### Specific tests for local/remote
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist-1" \
@@ -187,13 +182,12 @@ function test_file_hist {
 		)"
 
 	# backup remote source,dest without secret should fail
-	local myhost="$HOST $HOSTNAME" # HOST ist set on MacOS, HOSTNAME on Linux
 	eval "$(test_exec_backupdocker 1 \
 		"backup file" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$myhost:$TESTSETDIR/backup/file-hist-2" \
+		"$my_host:$TESTSETDIR/backup/file-hist-2" \
 		"$TEST_RSYNCOPT"
 		)"
 
@@ -204,7 +198,7 @@ function test_file_hist {
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$myhost:$TESTSETDIR/backup/file-hist-2" \
+		"$my_host:$TESTSETDIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
@@ -216,7 +210,7 @@ function test_file_hist {
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$myhost:$TESTSETDIR/backup/file-hist-2" \
+		"$my_host:$TESTSETDIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
@@ -228,7 +222,7 @@ function test_file_hist {
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$myhost:$TESTSETDIR/backup/file-hist-2" \
+		"$my_host:$TESTSETDIR/backup/file-hist-2" \
 		--dstsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
@@ -239,7 +233,7 @@ function test_file_hist {
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$myhost:$TESTSETDIR/backup/file-hist-2" \
+		"$my_host:$TESTSETDIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--dstsecret /secrets/id_rsa \
 		"$TEST_RSYNCOPT"

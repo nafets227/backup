@@ -137,11 +137,7 @@ function test_file_srcdest {
 
 ##### Tests for File backup (rsync) ##########################################
 function test_file {
-	if [ -n "$my_ip" ] || [ -n "$myhost" ]
-	then
-		printf "internal Error: my_ip or myhost missing\n"
-		return 1
-	fi
+	: "${my_ip:=""} ${my_host:=""}"
 
 	##### Specific tests for local/remote
 	mkdir -p "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2"
@@ -166,12 +162,11 @@ function test_file {
 		)"
 
 	# backup remote source,dest without secret should fail
-	local myhost="$HOST $HOSTNAME" # HOST ist set on MacOS, HOSTNAME on Linux
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
 		"backup file" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$myhost:$TESTSETDIR/backup/file2" \
+		"$my_host:$TESTSETDIR/backup/file2" \
 		$TEST_RSYNCOPT
 		)"
 
@@ -181,7 +176,7 @@ function test_file {
 	eval "$(test_exec_backupdocker 1 \
 		"backup file" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$myhost:$TESTSETDIR/backup/file2" \
+		"$my_host:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
@@ -192,7 +187,7 @@ function test_file {
 	eval "$(test_exec_backupdocker 1 \
 		"backup file" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$myhost:$TESTSETDIR/backup/file2" \
+		"$my_host:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
@@ -203,7 +198,7 @@ function test_file {
 	eval "$(test_exec_backupdocker 1 \
 		"backup file" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$myhost:$TESTSETDIR/backup/file2" \
+		"$my_host:$TESTSETDIR/backup/file2" \
 		--dstsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
@@ -213,7 +208,7 @@ function test_file {
 	eval "$(test_exec_backupdocker 1 \
 		"backup file" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$myhost:$TESTSETDIR/backup/file2" \
+		"$my_host:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--dstsecret /secrets/id_rsa \
 		$TEST_RSYNCOPT

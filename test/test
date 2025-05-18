@@ -25,6 +25,11 @@ function test_init {
 		my_ip=""
 	fi
 
+	my_host="$HOSTNAME" &&
+	test ! -z "$my_host"
+	test_assert "$?" "Could not get hostname" \
+	|| return 1
+
 	return 0
 }
 
