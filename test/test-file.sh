@@ -20,12 +20,15 @@ function test_file_srcdest {
 
 	mkdir -p \
 		"$TESTSETDIR/backup/file/source" \
-		"$TESTSETDIR/backup/file/dest" &&
-	chown 41598:41598 \
-		"$TESTSETDIR/backup/file" \
-		"$TESTSETDIR/backup/file/source" \
 		"$TESTSETDIR/backup/file/dest"
 	test_assert "$?" "Creating directories" || return 1
+	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
+		chown 41598:41598 \
+			"$TESTSETDIR/backup/file" \
+			"$TESTSETDIR/backup/file/source" \
+			"$TESTSETDIR/backup/file/dest"
+		test_assert "$?" "chown directories" || return 1
+	fi
 	source+="/file/source"
 	dest+="/file/dest"
 
