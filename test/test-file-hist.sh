@@ -163,7 +163,7 @@ function test_file_hist_srcdest {
 
 ##### Tests for File backup (rsync) ##########################################
 function test_file_hist {
-	: "${my_ip:=""} ${my_host:=""}"
+	: "${my_ip:=""} ${my_host:=""} ${my_fileopt:=""}"
 	##### Specific tests for local/remote
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist-1" \
@@ -175,7 +175,7 @@ function test_file_hist {
 
 	# backup remote source without secret should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
@@ -185,7 +185,7 @@ function test_file_hist {
 
 	# backup remote dest without secret should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		/backup/file1 \
@@ -195,7 +195,7 @@ function test_file_hist {
 
 	# backup remote source,dest without secret should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
@@ -206,7 +206,7 @@ function test_file_hist {
 	# backup remote source,dest with only source secret should work
 	# since remote and source are on same machine
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
@@ -218,7 +218,7 @@ function test_file_hist {
 
 	# backup remote source,dest with only source secret should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
@@ -230,7 +230,7 @@ function test_file_hist {
 
 	# backup remote source,dest with only dest secret should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
@@ -241,7 +241,7 @@ function test_file_hist {
 		)"
 	# backup remote source,dest without runon should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
@@ -266,7 +266,7 @@ function test_file_hist {
 			test_file_hist_srcdest \
 				"$source" \
 				"$dest" \
-				"$TEST_RSYNCOPT" \
+				"$my_fileopt $TEST_RSYNCOPT" \
 				$secretparm \
 			|| return 1
 		done
@@ -278,7 +278,7 @@ function test_file_hist {
 		for source in "/backup" ; do
 			# Backup to remote in history mod should fail
 			eval "$(test_exec_backupdocker 1 \
-				"backup file" \
+				"backup file $my_fileopt" \
 				--hist \
 				--histdate "2020-10-01" \
 				"$source" \
@@ -302,7 +302,7 @@ function test_file_hist {
 			test_file_hist_srcdest \
 				"$source" \
 				"$dest" \
-				"$TEST_RSYNCOPT" \
+				"$my_fileopt $TEST_RSYNCOPT" \
 				--runondst \
 				$secretparm \
 			|| return 1

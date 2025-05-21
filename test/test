@@ -11,11 +11,14 @@
 # Initialise tests including any necessary workaround
 function test_init {
 
+	my_fileopt=""
+
 	if 	[[ "$OSTYPE" =~ darwin* ]] ; then
 		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
 		test ! -z "$my_ip"
 		test_assert "$?" "Could not get IP with command ipconfig on MacOS" \
 		|| return 1
+		my_fileopt="--macos"
 	elif which "ip" >/dev/null ; then
 		my_ip="$USER@$(set -o pipefail
 			ip -4 -j a show dev docker0 primary |
@@ -173,6 +176,7 @@ if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
 	test_assert "$?" "chown TESTSETDIR/backup" >&2 || return 1
 fi
 
+: "$my_fileopt" # make shellcheck happy, its used in test-file*.sh
 if test_build "$1" && test_init ; then
 	test_runempty
 	test_email

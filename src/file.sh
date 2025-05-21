@@ -36,6 +36,9 @@ function backup2_file {
     if [ "$1" == "--inet" ] ; then
 		opt="-rLt --size-only --partial"
 		shift
+	elif [ "$1" == "--macos" ] ; then
+	    opt="-aH --delete"
+		shift
     else
 	    opt="-aHX --delete"
     fi

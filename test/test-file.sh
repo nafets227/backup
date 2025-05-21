@@ -140,7 +140,7 @@ function test_file_srcdest {
 
 ##### Tests for File backup (rsync) ##########################################
 function test_file {
-	: "${my_ip:=""} ${my_host:=""}"
+	: "${my_ip:=""} ${my_host:=""} ${my_fileopt:=""}"
 
 	##### Specific tests for local/remote
 	mkdir -p "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2"
@@ -149,7 +149,7 @@ function test_file {
 	# backup remote source without secret should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
 		/backup/file2 \
 		$TEST_RSYNCOPT
@@ -158,7 +158,7 @@ function test_file {
 	# backup remote dest without secret should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		/backup/file1 \
 		"$my_ip:$TESTSETDIR/backup/file2" \
 		$TEST_RSYNCOPT
@@ -167,7 +167,7 @@ function test_file {
 	# backup remote source,dest without secret should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
 		"$my_host:$TESTSETDIR/backup/file2" \
 		$TEST_RSYNCOPT
@@ -177,7 +177,7 @@ function test_file {
 	# since remote and source are on same machine
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
 		"$my_host:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
@@ -188,7 +188,7 @@ function test_file {
 	# backup remote source,dest with only source secret should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
 		"$my_host:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
@@ -199,7 +199,7 @@ function test_file {
 	# backup remote source,dest with only dest secret should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
 		"$my_host:$TESTSETDIR/backup/file2" \
 		--dstsecret /secrets/id_rsa \
@@ -209,7 +209,7 @@ function test_file {
 	# backup remote source,dest without runon should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
 		"$my_host:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
@@ -234,7 +234,7 @@ function test_file {
 				test_file_srcdest \
 					"$source" \
 					"$dest" \
-					"$TEST_RSYNCOPT" \
+					"$my_fileopt $TEST_RSYNCOPT" \
 					--runonsrc \
 					$secretparm \
 				|| return 1
@@ -246,7 +246,7 @@ function test_file {
 			test_file_srcdest \
 				"$source" \
 				"$dest" \
-				"$TEST_RSYNCOPT" \
+				"$my_fileopt $TEST_RSYNCOPT" \
 				$secretparm \
 			|| return 1
 		done
