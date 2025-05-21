@@ -18,8 +18,10 @@ function backup_remote {
 	local bck_hist_keep="$9"
 	shift 9
 
-	if [ -z "$remotemachine" ] ||
-	   [ -z "$remotesecret" ] ; then
+	if
+		[ -z "$remotemachine" ] ||
+		[ -z "$remotesecret" ]
+	then
 		printf "Error: %s without machine (%s) and/or secret (%s)\n" \
 			"trying to connect to remote" "$remotemachine" "$remotesecret"
 		return 1
@@ -83,7 +85,8 @@ function backup_remote {
 		fi
 	} &&
 	{
-		#shellcheck disable=SC2087 # intentionally making here-document expansion on server side
+		#shellcheck disable=SC2087
+		# intentionally making here-document expansion on server side
 		ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
 				"$remotemachine" -i "$remotesecret" <<-EOF
 			[[ x"$DEBUG" == x1 ]] && set -x
@@ -110,7 +113,9 @@ function backup_remote {
 		if [ -z "$bck_src_secret" ] ; then
 			true
 		else
-			if ! bck_secret=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+			if ! bck_secret=$(ssh \
+				-o StrictHostKeyChecking=no \
+				-o UserKnownHostsFile=/dev/null \
 				-i "$remotesecret" \
 				"$remotemachine" cat "$remdir/srcsecret")
 			then
@@ -130,7 +135,9 @@ function backup_remote {
 		if [ -z "$bck_dst_secret" ] ; then
 			true
 		else
-			if ! bck_secret=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+			if ! bck_secret=$(ssh \
+				-o StrictHostKeyChecking=no \
+				-o UserKnownHostsFile=/dev/null \
 				-i "$remotesecret" \
 				"$remotemachine" cat "$remdir/dstsecret")
 			then
@@ -197,7 +204,10 @@ function backup_local {
 		"${bck_local_prm[@]}" \
 		|| return 1
 
-	if [ -n "$bck_histdate" ] && [ "$bck_dst_full" != "$bck_dst/$bck_histdate" ] ; then
+	if
+		[ -n "$bck_histdate" ] &&
+		[ "$bck_dst_full" != "$bck_dst/$bck_histdate" ]
+	then
 		# History mode and we used a temporary dir for backup (.in-progress)
 		mv "$bck_dst_full" "$bck_dst/$bck_histdate" || return 1
 		printf "Backup in history mode successful - renamed to %s\n" \
@@ -211,17 +221,17 @@ function backup_local {
 function backup_notify {
 	if [ -z "$MAIL_TO" ] ; then
 		printf "Mail Alerting not configured, not sending EMail (%s)\n" \
-			 "set MAIL_TO to enable"
+			"set MAIL_TO to enable"
 		return 0 # no notification
 	elif [ -z "$MAIL_HOSTNAME" ] ; then
 		MAIL_HOSTNAME="$(hostname)"
 	fi
 
 	if [ -z "$MAIL_FROM" ] ; then
-		printf "Variable MAIL_FROM needs to be set if using Alerting indicated by MAIL_TO\n"
+		printf "Set MAIL_FROM if using Alerting indicated by MAIL_TO\n"
 		return 1
 	elif [ -z "$MAIL_URL" ] ; then
-		printf "Variable MAIL_URL needs to be set if using Alerting indicated by MAIL_TO\n"
+		printf "Set MAIL_URL if using Alerting indicated by MAIL_TO\n"
 		return 1
 	fi
 
@@ -232,7 +242,8 @@ function backup_notify {
 		MAIL_SUBJECT="Backup failed"
 	fi
 
-	#shellcheck disable=SC2086 # MAIL_TO intentionally may contain more than one word
+	#shellcheck disable=SC2086
+	# MAIL_TO intentionally may contain more than one word
 	(
 		printf "Total Return Code (NAFETS227BACKUP_GRC): %d\n" \
 			"$NAFETS227BACKUP_GRC"
@@ -291,13 +302,17 @@ function backup_default_runon {
 	elif [ "$bck_type" != file ] ; then
 		bck_runon=1 # can only run on destination
 	else
-		if   [[ "$bck_dst" == *":"* ]] &&
-		     [[ "$bck_src" == *":"* ]] ; then
+		if
+			[[ "$bck_dst" == *":"* ]] &&
+			[[ "$bck_src" == *":"* ]]
+		then
 			printf "Error: Missing option --runonsrc or --runondst %s\n" \
 				"when copying from remote to remote" >&2
 			return 1
-		elif [[ "$bck_dst" != *":"* ]] &&
-		     [[ "$bck_src" != *":"* ]] ; then
+		elif
+			[[ "$bck_dst" != *":"* ]] &&
+			[[ "$bck_src" != *":"* ]]
+		then
 			bck_runon=0
 		elif [[ "$bck_src" != *":"* ]] ; then
 			bck_runon=-1
@@ -554,9 +569,10 @@ if [[ ${BASH_VERSION:0:1} -lt "4" ]] ; then
 	# Special workaround for MacOS:
 	# system bash in /bin/bash is V3
 	# but v4+ max be available in /usr/local/bin
-	if [[ -x /usr/local/bin/bash ]] &&
-	   bashver=$(/usr/local/bin/bash -c 'echo $BASH_VERSION') &&
-	   [[ ${bashver:0:1} -ge 4 ]]
+	if \
+		[[ -x /usr/local/bin/bash ]] &&
+		bashver=$(/usr/local/bin/bash -c 'echo $BASH_VERSION') &&
+		[[ ${bashver:0:1} -ge 4 ]]
 	then
 		PATH="/usr/local/bin:$PATH" /usr/local/bin/bash "$0" "$@"
 		exit $?
@@ -575,11 +591,11 @@ fi
 #Source all modules in install.d
 for f in "$(dirname "$0")"/*.sh ; do
 	#shellcheck disable=SC1090 # shellcheck cannot follow dynamic sources
-    . "$f"
-    if [ x$? != x0 ] ; then
-	    printf "Error loading module %s\n" "$f"
-	    exit 1
-    fi
+	. "$f"
+	if [ x$? != x0 ] ; then
+		printf "Error loading module %s\n" "$f"
+		exit 1
+	fi
 done
 
 if [ "$DEBUG" == 1 ] ; then

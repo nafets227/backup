@@ -8,8 +8,10 @@
 
 ##### Tests for IMAP #########################################################
 function test_imap {
-	if ! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" ||
-	   ! test_assert_tools "curl" "$TEST_SNAIL" ; then
+	if \
+		! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" ||
+		! test_assert_tools "curl" "$TEST_SNAIL"
+	then
 		printf "\tSkipping IMAP Tests.\n"
 		return 0
 	elif ! test_assert_tools "offlineimap" "jq" ; then
@@ -34,7 +36,7 @@ function test_imap {
 
 	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$mail_smtpsrv"
 	test_assert "$?" "clean IMAP" || return 1
-	
+
 	# No password and default does not exist
 	eval "$(test_exec_backupdocker 1 \
 		"backup imap" \
@@ -60,7 +62,7 @@ function test_imap {
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_wrongpassword.password
 		)"
-	
+
 	# IMAP Wrong password - remote backup dest
 	$exec_remote &&
 	eval "$(test_exec_backupdocker 1 \

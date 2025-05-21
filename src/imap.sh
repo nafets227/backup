@@ -55,10 +55,10 @@ function backup2_imap_mkconfig {
 #	bck_dst_secret	Destination Secret Filename
 #	[ ...]		type specific futher options
 function backup2_imap {
-        if [ "$#" -ne 5 ] ; then
-                printf "Error in custom config script. "
-                printf "Calling backup imap with parms:\n\t%s\n" "$*"
-                return 1
+	if [ "$#" -ne 5 ] ; then
+		printf "Error in custom config script. "
+		printf "Calling backup imap with parms:\n\t%s\n" "$*"
+		return 1
 	elif [ "$DEBUG" == 1 ] ; then
 		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"
 	fi
@@ -93,9 +93,12 @@ function backup2_imap {
 	backup2_imap_mkconfig | offlineimap -c /dev/stdin
 	rc=$?
 	if [ $rc -ne 0 ] ; then
-		# on first error delete the .offlineimap files to workaround the UID validity issue
-		# see http://www.offlineimap.org/doc/FAQ.html#what-is-the-uid-validity-problem-for-folder
-		printf "Error connecting to IMAP %s. Will delete .offlineimap and retry.\n" "$emailuser"
+		# on first error delete the .offlineimap files to workaround the
+		# UID validity issue. See
+		# http://www.offlineimap.org/doc/FAQ.html
+		# #what-is-the-uid-validity-problem-for-folder
+		printf "Error connecting to IMAP %s. %s\n" \
+			"$emailuser" "Will delete .offlineimap and retry"
 		rm -rf "$bckimap_dst/.offlineimap" &&
 		backup2_imap_mkconfig | offlineimap -c /dev/stdin
 		rc=$?

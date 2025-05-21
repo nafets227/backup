@@ -54,15 +54,15 @@ COPY --from=rclone /usr/local/bin/rclone /usr/lib/nafets227.backup/
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN \
 	RCLONE_VER=$( \
-		set -o pipefail && \
 		/usr/lib/nafets227.backup/rclone --version \
 		| sed -n 's/^rclone //p') && \
+	RCLONE_BASEURL="https://downloads.rclone.org/$RCLONE_VER" && \
 	curl -o /tmp/rclone.zip \
-		"https://downloads.rclone.org/$RCLONE_VER/rclone-$RCLONE_VER-osx-amd64.zip" && \
+		"$RCLONE_BASEURL/rclone-$RCLONE_VER-osx-amd64.zip" && \
 	unzip -p /tmp/rclone.zip "rclone-$RCLONE_VER-osx-amd64/rclone" \
 		>/usr/lib/nafets227.backup/rclone.macos.amd64 && \
 	curl -o /tmp/rclone.zip \
-		"https://downloads.rclone.org/$RCLONE_VER/rclone-$RCLONE_VER-osx-arm64.zip" && \
+		"$RCLONE_BASEURL/rclone-$RCLONE_VER-osx-arm64.zip" && \
 	unzip -p /tmp/rclone.zip "rclone-$RCLONE_VER-osx-arm64/rclone" \
 		>/usr/lib/nafets227.backup/rclone.macos.arm64 && \
 	chmod +x \

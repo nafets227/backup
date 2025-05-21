@@ -8,14 +8,23 @@
 # you may want to set variabled:
 MY_DEST="myserver.mydomain.xxx"
 
-# General syntax of each backup is 
+# General syntax of each backup is
 # backup <type> <source> <dest> [ global-options ] [ -- ] [ type-options ]
 
-backup imap "example@mydomain.xxx" "$MY_DEST:/imap/example@mydomain.xxx" "imap.mydomain.xxx:143" --srcsecret "/backup/example@mydomain.xxx.password" --dstsecret "/backup/tgt.id_rsa"
+backup imap \
+	"example@mydomain.xxx" \
+	"$MY_DEST:/imap/example@mydomain.xxx" \
+	"imap.mydomain.xxx:143" \
+	--srcsecret "/backup/example@mydomain.xxx.password" \
+	--dstsecret "/backup/tgt.id_rsa"
 
-backup file "/mydir" "$MY_DEST:/mydir-backup" --dstsecret "/backup/tgt.id_rsa"
+backup file \
+	"/mydir" "$MY_DEST:/mydir-backup" \
+	--dstsecret "/backup/tgt.id_rsa"
 # you can use rsync options after --:
-backup file "/mydir2" "$MY_DEST:/mydir2-backup" --dstsecret "/backup/tgt.id_rsa" \
+backup file \
+	"/mydir2" "$MY_DEST:/mydir2-backup" \
+	--dstsecret "/backup/tgt.id_rsa" \
 	--hist \
 	-- "--exclude=/file-not-to-be-backuped"
 

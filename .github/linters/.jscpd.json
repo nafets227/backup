@@ -1,6 +1,6 @@
 {
-  "threshold": 0,
-  "reporters": ["consoleFull"],
-  "ignore": ["**/offlineimap3/**", "**/util/**"],
-  "absolute": true
+	"threshold": 0,
+	"reporters": ["consoleFull"],
+	"ignore": ["**/offlineimap3/**", "**/util/**"],
+	"absolute": true
 }

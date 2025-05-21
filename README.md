@@ -5,18 +5,21 @@ Container based implementation of backup. Features:
 - rsync to destination system
 - can backup IMAP accounts
 - Plugin system allows adding other types of data
-- History Mode preserves deleted files or old versions optimizing space by using hard links
+- History Mode preserves deleted files or old versions optimizing space by
+  using hard links
 
 ## Destinations
 
-Destination can be anything that is reachable via rsync/SSH or a local disk mounted in the container. Copying via internet is supported.
+Destination can be anything that is reachable via rsync/SSH or a local disk
+mounted in the container. Copying via internet is supported.
 
 ## History Mode
 
 History mode safes the backup to a subdirectory YYYY/mm/dd based on the backup
 date (today, unless --histdate is used). In order to save space, starting from
 the second backup we are hard-linking to unchanged filed of previous backup.
-With --histkeep also unsuccessful backups are reused in order to avoid double-downloading.
+With --histkeep also unsuccessful backups are reused in order to avoid
+double-downloading.
 
 ## Sources
 
@@ -30,8 +33,9 @@ backup supports currently the following sources:
 
 ### Easy use
 
-Start a container and pass the parameters (see below) for one action to this container.  
-This way of usage is recommended for testing and small number data storages.
+Start a container and pass the parameters (see below) for one action to this
+container. This way of usage is recommended for testing and small number data
+storages.
 
 ### Complex configurations
 
@@ -70,18 +74,21 @@ see also [Example][1].
 - --hist
   Backup in History Mode (see separate section)
 - --histdate <date>
-  Backup in History Mode, using <date> instead of today. Not intended for production use, but mainly for testing
+  Backup in History Mode, using <date> instead of today. Not intended for
+  production use, but mainly for testing
 - --histraw <YYYY/mm/dd>
-  Backup in History Mode, using fixed subdirectory as target. Only intended for internal use
+  Backup in History Mode, using fixed subdirectory as target. Only intended for
+  internal use
 - --histkeep
-  Reuse backup data of unsuccessful backups. This is especially useful for rclone
-  backups from cloud providers like Microsoft OneDrive.
+  Reuse backup data of unsuccessful backups. This is especially useful for
+  rclone backups from cloud providers like Microsoft OneDrive.
 
 ## Environment Parameters
 
 - DEBUG: 0 or 1, defaults to 0
 - MAIL_TO: EMail recipients
-  Recipient(s) of Alerting emails. If set, it also activates the alerting feature.
+  Recipient(s) of Alerting emails. If set, it also activates the alerting
+  feature.
 - MAIL_FROM: Email Sender
   sender of the Alerting emails
 - MAIL_URL: Email Server
@@ -153,7 +160,8 @@ Backups data from various Clouds, leveraging [rclone](https://rclone.org/).
 
 ## file2rclone
 
-Backups data from local to various Clouds, leveraging [rclone](https://rclone.org/).
+Backups data from local to various Clouds, leveraging
+[rclone](https://rclone.org/).
 
 ### file2rclone Global paramaters
 
@@ -171,11 +179,14 @@ version 0.2.1 no Defaults are applied.
 
 ## Rebasing history backups
 
-Rebasing a history backup in order to save space can be done. You need to start rebasing on the first backup that introduced the files to be based on other data
+Rebasing a history backup in order to save space can be done. You need to start
+rebasing on the first backup that introduced the files to be based on other data
 and then rebase each of the existing backups up to the latest.
 a sample command could be:
 
-    rsync -v -aHX --delete --progress --link-dest=../../../../../user_home/2021/11/20 --link-dest=../20 20/ 20.rsync-rebase.tmp
+    rsync -v -aHX --delete --progress
+    --link-dest=../../../../../user_home/2021/11/20
+    --link-dest=../20 20/ 20.rsync-rebase.tmp
 
 ## Future Plans
 
@@ -197,16 +208,20 @@ If you want to develop and test on macOS, you need:
 - trust your own SSH key (e.g. ~/.ssh/id_rsa.pub must be in authorized_keys)
 - tested with docker desktop for Mac
 
-To run tests in test subdirectory you need to have some test data available. ATTENTION: Test data will be DELETED on every run, so make sure you don´t have any data on it!
+To run tests in test subdirectory you need to have some test data available.
+ATTENTION: Test data will be DELETED on every run, so make sure you don´t have
+any data on it!
 
 - IMAP Test Account
 
-  Setup an IMAP Test Account and set Environment variables $MAIL_ADR, $MAIL_SRV and $MAIL_PW accordingly
+  Setup an IMAP Test Account and set Environment variables
+  $MAIL_ADR, $MAIL_SRV and $MAIL_PW accordingly
 
 - rclone Test Cloud
 
   Setup a Test-Cloud (I use Microsoft OneDrive that is for free).
-  Create an rclone.cfg and pass its filename in $RCLONE_CONF and the Cloud config to be used in $RCLONE_NAME.
+  Create an rclone.cfg and pass its filename in $RCLONE_CONF and the Cloud
+  config to be used in $RCLONE_NAME.
   You may wan to use something like
   `rclone --config ./rclonf.conf config` to create the file.
 
@@ -230,7 +245,8 @@ limitations, relevant secrets have been copied into the special dependabot
 area of secrets:
 
 - GH_SECRETS_ADMIN_TOKEN hold the value of the token named
-  [`dependabot_ghaction_nafet227backup`](https://github.com/settings/personal-access-tokens/2796058)
+  `dependabot_ghaction_nafet227backup`. See
+  [here](https://github.com/settings/personal-access-tokens/2796058)
   This is needed to let the action update RCLONE config after re-authentication.
 - MAIL_PW holds the mail password of the dummy accounts
   `nafets227.backup.test@nafets.de`. This account has limited send-rate to

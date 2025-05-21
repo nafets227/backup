@@ -16,10 +16,10 @@
 #	bck_dst_secret	Destination Secret Filename
 #	[ ...]		type specific futher options
 function backup2_file {
-    if [ "$#" -lt 4 ] ; then
-        printf "Error in custom config script. "
-        printf "Calling backup file with parms:\n\t%s\n" "$*"
-        return 1
+	if [ "$#" -lt 4 ] ; then
+		printf "Error in custom config script. "
+		printf "Calling backup file with parms:\n\t%s\n" "$*"
+		return 1
 	elif [ "$DEBUG" == 1 ] ; then
 		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"
 	fi
@@ -29,19 +29,19 @@ function backup2_file {
 	local bckfile_dst="${2%/}"
 	local bckfile_src_secret="$3"
 	local bckfile_dst_secret="$4"
-    shift 4
+	shift 4
 
-    local opt prm rsync_rc elapsed sshopt # start_date diff_date
+	local opt prm rsync_rc elapsed sshopt # start_date diff_date
 
-    if [ "$1" == "--inet" ] ; then
+	if [ "$1" == "--inet" ] ; then
 		opt="-rLt --size-only --partial"
 		shift
 	elif [ "$1" == "--macos" ] ; then
-	    opt="-aH --delete"
+		opt="-aH --delete"
 		shift
-    else
-	    opt="-aHX --delete"
-    fi
+	else
+		opt="-aHX --delete"
+	fi
 
 	if [ $# -gt 0 ]; then
 		# we got additional rsync parameters
@@ -61,9 +61,10 @@ function backup2_file {
 		if [ -z "$bckfile_src_secret" ] ; then
 			printf "ERROR: No secret for remote src file given.\n"
 			return 1
-        elif [ "$DEBUG" == 1 ] ; then
-            printf "DEBUG: Source Directory not checked, its on another computer.\n"
-        fi
+		elif [ "$DEBUG" == 1 ] ; then
+			printf "DEBUG: Source Directory not checked, %s.\n" \
+				"its on another computer"
+		fi
 	elif [ ! -d "$bckfile_src" ]; then
 		printf "Error: Source Directory %s does not exist\n" "$bckfile_src"
 		return 1
@@ -77,9 +78,10 @@ function backup2_file {
 		if [ -z "$bckfile_dst_secret" ] ; then
 			printf "ERROR: No secret for remote dst file given.\n"
 			return 1
-        elif [ "$DEBUG" == 1 ] ; then
-            printf "DEBUG: Dest Directory not checked, its on another computer.\n"
-        fi
+		elif [ "$DEBUG" == 1 ] ; then
+			printf "DEBUG: Dest Directory not checked, %s\n" \
+				"its on another computer."
+		fi
 	elif [ ! -d "$bckfile_dst" ]; then
 		mkdir -p "$bckfile_dst" || return 1
 		if [ "$DEBUG" == 1 ] ; then
@@ -94,9 +96,11 @@ function backup2_file {
 	printf "Backing up Files %s to %s\n" "$bckfile_src" "$bckfile_dst"
 
 	if	[[ "$bckfile_src" == *":"* ]] ; then
-		sshopt="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $bckfile_src_secret"
+		sshopt="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+		sshopt+=" -i $bckfile_src_secret"
 	elif [[ "$bckfile_dst" == *":"* ]] ; then
-		sshopt="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $bckfile_dst_secret"
+		sshopt="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+		sshopt+=" -i $bckfile_dst_secret"
 	else
 		sshopt="ssh"
 	fi
@@ -112,7 +116,7 @@ function backup2_file {
 #	start_date="$(date -u +"%s")" || return 1
 	if [ "$DEBUG" == 1 ] ; then
 		printf "Executing rsync -e \"%s\" %s %s %s/ %s\n" \
-            "$sshopt" "$opt" "$prm" "$bckfile_src" "$bckfile_dst"
+			"$sshopt" "$opt" "$prm" "$bckfile_src" "$bckfile_dst"
 	fi
 	#shellcheck disable=SC2086 # intentionally opt+prm can contain >1 word
 	rsync -e "$sshopt" $opt $prm "$bckfile_src/" "$bckfile_dst"
@@ -125,15 +129,15 @@ function backup2_file {
 #		elapsed=$(date +%H:%M:%S -u -d @"$diff_date") || return 1
 #	fi
 
-    if [ $rsync_rc -eq 0 ] ; then
-        printf "Backup of %s completed (%s).\n" "$bckfile_src" "$elapsed"
-        return 0
-    else
-        printf "Backup of %s ended in error. RSync RC=%d (%s).\n" \
-            "$bckfile_src" "$rsync_rc" "$elapsed"
-        return 1
-    fi
+	if [ $rsync_rc -eq 0 ] ; then
+		printf "Backup of %s completed (%s).\n" "$bckfile_src" "$elapsed"
+		return 0
+	else
+		printf "Backup of %s ended in error. RSync RC=%d (%s).\n" \
+			"$bckfile_src" "$rsync_rc" "$elapsed"
+		return 1
+	fi
 
 	#shellcheck disable=2317 # intentionally not reachable
-    return 99 # should never be reached
+	return 99 # should never be reached
 }

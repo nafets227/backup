@@ -132,8 +132,9 @@ function test_expect_rclone_files {
 
 ##### Tests for rclone2file ##################################################
 function test_rclone2file {
-	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
-	   ! test_assert_files "$RCLONE_CONF"
+	if \
+		! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
+		! test_assert_files "$RCLONE_CONF"
 	then
 		printf "\tSkipping rclone Tests.\n"
 		return 0
@@ -314,13 +315,16 @@ function test_rclone2file {
 
 ##### Tests for rclone2file history ##########################################
 function test_rclone2file_hist {
-	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
-	   ! test_assert_files "$RCLONE_CONF" ; then
+	if \
+		! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
+		! test_assert_files "$RCLONE_CONF"
+	then
 		printf "\tSkipping rclone Tests.\n"
 		return 0
 	fi
 
-	printf "Testing rclone history using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
+	printf "Testing rclone history using \"%s\" in %s\n" \
+		"$RCLONE_NAME" "$RCLONE_CONF"
 
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file-hist.conf"
 	test_assert "$?" "copy rclone2file-hist.conf" || return 1
@@ -350,7 +354,8 @@ function test_rclone2file_hist {
 	# Time 10+11: Added file
 	test_putRclone "${RCLONE_NAME}test.txt" "$RCLONE_CONF" "rclone-hist-1"
 	test_assert "$?" "put test.txt on rclone" || return 1
-	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" "$RCLONE_CONF" "rclone-hist-1"
+	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" \
+		"$RCLONE_CONF" "rclone-hist-1"
 	test_assert "$?" "put testdir/testfile.txt on rclone" || return 1
 	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
@@ -372,7 +377,8 @@ function test_rclone2file_hist {
 	# Time 20+21: modified file
 	test_putRclone "${RCLONE_NAME}test.txt" "$RCLONE_CONF" "rclone-hist-2"
 	test_assert "$?" "put test.txt on rclone" || return 1
-	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" "$RCLONE_CONF" "rclone-hist-2"
+	test_putRclone "${RCLONE_NAME}testdir/testfile.txt" \
+		"$RCLONE_CONF" "rclone-hist-2"
 	test_assert "$?" "put testdir/testfile.txt on rclone" || return 1
 	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
@@ -456,8 +462,10 @@ function test_rclone2file_hist {
 
 ##### Tests for file2rclone ##################################################
 function test_file2rclone {
-	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
-	   ! test_assert_files "$RCLONE_CONF" ; then
+	if \
+		! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
+		! test_assert_files "$RCLONE_CONF"
+	then
 		printf "\tSkipping file2rclone Tests.\n"
 		return 0
 	fi
@@ -521,7 +529,8 @@ function test_file2rclone {
 		--dstsecret /backup/file2rclone.conf \
 		)"
 
-	for source in "/backup/file2rclone" "$my_ip:$TESTSETDIR/backup/file2rclone" ; do
+	for source in "/backup/file2rclone" "$my_ip:$TESTSETDIR/backup/file2rclone"
+	do
 		secretparm=""
 		if [[ "$source" == *":"* ]] ; then
 			secretparm+="--srcsecret /secrets/id_rsa "

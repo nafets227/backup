@@ -87,10 +87,10 @@ function test_exec_backupdocker {
 		if ! chown 41598:41598 "$TESTSETDIR/id_rsa" ; then
 			printf "test_assert %s \"%s\"\n" "$?" "chown SSH Key"
 			return 1
-		else 
+		else
 			printf "test_assert %s \"%s\"\n" "0" "not chowning SSH Key"
 		fi
-	else 
+	else
 		printf "test_assert %s \"%s\"\n" "0" "not chowning SSH Key"
 	fi
 
@@ -132,14 +132,16 @@ function test_build {
 function test_runempty {
 	test_exec_cmd 1 "" \
 		docker run "$TESTIMG"
-	
+
 	return $?
 }
 
 ##### Test: Email alerting ###################################################
 function test_email {
-	if ! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" "MAIL_URL" ||
-	   ! test_assert_tools "curl" "$TEST_SNAIL" ; then
+	if \
+		! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" "MAIL_URL" ||
+		! test_assert_tools "curl" "$TEST_SNAIL"
+	then
 		printf "\tSkipping IMAP Tests.\n"
 		return 0
 	fi

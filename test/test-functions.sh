@@ -156,7 +156,8 @@ function test_expect_lastoutput_linecount {
 
 	local linecountact
 	linecountact=$(wc -l <"$TESTSETDIR/$testexecnr$extension")
-	linecountact=$(( linecountact - 4 )) # Ignore Log Lines inserted at the beginning
+	# Ignore Log Lines inserted at the beginning
+	linecountact=$(( linecountact - 4 ))
 	if [ $? -gt 1 ] ; then
 		# wc error
 		printf "ERROR checking linecount %s.\n" "$testnr"
@@ -359,7 +360,8 @@ function test_exec_kubecron {
 	#         0 - OK
 	#         1 - Job did run, but with error
 	#         2 - Job timed out
-	#         3 - Job could not be run (Kubernetes error when creating and scheduling)
+	#         3 - Job could not be run
+	#             (Kubernetes error when creating and scheduling)
 	#     3 - optional message to be printed if test fails
 	#     4 - Timeout in seconds [optional, default=240]
 	test_assert_tools "jq" || return 1
@@ -393,7 +395,8 @@ function test_exec_kubecron {
 		ACTIVE=$(jq '.active // 0' <<<"$STATUS" 2>&1) &&
 		FAILED=$(jq '.failed // 0' <<<"$STATUS" 2>&1) &&
 		SUCCEEDED=$(jq '.succeeded // 0' <<<"$STATUS" 2>&1) &&
-		CONDSTATUS=$(jq -r 'try .conditions[] | select(.status=="True").type' <<<"$STATUS" 2>&1)
+		CONDSTATUS=$(jq -r 'try .conditions[] | select(.status=="True").type' \
+			<<<"$STATUS" 2>&1)
 		#shellcheck disable=SC2181 # using $? here helps to keep the structure
 		if [ "$?" != 0 ] ; then
 			printf "%s\nACTIVE=%s\nFAILED=%s\nSUCCEEDED=%s\nCONDSTATUS=%s\n" \
@@ -402,26 +405,30 @@ function test_exec_kubecron {
 			TESTRC=3
 			break
 		elif [ "$CONDSTATUS" == "Complete" ] ; then
-			printf "  Completed Job: %s/%s/%s/%s (active/failed/succeeded/condition)\n" \
+			printf "  Completed Job: %s/%s/%s/%s (%s)\n" \
 				"$ACTIVE" "$FAILED" "$SUCCEEDED" "$CONDSTATUS" \
+				"active/failed/succeeded/condition" \
 				>>"$TESTSETDIR/$testnr.out"
 			TESTRC=0
 			break
 		elif [ "$CONDSTATUS" == "Failed" ] ; then
-			printf "     Failed Job: %s/%s/%s/%s (active/failed/succeeded/condition)\n" \
+			printf "     Failed Job: %s/%s/%s/%s (%s)\n" \
 				"$ACTIVE" "$FAILED" "$SUCCEEDED" "$CONDSTATUS" \
+				"active/failed/succeeded/condition" \
 				>>"$TESTSETDIR/$testnr.out"
 			TESTRC=1
 			break
 		elif [ "$slept" -gt "$sleepMax" ] ; then
-			printf "   TimedOut Job: %s/%s/%s/%s (active/failed/succeeded/condition)\n" \
+			printf "   TimedOut Job: %s/%s/%s/%s (%s)\n" \
 				"$ACTIVE" "$FAILED" "$SUCCEEDED" "$CONDSTATUS" \
+				"active/failed/succeeded/condition" \
 				>>"$TESTSETDIR/$testnr.out"
 			TESTRC=2
 			break
 		else
-			printf "Waiting for Job: %s/%s/%s/%s (active/failed/succeeded/condition)" \
+			printf "Waiting for Job: %s/%s/%s/%s (%s)" \
 				"$ACTIVE" "$FAILED" "$SUCCEEDED" "$CONDSTATUS" \
+				"active/failed/succeeded/condition" \
 				>>"$TESTSETDIR/$testnr.out"
 			printf " sleep %s seconds (%s/%s)\n" \
 					"$sleepNext" "$slept" "$sleepMax" \
@@ -516,7 +523,9 @@ function test_exec_kubenode2 {
 	kubecmd+="run kubenodetest"
 	kubecmd+=" --image alpine:latest"
 	kubecmd+=" --restart=Never"
-	kubecmd+=" --overrides='{ \"apiVersion\": \"v1\", \"spec\": { \"nodeName\": \"$nodename\" } }'"
+	kubecmd+=" --overrides='{"
+	kubecmd+="   \"apiVersion\": \"v1\","
+	kubecmd+="   \"spec\": { \"nodeName\": \"$nodename\" } }'"
 	kubecmd+=" --stdin"
 	kubecmd+=" --rm"
 	kubecmd+=" --pod-running-timeout=3m"
@@ -561,9 +570,10 @@ function test_exec_recvmail {
 	[ -z "$TEST_SNAIL" ] && return 1
 	test_exec_init "recvmail $rc_exp $url" || return 1
 
-	local -r MAIL_STD_OPT="-e -n -vv -Sv15-compat -Snosave -Sexpandaddr=fail,-all,+addr"
-	# -SNosave is included in -d and generates error messages - so dont include it
-	#MAIL_STD_OPT="-n -d -vv -Sv15-compat -Ssendwait -Sexpandaddr=fail,-all,+addr"
+	local MAIL_STD_OPT
+	MAIL_STD_OPT="-e -n -vv -Sv15-compat -Snosave"
+	MAIL_STD_OPT+=" -Sexpandaddr=fail,-all,+addr"
+	readonly MAIL_STD_OPT
 	local MAIL_OPT="-S 'inbox=$url'"
 
 	#shellcheck disable=SC2086 # vars contain multiple parms
@@ -597,9 +607,10 @@ function test_exec_sendmail {
 	[ -z "$TEST_SNAIL" ] && return 1
 	test_exec_init "sendmail $rc_exp $url" || return 1
 
-	local -r MAIL_STD_OPT="-n -vv -Sv15-compat -Ssendwait -Snosave -Sexpandaddr=fail,-all,+addr"
-	# -SNosave is included in -d and generates error messages - so dont include it
-	#MAIL_STD_OPT="-n -d -vv -Sv15-compat -Ssendwait -Sexpandaddr=fail,-all,+addr"
+	local -MAIL_STD_OPT
+	MAIL_STD_OPT="-n -vv -Sv15-compat -Ssendwait -Snosave"
+	MAIL_STD_OPT+=" -Sexpandaddr=fail,-all,+addr"
+	readonly MAIL_STD_OPT
 	MAIL_OPT="-S 'smtp=$url'"
 	MAIL_OPT="$MAIL_OPT -s 'Subject TestMail $testnr'"
 	MAIL_OPT="$MAIL_OPT -r '$from'"
@@ -613,8 +624,10 @@ function test_exec_sendmail {
 	TESTRC=$?
 	if [ "$TESTRC" -ne "$rc_exp" ] ; then
 		printf "FAILED. RC=%d (exp=%d)\n" "$rc" "$rc_exp"
-		printf "send_testmail(%s,%s,%s,%s,%s)\n" "$rc_exp" "$url" "$from" "$to" "$*"
-		printf "CMD: $TEST_SNAIL %s %s %s '%s'\n" "$MAIL_STD_OPT" "$MAIL_OPT" "$*" "$to"
+		printf "send_testmail(%s,%s,%s,%s,%s)\n" \
+			"$rc_exp" "$url" "$from" "$to" "$*"
+		printf "CMD: $TEST_SNAIL %s %s %s '%s'\n" \
+			"$MAIL_STD_OPT" "$MAIL_OPT" "$*" "$to"
 		printf "========== Output Test %d Begin ==========\n" "$testnr"
 		cat "$TESTSETDIR/$testnr.mailout"
 		printf "========== Output Test %d End ==========\n" "$testnr"
@@ -782,7 +795,10 @@ function test_expect_files {
 	fi
 
 	#shellcheck disable=SC2012 # no worries about non-alpha filenames here
-	testresult=$( set -o pipefail ; ls -1A "$testdir" 2>/dev/null | wc -l | tr -d ' ')
+	testresult=$( \
+		set -o pipefail ;
+		ls -1A "$testdir" 2>/dev/null | wc -l | tr -d ' '
+		)
 	rc=$?
 
 	if [ "$rc" != 0 ] ; then
@@ -901,7 +917,9 @@ function testset_init {
 		printf "Activating MacOS workaround.\n"
 		# TEST_RSYNCOPT="--rsync-path=/usr/local/bin/rsync"
 		TEST_SNAIL=/usr/local/bin/s-nail
-	elif [ "$(awk -F= '/^NAME/{print $2}' /etc/os-release)" == "\"Ubuntu\"" ] ; then
+	elif
+		[ "$(awk -F= '/^NAME/{print $2}' /etc/os-release)" == "\"Ubuntu\"" ]
+	then
 		printf "Activating Ubuntu settings.\n"
 		# TEST_RSYNCOPT=""
 		TEST_SNAIL=s-nail

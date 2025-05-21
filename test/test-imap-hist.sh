@@ -8,8 +8,10 @@
 
 ##### Tests for IMAP with history ############################################
 function test_imap_hist {
-	if ! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" ||
-	   ! test_assert_tools "curl" "$TEST_SNAIL" ; then
+	if  \
+		! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" ||
+		! test_assert_tools "curl" "$TEST_SNAIL"
+	then
 		printf "\tSkipping IMAP History Tests.\n"
 		return 0
 	elif ! test_assert_tools "offlineimap" "jq" ; then
@@ -201,7 +203,7 @@ function test_imap_hist {
 		"$TESTSETDIR/backup-rem/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# clear Emails
-	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$mail_smtpsrv" 
+	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$mail_smtpsrv"
 	test_assert "$?" "clean IMAP" || return 1
 
 	# IMAP OK with Empty Mailbox 2021-01-16

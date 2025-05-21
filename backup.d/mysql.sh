@@ -35,8 +35,15 @@ ssh $srv <<-EOF
 	mysqldump --skip-comments -T$DUMPDIR $db
 EOF
 
-backup_rsync --hist $srv:$DUMPDIR /srv/backup/mysql.$db.$srv "--ignore-times"
-backup_rsync $srv:$DUMPDIR /srv/backup/data.uncrypt/mysql.$db.$srv "--ignore-times"
+backup_rsync \
+	--hist \
+	$srv:$DUMPDIR \
+	/srv/backup/mysql.$db.$srv \
+	"--ignore-times"
+backup_rsync \
+	$srv:$DUMPDIR \
+	/srv/backup/data.uncrypt/mysql.$db.$srv \
+	"--ignore-times"
 
 ssh $srv <<-EOF
 	rm -rf $DUMPDIR
@@ -82,8 +89,14 @@ ssh $srv <<-EOSSH
 		EODOCK
 	EOSSH
 
-backup_rsync --hist $srv:$DUMPDIR /srv/backup/mysql.$cnt.$srv "--ignore-times"
-backup_rsync $srv:$DUMPDIR /srv/backup/data.uncrypt/mysql.$cnt.$srv "--ignore-times"
+backup_rsync \
+	--hist $srv:$DUMPDIR \
+	/srv/backup/mysql.$cnt.$srv \
+	"--ignore-times"
+backup_rsync \
+	$srv:$DUMPDIR \
+	/srv/backup/data.uncrypt/mysql.$cnt.$srv \
+	"--ignore-times"
 
 ssh $srv <<-EOF
 	rm -rf $DUMPDIR
@@ -155,9 +168,12 @@ kubectl --kubeconfig /root/.kube/config get -n prod pod -l svc=mariadb \
 		continue
 	fi
 
-	printf "Searching MySQl databases in Kubernetes POD %s (%s)\n" "$name" "$pod"
+	printf "Searching MySQl databases in Kubernetes POD %s (%s)\n" \
+		"$name" "$pod"
 
-	dbs=$(kubectl --kubeconfig /root/.kube/config exec -i -n prod $pod -- /bin/bash <<-EOKUBE
+	dbs=$(kubectl \
+			--kubeconfig /root/.kube/config \
+			exec -i -n prod $pod -- /bin/bash <<-EOKUBE
 		mysql -uroot -p"\$MYSQL_ROOT_PASSWORD" \
 			--skip-column-names \
 			-e "show databases"
@@ -169,14 +185,16 @@ kubectl --kubeconfig /root/.kube/config get -n prod pod -l svc=mariadb \
 			information_schema|mysql|performance_schema)
 			continue
 		esac
-		printf "Backing up MySQl databases %s in Kubernetes POD %s (%s)\n" "$db" "$name" "$pod"
+		printf "Backing up MySQl databases %s in Kubernetes POD %s (%s)\n" \
+			"$db" "$name" "$pod"
 
 		#NB: Dumping to /tmp or /var/tmp does not work, maybe a bug in mariadb
 		#    anyhow, all directories in the path need to be writeable to user
 		#    mysql, so we use /var/lib.
 		local readonly DUMPDIR_CNT="/var/lib/mysqldump.$(date +%Y%m%d)"
 		local readonly DUMPDIR="/var/lib/mysqldump.$(date +%Y%m%d)"
-		kubectl --kubeconfig /root/.kube/config exec -i -n prod $pod -- /bin/bash <<-EOKUBE
+		kubectl --kubeconfig /root/.kube/config exec \
+				-i -n prod $pod -- /bin/bash <<-EOKUBE
 			set -x
 			# This script will be executed in the DB-container
 			mkdir -p $DUMPDIR_CNT
@@ -186,11 +204,19 @@ kubectl --kubeconfig /root/.kube/config get -n prod pod -l svc=mariadb \
 				-T$DUMPDIR_CNT \
 				$db
 			EOKUBE
-		kubectl --kubeconfig /root/.kube/config cp prod/$pod:$DUMPDIR_CNT $DUMPDIR
-		kubectl --kubeconfig /root/.kube/config exec -i -n prod $pod -- /bin/rm -rf $DUMPDIR_CNT </dev/null
+		kubectl --kubeconfig /root/.kube/config \
+			cp prod/$pod:$DUMPDIR_CNT $DUMPDIR
+		kubectl --kubeconfig /root/.kube/config \
+			exec -i -n prod $pod -- /bin/rm -rf $DUMPDIR_CNT </dev/null
 
-		backup_rsync --hist $DUMPDIR /srv/backup/mysql.$name.$db "--ignore-times"
-		backup_rsync $DUMPDIR /srv/backup/data.uncrypt/mysql.$name.$db "--ignore-times"
+		backup_rsync --hist \
+			$DUMPDIR \
+			/srv/backup/mysql.$name.$db \
+			"--ignore-times"
+		backup_rsync \
+			$DUMPDIR \
+			/srv/backup/data.uncrypt/mysql.$name.$db \
+			"--ignore-times"
 
 		rm -rf $DUMPDIR
 	done
