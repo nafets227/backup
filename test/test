@@ -51,15 +51,24 @@ function test_exec_backupdocker {
 	rc_exp="$1"
 	shift
 
-	cat >"$TESTSETDIR/backup/backup" <<<"$@" &&
-	chmod +x "$TESTSETDIR/backup/backup"
-	test_assert "$?" "Write backup script" >&2 || return 1
+	if \
+		! cat >"$TESTSETDIR/backup/backup" <<<"$@" ||
+		! chmod +x "$TESTSETDIR/backup/backup"
+	then
+		printf "test_assert %s \"%s\"\n" "$?" "Write backup script"
+		return 1
+	fi
 
-	cp ~/.ssh/id_rsa "$TESTSETDIR/id_rsa"
-	test_assert "$?" "Copy SSH Key" >&2 || return 1
+	if ! cp ~/.ssh/id_rsa "$TESTSETDIR/id_rsa"
+	then
+		printf "test_assert %s \"%s\"\n" "$?" "Copy SSH Key"
+		return 1
+	fi
 	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/id_rsa"
-		test_assert "$?" "chown SSH Key" >&2 || return 1
+		if ! chown 41598:41598 "$TESTSETDIR/id_rsa" ; then
+			printf "test_assert %s \"%s\"\n" "$?" "chown SSH Key"
+			return 1
+		fi
 	fi
 
 	printf "test_exec_cmd"
