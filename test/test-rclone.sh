@@ -252,7 +252,8 @@ function test_rclone2file {
 		/backup/rclone2file \
 		--srcsecret /backup/rclone-update.conf
 		)" &&
-	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
+	test_exec_cmd "" "" \
+		fgrep '[rclone-unittest-dummy]' "$TESTSETDIR/backup/rclone-update.conf"
 
 	# Verify modifying conf - remote
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
@@ -269,7 +270,8 @@ function test_rclone2file {
 		--srcsecret /backup/rclone-update.conf \
 		--dstsecret /secrets/id_rsa
 		)" &&
-	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
+	test_exec_cmd "" "" \
+		fgrep '[rclone-unittest-dummy]' "$TESTSETDIR/backup/rclone-update.conf"
 
 	# Store Testfiles
 	test_putRclone "${RCLONE_NAME}test.txt" "$RCLONE_CONF"

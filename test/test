@@ -62,22 +62,19 @@ function test_exec_backupdocker {
 		test_assert "$?" "chown SSH Key" >&2 || return 1
 	fi
 
-	local docker_cmd=""
-	docker_cmd+="docker run"
-	docker_cmd+=" -v $TESTSETDIR/backup:/backup"
-	docker_cmd+=" -v $TESTSETDIR/id_rsa:/secrets/id_rsa:ro"
-	docker_cmd+=" -e DEBUG=1"
-	docker_cmd+=" -e MAIL_TO"
-	docker_cmd+=" -e MAIL_FROM"
-	docker_cmd+=" -e MAIL_URL"
-	docker_cmd+=" -e MAIL_HOSTNAME"
-	docker_cmd+=" $TESTIMG"
-	docker_cmd+=" . /backup/backup"
-
-	printf "test_exec_simple \"%s\" \"%s\" \"%s\"" \
-		"$docker_cmd" \
-		"$rc_exp" \
-		"Backup Command $*"
+	printf "test_exec_cmd"
+	printf  " \"%s\"" \
+		"$rc_exp" "Backup Command $*" \
+		docker run \
+			-v "$TESTSETDIR/backup:/backup" \
+			-v "$TESTSETDIR/id_rsa:/secrets/id_rsa:ro" \
+			-e DEBUG=1 \
+			-e MAIL_TO \
+			-e MAIL_FROM \
+			-e MAIL_URL \
+			-e MAIL_HOSTNAME \
+			"$TESTIMG" \
+			. /backup/backup
 
 	return "$TESTRC"
 }
@@ -87,9 +84,8 @@ function test_build {
 
 	if [ -z "$1" ] ; then
 		# Compile / Build docker
-		test_exec_simple \
-			"docker build -t nafets227/backup:test $BASEDIR/.." \
-			0
+		test_exec_cmd 0 "" \
+			docker build -t nafets227/backup:test "$BASEDIR/.."
 		[ "$TESTRC" -eq 0 ] || return 1
 		TESTIMG="nafets227/backup:test"
 	else
@@ -101,9 +97,8 @@ function test_build {
 
 ##### Test: no custom script #################################################
 function test_runempty {
-	test_exec_simple \
-		"docker run $TESTIMG" \
-		1
+	test_exec_cmd 1 "" \
+		docker run "$TESTIMG"
 	
 	return $?
 }

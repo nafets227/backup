@@ -232,18 +232,6 @@ function test_exec_cmd {
 	return 0
 }
 
-function test_exec_simple {
-	# DEPRECATED. Use test_exec_cmd instead.
-	# Parameters:
-	#     1 - command to test
-	#     2 - expected RC [default: 0]
-	#     3 - optional message to be printed if test fails
-
-	test_exec_cmd "$2" "$3" eval "$1"
-
-	return $?
-}
-
 function test_exec_ssh {
 	# Parameters:
 	#     1 - machine name to ssh to
