@@ -564,7 +564,7 @@ function test_exec_recvmail {
 	local -r MAIL_STD_OPT="-e -n -vv -Sv15-compat -Snosave -Sexpandaddr=fail,-all,+addr"
 	# -SNosave is included in -d and generates error messages - so dont include it
 	#MAIL_STD_OPT="-n -d -vv -Sv15-compat -Ssendwait -Sexpandaddr=fail,-all,+addr"
-	local MAIL_OPT="-S 'folder=$url'"
+	local MAIL_OPT="-S 'inbox=$url'"
 
 	#shellcheck disable=SC2086 # vars contain multiple parms
 	LC_ALL=C MAILRC=/dev/null \
