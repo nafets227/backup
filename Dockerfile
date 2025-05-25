@@ -56,7 +56,6 @@ COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
 
 COPY backup-error /backup/backup
 COPY backup-sample /backup/backup-sample
-COPY backup.d /usr/lib/nafets227.backup
 COPY src /usr/lib/nafets227.backup
 
 # using UID 41598 is a random number
