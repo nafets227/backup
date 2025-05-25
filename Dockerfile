@@ -48,7 +48,7 @@ RUN \
 	rm -rf /var/cache/apk/*
 
 COPY --from=offlineimap3 /usr/local /usr/local/
-COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
+COPY --from=rclone /usr/local/bin/rclone /usr/lib/nafets227.backup/
 
 # maybe include gigasync
 # https://github.com/noordawod/gigasync
@@ -56,7 +56,7 @@ COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
 
 COPY backup-error /backup/backup
 COPY backup-sample /backup/backup-sample
-COPY src /usr/lib/nafets227.backup
+COPY src /usr/lib/nafets227.backup/
 
 # using UID 41598 is a random number
 RUN adduser --uid 41598 --no-create-home --disabled-password backupuser

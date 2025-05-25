@@ -38,7 +38,7 @@ function test_rclone_execraw {
 			-e MAIL_FROM \
 			-e MAIL_URL \
 			-e MAIL_HOSTNAME \
-			--entrypoint rclone \
+			--entrypoint /usr/lib/nafets227.backup/rclone \
 			"$TESTIMG" \
 			--config /backup/rcloneraw.conf \
 			"$@"

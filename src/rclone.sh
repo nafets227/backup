@@ -60,7 +60,7 @@ function backup2_rclone2file {
 	fi
 
 	#shellcheck disable=SC2086 # backrclone_opts can intentionally contain >1 word
-	rclone \
+	$RCLONE_BIN \
 		--config $bckrclone_src_secret \
 		--stats-log-level NOTICE \
 		--stats-one-line \
@@ -69,7 +69,7 @@ function backup2_rclone2file {
 		"$bckrclone_dst" \
 		$bckrclone_opts \
 		--backup-dir="$bckrclone_dst.del" &&
-	rclone \
+	$RCLONE_BIN \
 		--config "$bckrclone_src_secret" \
 		--stats-log-level NOTICE \
 		--stats-one-line \
@@ -77,7 +77,7 @@ function backup2_rclone2file {
 		"$bckrclone_dst" \
 		$bckrclone_opts \
 		--backup-dir="$bckrclone_dst.del" &&
-	rclone \
+	$RCLONE_BIN \
 		--config "$bckrclone_src_secret" \
 		--stats-log-level NOTICE \
 		--stats-one-line \
@@ -160,7 +160,7 @@ function backup2_file2rclone {
 	fi
 
 	#shellcheck disable=SC2086 # backrclone_opts can intentionally contain >1 word
-	rclone \
+	$RCLONE_BIN \
 		--config "$bckrclone_dst_secret" \
 		--stats-log-level NOTICE \
 		--stats-one-line \
@@ -168,14 +168,14 @@ function backup2_file2rclone {
 		"$bckrclone_src" \
 		"$bckrclone_dst" \
 		$bckrclone_opts &&
-	rclone \
+	$RCLONE_BIN \
 		--config "$bckrclone_dst_secret" \
 		--stats-log-level NOTICE \
 		--stats-one-line \
 		rmdirs --leave-root \
 		"$bckrclone_dst" \
 		$bckrclone_opts &&
-	rclone \
+	$RCLONE_BIN \
 		--config "$bckrclone_dst_secret" \
 		--stats-log-level NOTICE \
 		--stats-one-line \
@@ -250,3 +250,4 @@ function backup2_rclone_unittest_updateconf {
 	return 0
 }
 
+RCLONE_BIN="$(dirname "$0")"/rclone
