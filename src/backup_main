@@ -54,7 +54,11 @@ function backup_remote {
 		) &&
 	scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
 		-i "$remotesecret" \
-		-r "$0" "$(dirname "$0")"/*.sh "$(dirname "$0")"/rclone \
+		-r "$0" \
+		"$(dirname "$0")"/*.sh \
+		"$(dirname "$0")"/rclone \
+		"$(dirname "$0")"/rclone.macos.amd64 \
+		"$(dirname "$0")"/rclone.macos.arm64 \
 		"$remotemachine:$remdir" &&
 	{
 		if [ -z "$bck_src_secret" ] ; then

@@ -250,4 +250,10 @@ function backup2_rclone_unittest_updateconf {
 	return 0
 }
 
-RCLONE_BIN="$(dirname "$0")"/rclone
+if [[ "$OSTYPE" =~ darwin* ]] && [ "$(uname -m)" == x86_64 ]; then
+	RCLONE_BIN="$(dirname "$0")"/rclone.macos.amd64
+elif [[ "$OSTYPE" =~ darwin* ]] && [ "$(uname -m)" == arm64 ]; then
+	RCLONE_BIN="$(dirname "$0")"/rclone.macos.arm64
+else
+	RCLONE_BIN="$(dirname "$0")"/rclone
+fi
