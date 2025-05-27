@@ -65,7 +65,7 @@ function test_expect_rclone_files {
 		rclone \
 			--config "$rclone_conf" \
 			lsf "$rclone_namepath" "$@" 2>/dev/null |
-		wc -l
+		wc -l | tr -d ' '
 		)
 
 	rc=$?

@@ -794,7 +794,7 @@ function test_expect_files {
 	fi
 
 	#shellcheck disable=SC2012 # no worries about non-alpha filenames here
-	testresult=$( set -o pipefail ; ls -1A "$testdir" 2>/dev/null | wc -l)
+	testresult=$( set -o pipefail ; ls -1A "$testdir" 2>/dev/null | wc -l | tr -d ' ')
 	rc=$?
 
 	if [ "$rc" != 0 ] ; then
