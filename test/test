@@ -121,6 +121,7 @@ function test_build {
 		[ "$TESTRC" -eq 0 ] || return 1
 		TESTIMG="nafets227/backup:test"
 	else
+		test_exec_cmd 0 "" true
 		TESTIMG=$1
 	fi
 
