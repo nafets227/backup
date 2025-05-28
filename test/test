@@ -40,6 +40,25 @@ function test_init {
 	return 0
 }
 
+##### Test chowner ###########################################################
+# Parameters:
+#     1 - test file to chown
+function test_chown {
+	local fname="$1"
+
+	test -n "$fname"
+	test_assert "$?" "Internal Error - fname not given" >&2
+
+	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
+		chown 41598:41598 "$fname"
+		test_assert "$?" "chown failed: $fname" >&2 || return 1
+	else
+		test_assert "0" "dont chown on MacOS: $fname" >&2 || return 1
+	fi
+
+	return 0
+}
+
 ##### Test Executer ##########################################################
 # Parameters:
 #     1 - command in custom backup shell
@@ -68,7 +87,11 @@ function test_exec_backupdocker {
 		if ! chown 41598:41598 "$TESTSETDIR/id_rsa" ; then
 			printf "test_assert %s \"%s\"\n" "$?" "chown SSH Key"
 			return 1
+		else 
+			printf "test_assert %s \"%s\"\n" "0" "not chowning SSH Key"
 		fi
+	else 
+		printf "test_assert %s \"%s\"\n" "0" "not chowning SSH Key"
 	fi
 
 	printf "test_exec_cmd"
@@ -175,10 +198,8 @@ testset_init || exit 1
 if [ ! -d "$TESTSETDIR/backup" ] ; then
 	mkdir "$TESTSETDIR/backup" || return 1
 fi
-if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-	chown 41598:41598 "$TESTSETDIR/backup" "$RCLONE_CONF"
-	test_assert "$?" "chown TESTSETDIR/backup" >&2 || return 1
-fi
+test_chown "$TESTSETDIR/backup" || return 1
+test_chown "$RCLONE_CONF" || return 1
 
 : "$my_fileopt" # make shellcheck happy, its used in test-file*.sh
 if test_build "$1" && test_init ; then

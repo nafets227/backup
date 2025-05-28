@@ -17,17 +17,11 @@ function test_rclone_execraw {
 
 	cp "$rclone_conf" "$TESTSETDIR/backup/rcloneraw.conf"
 	test_assert "$?" "copy rcloneraw.conf" >&2 || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/backup/rcloneraw.conf"
-		test_assert "$?" "chown rcloneraw.conf" >&2 || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/rcloneraw.conf" || return 1
 
 	cp ~/.ssh/id_rsa "$TESTSETDIR/id_rsa"
 	test_assert "$?" "Copy SSH Key" >&2 || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/id_rsa"
-		test_assert "$?" "chown SSH Key" >&2 || return 1
-	fi
+	test_chown "$TESTSETDIR/id_rsa" || return 1
 
 	test_exec_cmd 0 "Backup Command $*" \
 		docker run -i \
@@ -162,10 +156,7 @@ function test_rclone2file {
 
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file.conf"
 	test_assert "$?" "copy rclone2file.conf" || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/backup/rclone2file.conf"
-		test_assert "$?" "chown rclone2file.conf" || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/rclone2file.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
 	test_assert "$?" "clean rclone" || return 1
@@ -240,10 +231,7 @@ function test_rclone2file {
 	# Verify modifying conf
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
 	test_assert "$?" "write rclone-update.conf" || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/backup/rclone-update.conf"
-		test_assert "$?" "chown rclone-update.conf" || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/rclone-update.conf" || return 1
 
 	test_assert "$?" "write rclone-update.conf" || return 1
 	eval "$(test_exec_backupdocker 0 \
@@ -258,10 +246,7 @@ function test_rclone2file {
 	# Verify modifying conf - remote
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
 	test_assert "$?" "write rclone-update.conf" || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/backup/rclone-update.conf"
-		test_assert "$?" "chown rclone-update.conf" || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/rclone-update.conf" || return 1
 	$exec_remote &&
 	eval "$(test_exec_backupdocker 0 \
 		"backup rclone_unittest_updateconf" \
@@ -339,10 +324,7 @@ function test_rclone2file_hist {
 
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file-hist.conf"
 	test_assert "$?" "copy rclone2file-hist.conf" || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/backup/rclone2file-hist.conf"
-		test_assert "$?" "chown rclone2file-hist.conf" || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/rclone2file-hist.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
 	test_assert "$?" "clean rclone" || return 1
@@ -484,10 +466,7 @@ function test_file2rclone {
 
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/file2rclone.conf"
 	test_assert "$?" "copy file2rclone.conf" || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/backup/file2rclone.conf"
-		test_assert "$?" "chown file2rclone.conf" || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/file2rclone.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
 	test_assert "$?" "clean rclone" || return 1

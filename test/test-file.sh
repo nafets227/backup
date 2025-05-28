@@ -22,13 +22,10 @@ function test_file_srcdest {
 		"$TESTSETDIR/backup/file/source" \
 		"$TESTSETDIR/backup/file/dest"
 	test_assert "$?" "Creating directories" || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 \
-			"$TESTSETDIR/backup/file" \
-			"$TESTSETDIR/backup/file/source" \
-			"$TESTSETDIR/backup/file/dest"
-		test_assert "$?" "chown directories" || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/file" || return 1
+	test_chown "$TESTSETDIR/backup/file/source" || return 1
+	test_chown "$TESTSETDIR/backup/file/dest" || return 1
+
 	source+="/file/source"
 	dest+="/file/dest"
 

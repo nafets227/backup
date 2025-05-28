@@ -22,13 +22,9 @@ function test_file_hist_srcdest {
 		"$TESTSETDIR/backup/file-hist/source" \
 		"$TESTSETDIR/backup/file-hist/dest"
 	test_assert "$?" "Creating directories in ${FUNCNAME[0]}" || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 \
-			"$TESTSETDIR/backup/file-hist" \
-			"$TESTSETDIR/backup/file-hist/source" \
-			"$TESTSETDIR/backup/file-hist/dest"
-		test_assert "$?" "chown directories" || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/file-hist" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist/source" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist/dest" || return 1
 
 	source+="/file-hist/source"
 	dest+="/file-hist/dest"
@@ -72,10 +68,7 @@ function test_file_hist_srcdest {
 	# backup one file
 	cat >"$TESTSETDIR/backup/file-hist/source/dummyfile" <<<"Dummyfile"
 	test_assert "$?" "Creating dummyfile" || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/backup/file-hist/source/dummyfile"
-		test_assert "$?" "chown dummyfile" || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/file-hist/source/dummyfile" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -88,16 +81,10 @@ function test_file_hist_srcdest {
 	# backup additional file in subdirectory
 	mkdir "$TESTSETDIR/backup/file-hist/source/testsubdir"
 	test_assert "$?" "Creating testsubdir" || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/backup/file-hist/source/testsubdir"
-		test_assert "$?" "chown testsubdir" || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/file-hist/source/testsubdir" || return 1
 	cat >"$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2" <<<"Dummyfile2"
 	test_assert "$?" "Creating dummyfile2" || return 1
-	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2"
-		test_assert "$?" "chown dummyfile2" || return 1
-	fi
+	test_chown "$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -167,11 +154,10 @@ function test_file_hist {
 	##### Specific tests for local/remote
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist-1" \
-		"$TESTSETDIR/backup/file-hist-2" &&
-	chown 41598:41598 \
-		"$TESTSETDIR/backup/file-hist-1" \
-		"$TESTSETDIR/backup/file-hist-2" &&
+		"$TESTSETDIR/backup/file-hist-2"
 	test_assert "$?" "Init ${FUNCNAME[0]}" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist-1" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist-2" || return 1
 
 	# backup remote source without secret should fail
 	eval "$(test_exec_backupdocker 1 \
