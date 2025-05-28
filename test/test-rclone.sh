@@ -6,6 +6,44 @@
 #
 # Test script for IMAP
 
+function test_rclone_execraw {
+	# Execute rclone in a container
+	# Executing on the OS we are running on failed due to outdated
+	# rclone in GitHub Action Runner (Ubuntu) that had version 1.60.1+
+	# where a bug has not yet been fixed
+	# https://github.com/rclone/rclone/issues/7405 fixed in rclone 1.66.0
+	local rclone_conf="$1"
+	shift
+
+	cp "$rclone_conf" "$TESTSETDIR/backup/rcloneraw.conf"
+	test_assert "$?" "copy rcloneraw.conf" >&2 || return 1
+	test_chown "$TESTSETDIR/backup/rcloneraw.conf" || return 1
+
+	cp ~/.ssh/id_rsa "$TESTSETDIR/id_rsa"
+	test_assert "$?" "Copy SSH Key" >&2 || return 1
+	test_chown "$TESTSETDIR/id_rsa" || return 1
+
+	test_exec_cmd 0 "Backup Command $*" \
+		docker run -i \
+			-v "$TESTSETDIR/backup:/backup" \
+			-v "$TESTSETDIR/id_rsa:/secrets/id_rsa:ro" \
+			-e DEBUG=1 \
+			-e MAIL_TO \
+			-e MAIL_FROM \
+			-e MAIL_URL \
+			-e MAIL_HOSTNAME \
+			--entrypoint /usr/lib/nafets227.backup/rclone \
+			"$TESTIMG" \
+			--config /backup/rcloneraw.conf \
+			"$@"
+
+	if [ "$TESTRC" != 0 ] ; then
+		return 1
+	fi
+
+	return 0
+}
+
 function test_cleanRclone () {
 	if [ "$#" -ne 2 ] ; then
 		printf "%s: Internal Error. Got %s parms (exp=3)\n" \
@@ -19,8 +57,7 @@ function test_cleanRclone () {
 	printf "Purging rclone %s from %s.\n" \
 		"$rclone_name" "$rclone_conf"
 
-	rclone \
-		--config "$rclone_conf" \
+	test_rclone_execraw "$rclone_conf" \
 		delete "$rclone_name" --rmdirs
 
 	return $?
@@ -40,8 +77,7 @@ function test_putRclone () {
 	printf "Storing a file into %s at %s.\n" \
 		"$rclone_namepath" "$rclone_conf"
 
-	rclone \
-		--config "$rclone_conf" \
+	test_rclone_execraw "$rclone_conf" \
 		rcat "$rclone_namepath" <<-EOF
 			TestFile on Cloud for testing of nafets227
 			see https://github.com/nafets227/util
@@ -60,12 +96,13 @@ function test_expect_rclone_files {
 	local testexpected="$3"
 	shift 3
 
+	test_rclone_execraw "$rclone_conf" \
+		lsf "$rclone_namepath" "$@"
+
 	testresult=$(
 		set -o pipefail
-		rclone \
-			--config "$rclone_conf" \
-			lsf "$rclone_namepath" "$@" 2>/dev/null |
-		wc -l
+		test_get_lastoutput |
+		grep --count --invert-match "^#-----"  || [ "$?" == "1" ]
 		)
 
 	rc=$?
@@ -96,14 +133,15 @@ function test_expect_rclone_files {
 ##### Tests for rclone2file ##################################################
 function test_rclone2file {
 	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
-	   ! test_assert_files "$RCLONE_CONF" ||
-	   ! test_assert_tools "rclone"
+	   ! test_assert_files "$RCLONE_CONF"
 	then
 		printf "\tSkipping rclone Tests.\n"
 		return 0
-	elif [ -n "$RCLONE_CONF" ] || [ -n "$RCLONE_NAME" ]
-	then
-		printf "internal Error: RCLONE_CONF or RCLONE_NAME missing\n"
+	elif [ -z "$RCLONE_CONF" ] ; then
+		test_assert 1 "internal Error: RCLONE_CONF is empty"
+		return 1
+	elif [ -z "$RCLONE_NAME" ] ; then
+		test_assert 1 "internal Error: RCLONE_NAME is empty"
 		return 1
 	fi
 
@@ -116,9 +154,9 @@ function test_rclone2file {
 
 	printf "Testing rclone2file using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
 
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file.conf" &&
-	chown 41598:41598 "$TESTSETDIR/backup/rclone2file.conf"
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file.conf"
 	test_assert "$?" "copy rclone2file.conf" || return 1
+	test_chown "$TESTSETDIR/backup/rclone2file.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
 	test_assert "$?" "clean rclone" || return 1
@@ -192,7 +230,9 @@ function test_rclone2file {
 
 	# Verify modifying conf
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
-	chown 41598:41598 "$TESTSETDIR/backup/rclone-update.conf"
+	test_assert "$?" "write rclone-update.conf" || return 1
+	test_chown "$TESTSETDIR/backup/rclone-update.conf" || return 1
+
 	test_assert "$?" "write rclone-update.conf" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup rclone_unittest_updateconf" \
@@ -200,12 +240,13 @@ function test_rclone2file {
 		/backup/rclone2file \
 		--srcsecret /backup/rclone-update.conf
 		)" &&
-	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
+	test_exec_cmd "" "" \
+		fgrep '[rclone-unittest-dummy]' "$TESTSETDIR/backup/rclone-update.conf"
 
 	# Verify modifying conf - remote
 	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone-update.conf" &&
-	chown 41598:41598 "$TESTSETDIR/backup/rclone-update.conf"
 	test_assert "$?" "write rclone-update.conf" || return 1
+	test_chown "$TESTSETDIR/backup/rclone-update.conf" || return 1
 	$exec_remote &&
 	eval "$(test_exec_backupdocker 0 \
 		"backup rclone_unittest_updateconf" \
@@ -214,7 +255,8 @@ function test_rclone2file {
 		--srcsecret /backup/rclone-update.conf \
 		--dstsecret /secrets/id_rsa
 		)" &&
-	test_exec_simple "fgrep '[rclone-unittest-dummy]' $TESTSETDIR/backup/rclone-update.conf"
+	test_exec_cmd "" "" \
+		fgrep '[rclone-unittest-dummy]' "$TESTSETDIR/backup/rclone-update.conf"
 
 	# Store Testfiles
 	test_putRclone "${RCLONE_NAME}test.txt" "$RCLONE_CONF"
@@ -273,17 +315,16 @@ function test_rclone2file {
 ##### Tests for rclone2file history ##########################################
 function test_rclone2file_hist {
 	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
-	   ! test_assert_files "$RCLONE_CONF" ||
-	   ! test_assert_tools "rclone" ; then
+	   ! test_assert_files "$RCLONE_CONF" ; then
 		printf "\tSkipping rclone Tests.\n"
 		return 0
 	fi
 
 	printf "Testing rclone history using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
 
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file-hist.conf" &&
-	chown 41598:41598 "$TESTSETDIR/backup/rclone2file-hist.conf"
-	test_assert "$?" "copy rclone.conf" || return 1
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/rclone2file-hist.conf"
+	test_assert "$?" "copy rclone2file-hist.conf" || return 1
+	test_chown "$TESTSETDIR/backup/rclone2file-hist.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
 	test_assert "$?" "clean rclone" || return 1
@@ -416,17 +457,16 @@ function test_rclone2file_hist {
 ##### Tests for file2rclone ##################################################
 function test_file2rclone {
 	if ! test_assert_vars "RCLONE_CONF" "RCLONE_NAME" ||
-	   ! test_assert_files "$RCLONE_CONF" ||
-	   ! test_assert_tools "rclone" ; then
+	   ! test_assert_files "$RCLONE_CONF" ; then
 		printf "\tSkipping file2rclone Tests.\n"
 		return 0
 	fi
 
 	printf "Testing file2rclone using \"%s\" in %s\n" "$RCLONE_NAME" "$RCLONE_CONF"
 
-	cp "$RCLONE_CONF" "$TESTSETDIR/backup/file2rclone.conf" &&
-	chown 41598:41598 "$TESTSETDIR/backup/file2rclone.conf"
+	cp "$RCLONE_CONF" "$TESTSETDIR/backup/file2rclone.conf"
 	test_assert "$?" "copy file2rclone.conf" || return 1
+	test_chown "$TESTSETDIR/backup/file2rclone.conf" || return 1
 
 	test_cleanRclone "$RCLONE_NAME" "$RCLONE_CONF"
 	test_assert "$?" "clean rclone" || return 1

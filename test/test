@@ -11,18 +11,49 @@
 # Initialise tests including any necessary workaround
 function test_init {
 
-	if which "ip" >/dev/null ; then
+	my_fileopt=""
+
+	if 	[[ "$OSTYPE" =~ darwin* ]] ; then
+		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
+		test ! -z "$my_ip"
+		test_assert "$?" "Could not get IP with command ipconfig on MacOS" \
+		|| return 1
+		my_fileopt="--macos"
+	elif which "ip" >/dev/null ; then
 		my_ip="$USER@$(set -o pipefail
 			ip -4 -j a show dev docker0 primary |
 			jq '.[].addr_info[0].local')" &&
 		my_ip=${my_ip//\"}
-		test_assert "$?" "Could not get IP with command ip" || return 1
-	elif which "ipconfig" >/dev/null ; then
-		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
-		test ! -z "$my_ip"
-		test_assert "$?" "Could not get IP with command ipconfig" || return 1
+		test_assert "$?" "Could not get IP with command ip" \
+		|| return 1
 	else
 		my_ip=""
+		test_assert "1" "Could not get IP (not on MacO and command ip missing)"
+		return 1
+	fi
+
+	my_host="$HOSTNAME" &&
+	test ! -z "$my_host"
+	test_assert "$?" "Could not get hostname" \
+	|| return 1
+
+	return 0
+}
+
+##### Test chowner ###########################################################
+# Parameters:
+#     1 - test file to chown
+function test_chown {
+	local fname="$1"
+
+	test -n "$fname"
+	test_assert "$?" "Internal Error - fname not given" >&2
+
+	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
+		chown 41598:41598 "$fname"
+		test_assert "$?" "chown failed: $fname" >&2 || return 1
+	else
+		test_assert "0" "dont chown on MacOS: $fname" >&2 || return 1
 	fi
 
 	return 0
@@ -39,30 +70,43 @@ function test_exec_backupdocker {
 	rc_exp="$1"
 	shift
 
-	cat >"$TESTSETDIR/backup/backup" <<<"$@" &&
-	chmod +x "$TESTSETDIR/backup/backup"
-	test_assert "$?" "Write backup script" >&2 || return 1
+	if \
+		! cat >"$TESTSETDIR/backup/backup" <<<"$@" ||
+		! chmod +x "$TESTSETDIR/backup/backup"
+	then
+		printf "test_assert %s \"%s\"\n" "$?" "Write backup script"
+		return 1
+	fi
 
-	cp ~/.ssh/id_rsa "$TESTSETDIR/id_rsa" &&
-	chown 41598:41598 "$TESTSETDIR/id_rsa"
-	test_assert "$?" "Copy SSH Key" >&2 || return 1
+	if ! cp ~/.ssh/id_rsa "$TESTSETDIR/id_rsa"
+	then
+		printf "test_assert %s \"%s\"\n" "$?" "Copy SSH Key"
+		return 1
+	fi
+	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
+		if ! chown 41598:41598 "$TESTSETDIR/id_rsa" ; then
+			printf "test_assert %s \"%s\"\n" "$?" "chown SSH Key"
+			return 1
+		else 
+			printf "test_assert %s \"%s\"\n" "0" "not chowning SSH Key"
+		fi
+	else 
+		printf "test_assert %s \"%s\"\n" "0" "not chowning SSH Key"
+	fi
 
-	local docker_cmd=""
-	docker_cmd+="docker run"
-	docker_cmd+=" -v $TESTSETDIR/backup:/backup"
-	docker_cmd+=" -v $TESTSETDIR/id_rsa:/secrets/id_rsa:ro"
-	docker_cmd+=" -e DEBUG=1"
-	docker_cmd+=" -e MAIL_TO"
-	docker_cmd+=" -e MAIL_FROM"
-	docker_cmd+=" -e MAIL_URL"
-	docker_cmd+=" -e MAIL_HOSTNAME"
-	docker_cmd+=" $TESTIMG"
-	docker_cmd+=" . /backup/backup"
-
-	printf "test_exec_simple \"%s\" \"%s\" \"%s\"" \
-		"$docker_cmd" \
-		"$rc_exp" \
-		"Backup Command $*"
+	printf "test_exec_cmd"
+	printf  " \"%s\"" \
+		"$rc_exp" "Backup Command $*" \
+		docker run \
+			-v "$TESTSETDIR/backup:/backup" \
+			-v "$TESTSETDIR/id_rsa:/secrets/id_rsa:ro" \
+			-e DEBUG=1 \
+			-e MAIL_TO \
+			-e MAIL_FROM \
+			-e MAIL_URL \
+			-e MAIL_HOSTNAME \
+			"$TESTIMG" \
+			. /backup/backup
 
 	return "$TESTRC"
 }
@@ -72,12 +116,12 @@ function test_build {
 
 	if [ -z "$1" ] ; then
 		# Compile / Build docker
-		test_exec_simple \
-			"docker build -t nafets227/backup:test $BASEDIR/.." \
-			0
+		test_exec_cmd 0 "" \
+			docker build -t nafets227/backup:test "$BASEDIR/.."
 		[ "$TESTRC" -eq 0 ] || return 1
 		TESTIMG="nafets227/backup:test"
 	else
+		test_exec_cmd 0 "" true
 		TESTIMG=$1
 	fi
 
@@ -86,9 +130,8 @@ function test_build {
 
 ##### Test: no custom script #################################################
 function test_runempty {
-	test_exec_simple \
-		"docker run $TESTIMG" \
-		1
+	test_exec_cmd 1 "" \
+		docker run "$TESTIMG"
 	
 	return $?
 }
@@ -156,8 +199,10 @@ testset_init || exit 1
 if [ ! -d "$TESTSETDIR/backup" ] ; then
 	mkdir "$TESTSETDIR/backup" || return 1
 fi
-chown 41598:41598 "$TESTSETDIR/backup" "$RCLONE_CONF"
+test_chown "$TESTSETDIR/backup" || return 1
+test_chown "$RCLONE_CONF" || return 1
 
+: "$my_fileopt" # make shellcheck happy, its used in test-file*.sh
 if test_build "$1" && test_init ; then
 	test_runempty
 	test_email

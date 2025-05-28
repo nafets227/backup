@@ -20,12 +20,12 @@ function test_file_srcdest {
 
 	mkdir -p \
 		"$TESTSETDIR/backup/file/source" \
-		"$TESTSETDIR/backup/file/dest" &&
-	chown 41598:41598 \
-		"$TESTSETDIR/backup/file" \
-		"$TESTSETDIR/backup/file/source" \
 		"$TESTSETDIR/backup/file/dest"
 	test_assert "$?" "Creating directories" || return 1
+	test_chown "$TESTSETDIR/backup/file" || return 1
+	test_chown "$TESTSETDIR/backup/file/source" || return 1
+	test_chown "$TESTSETDIR/backup/file/dest" || return 1
+
 	source+="/file/source"
 	dest+="/file/dest"
 
@@ -137,11 +137,7 @@ function test_file_srcdest {
 
 ##### Tests for File backup (rsync) ##########################################
 function test_file {
-	if [ -n "$my_ip" ] || [ -n "$myhost" ]
-	then
-		printf "internal Error: my_ip or myhost missing\n"
-		return 1
-	fi
+	: "${my_ip:=""} ${my_host:=""} ${my_fileopt:=""}"
 
 	##### Specific tests for local/remote
 	mkdir -p "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2"
@@ -150,7 +146,7 @@ function test_file {
 	# backup remote source without secret should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
 		/backup/file2 \
 		$TEST_RSYNCOPT
@@ -159,19 +155,18 @@ function test_file {
 	# backup remote dest without secret should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		/backup/file1 \
 		"$my_ip:$TESTSETDIR/backup/file2" \
 		$TEST_RSYNCOPT
 		)"
 
 	# backup remote source,dest without secret should fail
-	local myhost="$HOST $HOSTNAME" # HOST ist set on MacOS, HOSTNAME on Linux
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$myhost:$TESTSETDIR/backup/file2" \
+		"$my_host:$TESTSETDIR/backup/file2" \
 		$TEST_RSYNCOPT
 		)"
 
@@ -179,9 +174,9 @@ function test_file {
 	# since remote and source are on same machine
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$myhost:$TESTSETDIR/backup/file2" \
+		"$my_host:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
@@ -190,9 +185,9 @@ function test_file {
 	# backup remote source,dest with only source secret should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$myhost:$TESTSETDIR/backup/file2" \
+		"$my_host:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
@@ -201,9 +196,9 @@ function test_file {
 	# backup remote source,dest with only dest secret should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$myhost:$TESTSETDIR/backup/file2" \
+		"$my_host:$TESTSETDIR/backup/file2" \
 		--dstsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
@@ -211,9 +206,9 @@ function test_file {
 	# backup remote source,dest without runon should fail
 	#shellcheck disable=SC2086 # TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$myhost:$TESTSETDIR/backup/file2" \
+		"$my_host:$TESTSETDIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--dstsecret /secrets/id_rsa \
 		$TEST_RSYNCOPT
@@ -236,7 +231,7 @@ function test_file {
 				test_file_srcdest \
 					"$source" \
 					"$dest" \
-					"$TEST_RSYNCOPT" \
+					"$my_fileopt $TEST_RSYNCOPT" \
 					--runonsrc \
 					$secretparm \
 				|| return 1
@@ -248,7 +243,7 @@ function test_file {
 			test_file_srcdest \
 				"$source" \
 				"$dest" \
-				"$TEST_RSYNCOPT" \
+				"$my_fileopt $TEST_RSYNCOPT" \
 				$secretparm \
 			|| return 1
 		done

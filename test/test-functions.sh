@@ -232,18 +232,6 @@ function test_exec_cmd {
 	return 0
 }
 
-function test_exec_simple {
-	# DEPRECATED. Use test_exec_cmd instead.
-	# Parameters:
-	#     1 - command to test
-	#     2 - expected RC [default: 0]
-	#     3 - optional message to be printed if test fails
-
-	test_exec_cmd "$2" "$3" eval "$1"
-
-	return $?
-}
-
 function test_exec_ssh {
 	# Parameters:
 	#     1 - machine name to ssh to
@@ -576,7 +564,7 @@ function test_exec_recvmail {
 	local -r MAIL_STD_OPT="-e -n -vv -Sv15-compat -Snosave -Sexpandaddr=fail,-all,+addr"
 	# -SNosave is included in -d and generates error messages - so dont include it
 	#MAIL_STD_OPT="-n -d -vv -Sv15-compat -Ssendwait -Sexpandaddr=fail,-all,+addr"
-	local MAIL_OPT="-S 'folder=$url'"
+	local MAIL_OPT="-S 'inbox=$url'"
 
 	#shellcheck disable=SC2086 # vars contain multiple parms
 	LC_ALL=C MAILRC=/dev/null \
@@ -794,7 +782,7 @@ function test_expect_files {
 	fi
 
 	#shellcheck disable=SC2012 # no worries about non-alpha filenames here
-	testresult=$( set -o pipefail ; ls -1A "$testdir" 2>/dev/null | wc -l)
+	testresult=$( set -o pipefail ; ls -1A "$testdir" 2>/dev/null | wc -l | tr -d ' ')
 	rc=$?
 
 	if [ "$rc" != 0 ] ; then

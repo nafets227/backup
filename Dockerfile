@@ -37,6 +37,7 @@ RUN \
 	apk update && \
 	apk add --no-cache \
 		bash \
+		curl \
 		ca-certificates \
 		krb5 \
 		mysql-client \
@@ -48,7 +49,28 @@ RUN \
 	rm -rf /var/cache/apk/*
 
 COPY --from=offlineimap3 /usr/local /usr/local/
-COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
+COPY --from=rclone /usr/local/bin/rclone /usr/lib/nafets227.backup/
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN \
+	RCLONE_VER=$( \
+		set -o pipefail && \
+		/usr/lib/nafets227.backup/rclone --version \
+		| sed -n 's/^rclone //p') && \
+	curl -o /tmp/rclone.zip \
+		"https://downloads.rclone.org/$RCLONE_VER/rclone-$RCLONE_VER-osx-amd64.zip" && \
+	unzip -p /tmp/rclone.zip "rclone-$RCLONE_VER-osx-amd64/rclone" \
+		>/usr/lib/nafets227.backup/rclone.macos.amd64 && \
+	curl -o /tmp/rclone.zip \
+		"https://downloads.rclone.org/$RCLONE_VER/rclone-$RCLONE_VER-osx-arm64.zip" && \
+	unzip -p /tmp/rclone.zip "rclone-$RCLONE_VER-osx-arm64/rclone" \
+		>/usr/lib/nafets227.backup/rclone.macos.arm64 && \
+	chmod +x \
+		/usr/lib/nafets227.backup/rclone \
+		/usr/lib/nafets227.backup/rclone.macos.amd64 \
+		/usr/lib/nafets227.backup/rclone.macos.arm64 && \
+	rm /tmp/rclone.zip
+SHELL ["/bin/sh", "-c"]
 
 # maybe include gigasync
 # https://github.com/noordawod/gigasync
@@ -56,7 +78,7 @@ COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
 
 COPY backup-error /backup/backup
 COPY backup-sample /backup/backup-sample
-COPY src /usr/lib/nafets227.backup
+COPY src /usr/lib/nafets227.backup/
 
 # using UID 41598 is a random number
 RUN adduser --uid 41598 --no-create-home --disabled-password backupuser

@@ -20,12 +20,11 @@ function test_file_hist_srcdest {
 
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist/source" \
-		"$TESTSETDIR/backup/file-hist/dest" &&
-	chown 41598:41598 \
-		"$TESTSETDIR/backup/file-hist" \
-		"$TESTSETDIR/backup/file-hist/source" \
 		"$TESTSETDIR/backup/file-hist/dest"
 	test_assert "$?" "Creating directories in ${FUNCNAME[0]}" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist/source" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist/dest" || return 1
 
 	source+="/file-hist/source"
 	dest+="/file-hist/dest"
@@ -67,9 +66,9 @@ function test_file_hist_srcdest {
 		)"
 
 	# backup one file
-	cat >"$TESTSETDIR/backup/file-hist/source/dummyfile" <<<"Dummyfile" &&
-	chown 41598:41598 "$TESTSETDIR/backup/file-hist/source/dummyfile"
+	cat >"$TESTSETDIR/backup/file-hist/source/dummyfile" <<<"Dummyfile"
 	test_assert "$?" "Creating dummyfile" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist/source/dummyfile" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -80,12 +79,12 @@ function test_file_hist_srcdest {
 		)"
 
 	# backup additional file in subdirectory
-	mkdir "$TESTSETDIR/backup/file-hist/source/testsubdir" &&
-	chown 41598:41598 "$TESTSETDIR/backup/file-hist/source/testsubdir"
+	mkdir "$TESTSETDIR/backup/file-hist/source/testsubdir"
 	test_assert "$?" "Creating testsubdir" || return 1
-	cat >"$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2" <<<"Dummyfile2" &&
-	chown 41598:41598 "$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2"
+	test_chown "$TESTSETDIR/backup/file-hist/source/testsubdir" || return 1
+	cat >"$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2" <<<"Dummyfile2"
 	test_assert "$?" "Creating dummyfile2" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -151,24 +150,18 @@ function test_file_hist_srcdest {
 
 ##### Tests for File backup (rsync) ##########################################
 function test_file_hist {
-	if [ -n "$my_ip" ] || [ -n "$myhost" ]
-	then
-		printf "internal Error: my_ip or myhost missing\n"
-		return 1
-	fi
-
+	: "${my_ip:=""} ${my_host:=""} ${my_fileopt:=""}"
 	##### Specific tests for local/remote
 	mkdir -p \
 		"$TESTSETDIR/backup/file-hist-1" \
-		"$TESTSETDIR/backup/file-hist-2" &&
-	chown 41598:41598 \
-		"$TESTSETDIR/backup/file-hist-1" \
-		"$TESTSETDIR/backup/file-hist-2" &&
+		"$TESTSETDIR/backup/file-hist-2"
 	test_assert "$?" "Init ${FUNCNAME[0]}" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist-1" || return 1
+	test_chown "$TESTSETDIR/backup/file-hist-2" || return 1
 
 	# backup remote source without secret should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
@@ -178,7 +171,7 @@ function test_file_hist {
 
 	# backup remote dest without secret should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		/backup/file1 \
@@ -187,24 +180,23 @@ function test_file_hist {
 		)"
 
 	# backup remote source,dest without secret should fail
-	local myhost="$HOST $HOSTNAME" # HOST ist set on MacOS, HOSTNAME on Linux
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$myhost:$TESTSETDIR/backup/file-hist-2" \
+		"$my_host:$TESTSETDIR/backup/file-hist-2" \
 		"$TEST_RSYNCOPT"
 		)"
 
 	# backup remote source,dest with only source secret should work
 	# since remote and source are on same machine
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$myhost:$TESTSETDIR/backup/file-hist-2" \
+		"$my_host:$TESTSETDIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
@@ -212,11 +204,11 @@ function test_file_hist {
 
 	# backup remote source,dest with only source secret should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$myhost:$TESTSETDIR/backup/file-hist-2" \
+		"$my_host:$TESTSETDIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
@@ -224,22 +216,22 @@ function test_file_hist {
 
 	# backup remote source,dest with only dest secret should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$myhost:$TESTSETDIR/backup/file-hist-2" \
+		"$my_host:$TESTSETDIR/backup/file-hist-2" \
 		--dstsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
 		)"
 	# backup remote source,dest without runon should fail
 	eval "$(test_exec_backupdocker 1 \
-		"backup file" \
+		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$myhost:$TESTSETDIR/backup/file-hist-2" \
+		"$my_host:$TESTSETDIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--dstsecret /secrets/id_rsa \
 		"$TEST_RSYNCOPT"
@@ -260,7 +252,7 @@ function test_file_hist {
 			test_file_hist_srcdest \
 				"$source" \
 				"$dest" \
-				"$TEST_RSYNCOPT" \
+				"$my_fileopt $TEST_RSYNCOPT" \
 				$secretparm \
 			|| return 1
 		done
@@ -272,7 +264,7 @@ function test_file_hist {
 		for source in "/backup" ; do
 			# Backup to remote in history mod should fail
 			eval "$(test_exec_backupdocker 1 \
-				"backup file" \
+				"backup file $my_fileopt" \
 				--hist \
 				--histdate "2020-10-01" \
 				"$source" \
@@ -296,7 +288,7 @@ function test_file_hist {
 			test_file_hist_srcdest \
 				"$source" \
 				"$dest" \
-				"$TEST_RSYNCOPT" \
+				"$my_fileopt $TEST_RSYNCOPT" \
 				--runondst \
 				$secretparm \
 			|| return 1
