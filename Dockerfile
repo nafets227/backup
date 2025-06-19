@@ -8,7 +8,7 @@
 #checkov:skip=CKV_DOCKER_2: HEALTHCHECK should be in kubernetes
 # hadolint global ignore=DL3018,SC1091
 
-FROM rclone/rclone:1.69.3 AS rclone
+FROM rclone/rclone:1.70.1 AS rclone
 
 FROM alpine:3.22.0 AS offlineimap3
 # Copy and install offlineimap3 (replaces offlineimap)
