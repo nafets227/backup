@@ -139,7 +139,7 @@ function test_runempty {
 ##### Test: Email alerting ###################################################
 function test_email {
 	if \
-		! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" "MAIL_URL" ||
+		! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" ||
 		! test_assert_tools "curl" "$TEST_SNAIL"
 	then
 		printf "\tSkipping IMAP Tests.\n"
@@ -151,7 +151,21 @@ function test_email {
 
 	# Trigger Error Email with empty command
 	export MAIL_TO=$MAIL_ADR
-	export MAIL_URL="smtp://$MAIL_URL"
+	export MAIL_URL="smtp://$MAIL_SRV"
+	export MAIL_FROM
+	eval "$(test_exec_backupdocker 0 "")"
+
+	sleep 10 # let mail be processed
+
+	mail_pwd="$($TEST_SNAIL -# <<<"urlcodec encode $(cat "$MAIL_PW")")"
+	mailimapurl="imap://${MAIL_TO//@/%40}:$mail_pwd@$MAIL_SRV/INBOX"
+	test_exec_recvmail "$mailimapurl" 0 "-S 'imap-use-starttls'"
+	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$MAIL_SRV"
+
+	# Trigger Error Email with empty command and send with STARTTLS
+	export MAIL_SSL=1
+	export MAIL_TO=$MAIL_ADR
+	export MAIL_URL="smtp://${MAIL_TO//@/%40}:$mail_pwd@$MAIL_SRV"
 	export MAIL_FROM
 	eval "$(test_exec_backupdocker 0 "")"
 
@@ -176,8 +190,6 @@ function test_email {
 	#test_exec_recvmail "$mailimapurl" 0 "-S 'imap-use-starttls'"
 	#test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV"
 
-	unset MAIL_TO MAIL_URL
-
 	return 0
 }
 
@@ -188,7 +200,6 @@ MAIL_FROM="${MAIL_FROM:-"nafets227/backup CI <no-reply@nafets.de>"}"
 MAIL_ADR="${MAIL_ADR:-"nafets227.backup.test@nafets.de"}"
 MAIL_PW="${MAIL_PW:-"$BASEDIR/mail.password"}"
 MAIL_SRV="${MAIL_SRV:-nafets.de:143}"
-MAIL_URL="${MAIL_URL:-nafets.de}"
 RCLONE_CONF="${RCLONE_CONF:-"$BASEDIR/rclone.conf"}"
 RCLONE_NAME="${RCLONE_NAME:-"nafets227_nafets_de:/"}"
 
@@ -208,6 +219,7 @@ test_chown "$RCLONE_CONF" || return 1
 if test_build "$1" && test_init ; then
 	test_runempty
 	test_email
+	unset MAIL_TO MAIL_URL # disable mailing for following tests
 	test_rclone2file
 	test_rclone2file_hist
 	test_file2rclone
