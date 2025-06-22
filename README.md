@@ -94,6 +94,8 @@ see also [Example][1].
 - MAIL_URL: Email Server
   where to deliver the Alerting emails like
   'smtp[s]://user:password@some.host:port'
+- MAIL_SSL: Use SSL to deliver mail
+  if set to 1 Emails will be delivered to the mail server using STARTTLS
 - MAIL_HOSTNAME: hostname reported in SMTP HELO
   optionally give the hostname that we report to SMTP server in
   HELO command. Usefule if the SMTP server requires a FQDN. Defaults to
@@ -235,6 +237,8 @@ any data on it!
   - TESTALERTMAIL_TO
   - TESTALERTMAIL_FROM
   - TESTALERTMAIL_URL
+  - TESTALERTMAIL_USER
+  - TESTALERTMAIL_SECRET
   - TESTALERTMAIL_HOSTNAME
   - TESTALERTMAIL_IMAPxxx
 

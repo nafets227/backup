@@ -145,18 +145,37 @@ function test_email {
 		return 0
 	fi
 
-	local imappw imapurl
+	local imappw imapurl smtppw smtpurl
+
 	imappw="$(cat "$TESTALERTMAIL_IMAP_SECRET")"
 	imapurl="imap://${TESTALERTMAIL_ADR//@/%40}"
 	imapurl+=":$($TEST_SNAIL -# <<<"urlcodec encode $imappw")"
 	imapurl+="@$TESTALERTMAIL_IMAP_URL/INBOX"
 
+	smtppw="$($TEST_SNAIL -# <<<"urlcodec encode $imappw")"
+	smtpurl="smtp://${TESTALERTMAIL_USER//@/%40}:$smtppw@$TESTALERTMAIL_URL"
+
 	test_cleanImap "$TESTALERTMAIL_ADR" "$imappw" "$TESTALERTMAIL_IMAP_URL"
 	test_assert "$?" "clean IMAP" || return 1
 
-	# Trigger Error Email with empty command
+	# Trigger Error Email with empty command and unset MAIL_SSL
 	export MAIL_TO=$TESTALERTMAIL_ADR
 	export MAIL_URL="$TESTALERTMAIL_URL"
+	unset MAIL_SSL
+	export MAIL_FROM="$TESTALERTMAIL_FROM"
+	eval "$(test_exec_backupdocker 0 "")"
+
+	sleep 10 # let mail be processed
+
+	test_exec_recvmail "$imapurl" 0 "-S 'imap-use-starttls'"
+	test_cleanImap "$TESTALERTMAIL_ADR" "$imappw" "$TESTALERTMAIL_IMAP_URL"
+
+	# @TODO Trigger Error Email eith MAIL_SSL=0
+
+	# Trigger Error Email with empty command and send with STARTTLS
+	export MAIL_TO=$TESTALERTMAIL_ADR
+	export MAIL_URL="$smtpurl"
+	export MAIL_SSL=1
 	export MAIL_FROM="$TESTALERTMAIL_FROM"
 	eval "$(test_exec_backupdocker 0 "")"
 
@@ -209,6 +228,8 @@ test_assert_vars \
 	TESTALERTMAIL_ADR \
 	TESTALERTMAIL_FROM \
 	TESTALERTMAIL_URL \
+	TESTALERTMAIL_USER \
+	TESTALERTMAIL_SECRET \
 	TESTALERTMAIL_IMAP_URL \
 	TESTALERTMAIL_IMAP_SECRET \
 	&&
@@ -227,6 +248,7 @@ true
 if [ "$?" == "0" ] ; then
 	test_runempty
 	test_email
+	unset MAIL_TO MAIL_URL # disable mailing for following tests
 	test_rclone2file
 	test_rclone2file_hist
 	test_file2rclone

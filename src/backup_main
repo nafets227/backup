@@ -235,6 +235,13 @@ function backup_notify {
 		return 1
 	fi
 
+	local MAIL_SSL_OPT
+	if [ "${MAIL_SSL-""}" == "1" ] ; then
+		MAIL_SSL_OPT="smtp-use-starttls"
+	else
+		MAIL_SSL_OPT="smtp-auth=none"
+	fi
+
 	local MAIL_SUBJECT
 	if [ "$NAFETS227BACKUP_GRC" == "0" ] ; then
 		MAIL_SUBJECT="Backup successful"
@@ -251,7 +258,7 @@ function backup_notify {
 		printf "For details see backup-log\n"
 	) | LC_ALL=C MAILRC=/dev/null mail \
 		-n -Sv15-compat -Ssendwait -Snosave -Sexpandaddr=fail,-all,+addr \
-		-S 'smtp-auth=none' \
+		-S "$MAIL_SSL_OPT" \
 		-S "smtp=$MAIL_URL" \
 		-S "hostname=$MAIL_HOSTNAME" \
 		-s "$MAIL_SUBJECT" \
