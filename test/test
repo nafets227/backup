@@ -71,20 +71,20 @@ function test_exec_backupdocker {
 	shift
 
 	if \
-		! cat >"$TESTSETDIR/backup/backup" <<<"$@" ||
-		! chmod +x "$TESTSETDIR/backup/backup"
+		! cat >"$TESTSET_DIR/backup/backup" <<<"$@" ||
+		! chmod +x "$TESTSET_DIR/backup/backup"
 	then
 		printf "test_assert %s \"%s\"\n" "$?" "Write backup script"
 		return 1
 	fi
 
-	if ! cp ~/.ssh/id_rsa "$TESTSETDIR/id_rsa"
+	if ! cp ~/.ssh/id_rsa "$TESTSET_DIR/id_rsa"
 	then
 		printf "test_assert %s \"%s\"\n" "$?" "Copy SSH Key"
 		return 1
 	fi
 	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		if ! chown 41598:41598 "$TESTSETDIR/id_rsa" ; then
+		if ! chown 41598:41598 "$TESTSET_DIR/id_rsa" ; then
 			printf "test_assert %s \"%s\"\n" "$?" "chown SSH Key"
 			return 1
 		else
@@ -98,8 +98,8 @@ function test_exec_backupdocker {
 	printf  " \"%s\"" \
 		"$rc_exp" "Backup Command $*" \
 		docker run \
-			-v "$TESTSETDIR/backup:/backup" \
-			-v "$TESTSETDIR/id_rsa:/secrets/id_rsa:ro" \
+			-v "$TESTSET_DIR/backup:/backup" \
+			-v "$TESTSET_DIR/id_rsa:/secrets/id_rsa:ro" \
 			-e DEBUG=1 \
 			-e MAIL_TO \
 			-e MAIL_FROM \
@@ -108,7 +108,7 @@ function test_exec_backupdocker {
 			"$TESTIMG" \
 			. /backup/backup
 
-	return "$TESTRC"
+	return 0
 }
 
 ##### Test Build #############################################################
@@ -118,7 +118,7 @@ function test_build {
 		# Compile / Build docker
 		test_exec_cmd 0 "" \
 			docker build -t nafets227/backup:test "$BASEDIR/.."
-		[ "$TESTRC" -eq 0 ] || return 1
+		test_exec_issuccess || return 1
 		TESTIMG="nafets227/backup:test"
 	else
 		test_exec_cmd 0 "" true
@@ -198,10 +198,10 @@ for f in "$BASEDIR"/*.sh ; do
 done
 
 testset_init || exit 1
-if [ ! -d "$TESTSETDIR/backup" ] ; then
-	mkdir "$TESTSETDIR/backup" || return 1
+if [ ! -d "$TESTSET_DIR/backup" ] ; then
+	mkdir "$TESTSET_DIR/backup" || return 1
 fi
-test_chown "$TESTSETDIR/backup" || return 1
+test_chown "$TESTSET_DIR/backup" || return 1
 test_chown "$RCLONE_CONF" || return 1
 
 : "$my_fileopt" # make shellcheck happy, its used in test-file*.sh
