@@ -28,7 +28,7 @@ function test_imap_hist {
 
 	local mail_smtpsrv=${MAIL_SRV%%:*}
 	cp "$MAIL_PW" \
-		"$TESTSETDIR/backup/imap_password.password"
+		"$TESTSET_DIR/backup/imap_password.password"
 	test_assert "$?" "copy imap password" || return 1
 
 	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$mail_smtpsrv"
@@ -54,7 +54,7 @@ function test_imap_hist {
 		--hist \
 		--histdate "2020-06-15" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap-hist" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
@@ -86,7 +86,7 @@ function test_imap_hist {
 		--hist \
 		--histdate "2020-06-15" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap-hist" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
@@ -107,8 +107,8 @@ function test_imap_hist {
 	test_expect_files "backup/imap-hist/2020/06/16/INBOX/new" 0 &&
 	test_expect_files "backup/imap-hist/2020/06/16/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"$TESTSETDIR/backup/imap-hist/2020/06/16/INBOX/cur"/* \
-		"$TESTSETDIR/backup/imap-hist/2020/06/15/INBOX/cur"/*
+		"$TESTSET_DIR/backup/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSET_DIR/backup/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# IMAP OK with 1 Mail 2020-06-16 - remote backup dest
 	$exec_remote &&
@@ -117,7 +117,7 @@ function test_imap_hist {
 		--hist \
 		--histdate "2020-06-16" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap-hist" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
@@ -125,8 +125,8 @@ function test_imap_hist {
 	test_expect_files "backup-rem/imap-hist/2020/06/16/INBOX/new" 0 &&
 	test_expect_files "backup-rem/imap-hist/2020/06/16/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"$TESTSETDIR/backup-rem/imap-hist/2020/06/16/INBOX/cur"/* \
-		"$TESTSETDIR/backup-rem/imap-hist/2020/06/15/INBOX/cur"/*
+		"$TESTSET_DIR/backup-rem/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSET_DIR/backup-rem/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# IMAP OK with 1 Mail 2020-07-15
 	eval "$(test_exec_backupdocker  0 \
@@ -141,9 +141,9 @@ function test_imap_hist {
 	test_expect_files "backup/imap-hist/2020/07/15/INBOX/new" 0 &&
 	test_expect_files "backup/imap-hist/2020/07/15/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"$TESTSETDIR/backup/imap-hist/2020/07/15/INBOX/cur"/* \
-		"$TESTSETDIR/backup/imap-hist/2020/06/16/INBOX/cur"/* \
-		"$TESTSETDIR/backup/imap-hist/2020/06/15/INBOX/cur"/*
+		"$TESTSET_DIR/backup/imap-hist/2020/07/15/INBOX/cur"/* \
+		"$TESTSET_DIR/backup/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSET_DIR/backup/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# IMAP OK with 1 Mail 2020-07-15 - remote backup dest
 	$exec_remote &&
@@ -152,7 +152,7 @@ function test_imap_hist {
 		--hist \
 		--histdate "2020-07-15" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap-hist" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
@@ -160,9 +160,9 @@ function test_imap_hist {
 	test_expect_files "backup-rem/imap-hist/2020/07/15/INBOX/new" 0 &&
 	test_expect_files "backup-rem/imap-hist/2020/07/15/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"$TESTSETDIR/backup-rem/imap-hist/2020/07/15/INBOX/cur"/* \
-		"$TESTSETDIR/backup-rem/imap-hist/2020/06/16/INBOX/cur"/* \
-		"$TESTSETDIR/backup-rem/imap-hist/2020/06/15/INBOX/cur"/*
+		"$TESTSET_DIR/backup-rem/imap-hist/2020/07/15/INBOX/cur"/* \
+		"$TESTSET_DIR/backup-rem/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSET_DIR/backup-rem/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# IMAP OK with one Mail 2021-01-15
 	eval "$(test_exec_backupdocker  0 \
@@ -177,10 +177,10 @@ function test_imap_hist {
 	test_expect_files "backup/imap-hist/2021/01/15/INBOX/new" 0 &&
 	test_expect_files "backup/imap-hist/2021/01/15/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"$TESTSETDIR/backup/imap-hist/2021/01/15/INBOX/cur"/* \
-		"$TESTSETDIR/backup/imap-hist/2020/07/15/INBOX/cur"/* \
-		"$TESTSETDIR/backup/imap-hist/2020/06/16/INBOX/cur"/* \
-		"$TESTSETDIR/backup/imap-hist/2020/06/15/INBOX/cur"/*
+		"$TESTSET_DIR/backup/imap-hist/2021/01/15/INBOX/cur"/* \
+		"$TESTSET_DIR/backup/imap-hist/2020/07/15/INBOX/cur"/* \
+		"$TESTSET_DIR/backup/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSET_DIR/backup/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# IMAP OK with one Mail 2021-01-15 - remote backup dest
 	$exec_remote &&
@@ -189,7 +189,7 @@ function test_imap_hist {
 		--hist \
 		--histdate "2021-01-15" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap-hist" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
@@ -197,10 +197,10 @@ function test_imap_hist {
 	test_expect_files "backup-rem/imap-hist/2021/01/15/INBOX/new" 0 &&
 	test_expect_files "backup-rem/imap-hist/2021/01/15/INBOX/cur" 1 &&
 	test_expect_linkedfiles \
-		"$TESTSETDIR/backup-rem/imap-hist/2021/01/15/INBOX/cur"/* \
-		"$TESTSETDIR/backup-rem/imap-hist/2020/07/15/INBOX/cur"/* \
-		"$TESTSETDIR/backup-rem/imap-hist/2020/06/16/INBOX/cur"/* \
-		"$TESTSETDIR/backup-rem/imap-hist/2020/06/15/INBOX/cur"/*
+		"$TESTSET_DIR/backup-rem/imap-hist/2021/01/15/INBOX/cur"/* \
+		"$TESTSET_DIR/backup-rem/imap-hist/2020/07/15/INBOX/cur"/* \
+		"$TESTSET_DIR/backup-rem/imap-hist/2020/06/16/INBOX/cur"/* \
+		"$TESTSET_DIR/backup-rem/imap-hist/2020/06/15/INBOX/cur"/*
 
 	# clear Emails
 	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$mail_smtpsrv"
@@ -226,7 +226,7 @@ function test_imap_hist {
 		--hist \
 		--histdate "2021-01-16" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap-hist" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
@@ -253,7 +253,7 @@ function test_imap_hist {
 		--hist \
 		--histdate "2021-01-07" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap-hist" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
@@ -280,7 +280,7 @@ function test_imap_hist {
 		"backup imap" \
 		--hist \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap-hist" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa

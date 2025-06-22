@@ -19,12 +19,12 @@ function test_file_srcdest {
 		"$source" "$dest"
 
 	mkdir -p \
-		"$TESTSETDIR/backup/file/source" \
-		"$TESTSETDIR/backup/file/dest"
+		"$TESTSET_DIR/backup/file/source" \
+		"$TESTSET_DIR/backup/file/dest"
 	test_assert "$?" "Creating directories" || return 1
-	test_chown "$TESTSETDIR/backup/file" || return 1
-	test_chown "$TESTSETDIR/backup/file/source" || return 1
-	test_chown "$TESTSETDIR/backup/file/dest" || return 1
+	test_chown "$TESTSET_DIR/backup/file" || return 1
+	test_chown "$TESTSET_DIR/backup/file/source" || return 1
+	test_chown "$TESTSET_DIR/backup/file/dest" || return 1
 
 	source+="/file/source"
 	dest+="/file/dest"
@@ -45,7 +45,7 @@ function test_file_srcdest {
 		"$@" \
 		)" &&
 	test_expect_files "backup/file/dest/thisdirdoesnotexist" 0 &&
-	rmdir "$TESTSETDIR/backup/file/dest/thisdirdoesnotexist"
+	rmdir "$TESTSET_DIR/backup/file/dest/thisdirdoesnotexist"
 
 	# backup empty path
 	eval "$(test_exec_backupdocker 0 \
@@ -68,7 +68,7 @@ function test_file_srcdest {
 	test_expect_files "backup/file/dest" 0
 
 	# backup one file
-	cat >"$TESTSETDIR/backup/file/source/dummyfile" <<<"Dummyfile"
+	cat >"$TESTSET_DIR/backup/file/source/dummyfile" <<<"Dummyfile"
 	test_assert "$?" "Creating dummyfile" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -79,9 +79,9 @@ function test_file_srcdest {
 	test_expect_files "backup/file/source" 1
 
 	# backup additional file in subdirectory
-	mkdir "$TESTSETDIR/backup/file/source/testsubdir"
+	mkdir "$TESTSET_DIR/backup/file/source/testsubdir"
 	test_assert "$?" "Creating testsubdir" || return 1
-	cat >"$TESTSETDIR/backup/file/source/testsubdir/dummyfile2" <<<"Dummyfile2"
+	cat >"$TESTSET_DIR/backup/file/source/testsubdir/dummyfile2" <<<"Dummyfile2"
 	test_assert "$?" "Creating dummyfile2" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -93,7 +93,7 @@ function test_file_srcdest {
 	test_expect_files "backup/file/dest/testsubdir" 1
 
 	# delete no longer existing file
-	rm "$TESTSETDIR/backup/file/source/dummyfile"
+	rm "$TESTSET_DIR/backup/file/source/dummyfile"
 	test_assert "$?" "remove Dummyfile" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -105,7 +105,7 @@ function test_file_srcdest {
 	test_expect_files "backup/file/dest/testsubdir" 1
 
 	# delete no longer existing file in subdir
-	rm "$TESTSETDIR/backup/file/source/testsubdir/dummyfile2"
+	rm "$TESTSET_DIR/backup/file/source/testsubdir/dummyfile2"
 	test_assert "$?" "remove Dummyfile2" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -117,7 +117,7 @@ function test_file_srcdest {
 	test_expect_files "backup/file/dest/testsubdir" 0
 
 	# delete no longer existing subdir
-	rmdir "$TESTSETDIR/backup/file/source/testsubdir"
+	rmdir "$TESTSET_DIR/backup/file/source/testsubdir"
 	test_assert "$?" "remove testsubdir" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -128,8 +128,8 @@ function test_file_srcdest {
 	test_expect_files "backup/file/dest" 0
 
 	rm -rf \
-		"$TESTSETDIR/backup/file/source" \
-		"$TESTSETDIR/backup/file/dest"
+		"$TESTSET_DIR/backup/file/source" \
+		"$TESTSET_DIR/backup/file/dest"
 	test_assert "$?" "remove backupdirs" || return 1
 
 	return 0
@@ -140,7 +140,7 @@ function test_file {
 	: "${my_ip:=""} ${my_host:=""} ${my_fileopt:=""}"
 
 	##### Specific tests for local/remote
-	mkdir -p "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2"
+	mkdir -p "$TESTSET_DIR/backup/file1" "$TESTSET_DIR/backup/file2"
 	test_assert "$?" "create testdirs" || return 1
 
 	# backup remote source without secret should fail
@@ -148,7 +148,7 @@ function test_file {
 	# TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
-		"$my_ip:$TESTSETDIR/backup/file1" \
+		"$my_ip:$TESTSET_DIR/backup/file1" \
 		/backup/file2 \
 		$TEST_RSYNCOPT
 		)"
@@ -159,7 +159,7 @@ function test_file {
 	eval "$(test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		/backup/file1 \
-		"$my_ip:$TESTSETDIR/backup/file2" \
+		"$my_ip:$TESTSET_DIR/backup/file2" \
 		$TEST_RSYNCOPT
 		)"
 
@@ -168,8 +168,8 @@ function test_file {
 	# TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
-		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$my_host:$TESTSETDIR/backup/file2" \
+		"$my_ip:$TESTSET_DIR/backup/file1" \
+		"$my_host:$TESTSET_DIR/backup/file2" \
 		$TEST_RSYNCOPT
 		)"
 
@@ -179,8 +179,8 @@ function test_file {
 	# TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
-		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$my_host:$TESTSETDIR/backup/file2" \
+		"$my_ip:$TESTSET_DIR/backup/file1" \
+		"$my_host:$TESTSET_DIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
@@ -191,8 +191,8 @@ function test_file {
 	# TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
-		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$my_host:$TESTSETDIR/backup/file2" \
+		"$my_ip:$TESTSET_DIR/backup/file1" \
+		"$my_host:$TESTSET_DIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
@@ -203,8 +203,8 @@ function test_file {
 	# TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
-		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$my_host:$TESTSETDIR/backup/file2" \
+		"$my_ip:$TESTSET_DIR/backup/file1" \
+		"$my_host:$TESTSET_DIR/backup/file2" \
 		--dstsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
@@ -214,19 +214,19 @@ function test_file {
 	# TEST_RSYNCOPE intentionally may conatain 0,1 or more words
 	eval "$(test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
-		"$my_ip:$TESTSETDIR/backup/file1" \
-		"$my_host:$TESTSETDIR/backup/file2" \
+		"$my_ip:$TESTSET_DIR/backup/file1" \
+		"$my_host:$TESTSET_DIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--dstsecret /secrets/id_rsa \
 		$TEST_RSYNCOPT
 		)"
 
-	rmdir "$TESTSETDIR/backup/file1" "$TESTSETDIR/backup/file2"
+	rmdir "$TESTSET_DIR/backup/file1" "$TESTSET_DIR/backup/file2"
 	test_assert "$?" "remove testdirs" || return 1
 
 	##### common tests for all variants source,dest in local,remote
-	for source in "/backup" "$my_ip:$TESTSETDIR/backup" ; do
-		for dest in "/backup" "$my_ip:$TESTSETDIR/backup" ; do
+	for source in "/backup" "$my_ip:$TESTSET_DIR/backup" ; do
+		for dest in "/backup" "$my_ip:$TESTSET_DIR/backup" ; do
 			secretparm=""
 			[[ "$source" == *":"* ]] &&
 				secretparm+="--srcsecret /secrets/id_rsa "

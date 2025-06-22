@@ -19,12 +19,12 @@ function test_file_hist_srcdest {
 		"$source" "$dest"
 
 	mkdir -p \
-		"$TESTSETDIR/backup/file-hist/source" \
-		"$TESTSETDIR/backup/file-hist/dest"
+		"$TESTSET_DIR/backup/file-hist/source" \
+		"$TESTSET_DIR/backup/file-hist/dest"
 	test_assert "$?" "Creating directories in ${FUNCNAME[0]}" || return 1
-	test_chown "$TESTSETDIR/backup/file-hist" || return 1
-	test_chown "$TESTSETDIR/backup/file-hist/source" || return 1
-	test_chown "$TESTSETDIR/backup/file-hist/dest" || return 1
+	test_chown "$TESTSET_DIR/backup/file-hist" || return 1
+	test_chown "$TESTSET_DIR/backup/file-hist/source" || return 1
+	test_chown "$TESTSET_DIR/backup/file-hist/dest" || return 1
 
 	source+="/file-hist/source"
 	dest+="/file-hist/dest"
@@ -50,10 +50,10 @@ function test_file_hist_srcdest {
 		)" &&
 	test_expect_files "backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" 0 &&
 	rmdir \
-		"$TESTSETDIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" \
-		"$TESTSETDIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10" \
-		"$TESTSETDIR/backup/file-hist/dest/thisdirdoesnotexist/2020" \
-		"$TESTSETDIR/backup/file-hist/dest/thisdirdoesnotexist"
+		"$TESTSET_DIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" \
+		"$TESTSET_DIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10" \
+		"$TESTSET_DIR/backup/file-hist/dest/thisdirdoesnotexist/2020" \
+		"$TESTSET_DIR/backup/file-hist/dest/thisdirdoesnotexist"
 
 	# backup empty path
 	eval "$(test_exec_backupdocker 0 \
@@ -66,9 +66,9 @@ function test_file_hist_srcdest {
 		)"
 
 	# backup one file
-	cat >"$TESTSETDIR/backup/file-hist/source/dummyfile" <<<"Dummyfile"
+	cat >"$TESTSET_DIR/backup/file-hist/source/dummyfile" <<<"Dummyfile"
 	test_assert "$?" "Creating dummyfile" || return 1
-	test_chown "$TESTSETDIR/backup/file-hist/source/dummyfile" || return 1
+	test_chown "$TESTSET_DIR/backup/file-hist/source/dummyfile" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -79,13 +79,13 @@ function test_file_hist_srcdest {
 		)"
 
 	# backup additional file in subdirectory
-	mkdir "$TESTSETDIR/backup/file-hist/source/testsubdir"
+	mkdir "$TESTSET_DIR/backup/file-hist/source/testsubdir"
 	test_assert "$?" "Creating testsubdir" || return 1
-	test_chown "$TESTSETDIR/backup/file-hist/source/testsubdir" || return 1
-	cat >"$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2" \
+	test_chown "$TESTSET_DIR/backup/file-hist/source/testsubdir" || return 1
+	cat >"$TESTSET_DIR/backup/file-hist/source/testsubdir/dummyfile2" \
 		<<<"Dummyfile2"
 	test_assert "$?" "Creating dummyfile2" || return 1
-	test_chown "$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2" \
+	test_chown "$TESTSET_DIR/backup/file-hist/source/testsubdir/dummyfile2" \
 		|| return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -97,7 +97,7 @@ function test_file_hist_srcdest {
 		)"
 
 	# delete no longer existing file
-	rm "$TESTSETDIR/backup/file-hist/source/dummyfile"
+	rm "$TESTSET_DIR/backup/file-hist/source/dummyfile"
 	test_assert "$?" "remove Dummyfile" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -109,7 +109,7 @@ function test_file_hist_srcdest {
 		)"
 
 	# delete no longer existing file in subdir
-	rm "$TESTSETDIR/backup/file-hist/source/testsubdir/dummyfile2"
+	rm "$TESTSET_DIR/backup/file-hist/source/testsubdir/dummyfile2"
 	test_assert "$?" "remove Dummyfile2" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -121,7 +121,7 @@ function test_file_hist_srcdest {
 		)"
 
 	# delete no longer existing subdir
-	rmdir "$TESTSETDIR/backup/file-hist/source/testsubdir"
+	rmdir "$TESTSET_DIR/backup/file-hist/source/testsubdir"
 	test_assert "$?" "remove testsubdir" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
@@ -143,8 +143,8 @@ function test_file_hist_srcdest {
 	test_expect_files "backup/file-hist/dest/2020/10/16" 0
 
 	rm -rf \
-		"$TESTSETDIR/backup/file-hist/source" \
-		"$TESTSETDIR/backup/file-hist/dest"
+		"$TESTSET_DIR/backup/file-hist/source" \
+		"$TESTSET_DIR/backup/file-hist/dest"
 	test_assert "$?" "remove backupdirs" || return 1
 
 	return 0
@@ -155,18 +155,18 @@ function test_file_hist {
 	: "${my_ip:=""} ${my_host:=""} ${my_fileopt:=""}"
 	##### Specific tests for local/remote
 	mkdir -p \
-		"$TESTSETDIR/backup/file-hist-1" \
-		"$TESTSETDIR/backup/file-hist-2"
+		"$TESTSET_DIR/backup/file-hist-1" \
+		"$TESTSET_DIR/backup/file-hist-2"
 	test_assert "$?" "Init ${FUNCNAME[0]}" || return 1
-	test_chown "$TESTSETDIR/backup/file-hist-1" || return 1
-	test_chown "$TESTSETDIR/backup/file-hist-2" || return 1
+	test_chown "$TESTSET_DIR/backup/file-hist-1" || return 1
+	test_chown "$TESTSET_DIR/backup/file-hist-2" || return 1
 
 	# backup remote source without secret should fail
 	eval "$(test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
-		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
+		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
 		/backup/file2 \
 		"$TEST_RSYNCOPT"
 		)"
@@ -177,7 +177,7 @@ function test_file_hist {
 		--hist \
 		--histdate "2020-09-01" \
 		/backup/file1 \
-		"$my_ip:$TESTSETDIR/backup/file-hist-2" \
+		"$my_ip:$TESTSET_DIR/backup/file-hist-2" \
 		"$TEST_RSYNCOPT"
 		)"
 
@@ -186,8 +186,8 @@ function test_file_hist {
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
-		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$my_host:$TESTSETDIR/backup/file-hist-2" \
+		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
+		"$my_host:$TESTSET_DIR/backup/file-hist-2" \
 		"$TEST_RSYNCOPT"
 		)"
 
@@ -197,8 +197,8 @@ function test_file_hist {
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
-		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$my_host:$TESTSETDIR/backup/file-hist-2" \
+		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
+		"$my_host:$TESTSET_DIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
@@ -209,8 +209,8 @@ function test_file_hist {
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
-		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$my_host:$TESTSETDIR/backup/file-hist-2" \
+		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
+		"$my_host:$TESTSET_DIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
@@ -221,8 +221,8 @@ function test_file_hist {
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
-		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$my_host:$TESTSETDIR/backup/file-hist-2" \
+		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
+		"$my_host:$TESTSET_DIR/backup/file-hist-2" \
 		--dstsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
@@ -232,20 +232,20 @@ function test_file_hist {
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
-		"$my_ip:$TESTSETDIR/backup/file-hist-1" \
-		"$my_host:$TESTSETDIR/backup/file-hist-2" \
+		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
+		"$my_host:$TESTSET_DIR/backup/file-hist-2" \
 		--srcsecret /secrets/id_rsa \
 		--dstsecret /secrets/id_rsa \
 		"$TEST_RSYNCOPT"
 		)"
 
-	rmdir "$TESTSETDIR/backup/file-hist-1" "$TESTSETDIR/backup/file-hist-2"
+	rmdir "$TESTSET_DIR/backup/file-hist-1" "$TESTSET_DIR/backup/file-hist-2"
 	test_assert "$?" "remove testdirs in ${FUNCNAME[0]}" || return 1
 
 	##### common tests for all variants source,dest in local,remote
 	#shellcheck disable=SC2043
 	for dest in "/backup" ; do
-		for source in "/backup" "$my_ip:$TESTSETDIR/backup" ; do
+		for source in "/backup" "$my_ip:$TESTSET_DIR/backup" ; do
 			secretparm=""
 			[[ "$source" == *":"* ]] &&
 				secretparm+="--srcsecret /secrets/id_rsa "
@@ -261,7 +261,7 @@ function test_file_hist {
 	done
 
 	#shellcheck disable=SC2066
-	for dest in "$my_ip:$TESTSETDIR/backup" ; do
+	for dest in "$my_ip:$TESTSET_DIR/backup" ; do
 		#shellcheck disable=SC2043
 		for source in "/backup" ; do
 			# Backup to remote in history mod should fail
@@ -276,7 +276,7 @@ function test_file_hist {
 				--dstsecret /secrets/id_rsa \
 				)"
 		done
-		for source in  "$my_ip:$TESTSETDIR/backup" ; do
+		for source in  "$my_ip:$TESTSET_DIR/backup" ; do
 			if [[ $source == *":"* ]] ; then
 				secretparm="--srcsecret /secrets/id_rsa "
 				secretparm+="--dstsecret /secrets/id_rsa "

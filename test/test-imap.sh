@@ -27,11 +27,11 @@ function test_imap {
 	printf "Testing IMAP using Mail Adress \"%s\"\n" "$MAIL_ADR"
 
 	local mail_smtpsrv=${MAIL_SRV%%:*}
-	cat >"$TESTSETDIR/backup/imap_wrongpassword.password" <<<"wrongpassword"
+	cat >"$TESTSET_DIR/backup/imap_wrongpassword.password" <<<"wrongpassword"
 	test_assert "$?" "write imap_wrongpassword.password" || return 1
 
 	cp "$MAIL_PW" \
-		"$TESTSETDIR/backup/imap_password.password"
+		"$TESTSET_DIR/backup/imap_password.password"
 	test_assert "$?" "write imap_password.password" || return 1
 
 	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$mail_smtpsrv"
@@ -68,7 +68,7 @@ function test_imap {
 	eval "$(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_wrongpassword.password \
 		--dstsecret /secrets/id_rsa
@@ -90,7 +90,7 @@ function test_imap {
 	eval "$(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
@@ -100,7 +100,7 @@ function test_imap {
 
 	# IMAP KO without password
 	cp "$MAIL_PW" \
-		"$TESTSETDIR/backup/$MAIL_ADR.password"
+		"$TESTSET_DIR/backup/$MAIL_ADR.password"
 	test_assert "$?" "copy mail password" || return 1
 	eval "$(test_exec_backupdocker 1 \
 		"backup imap" \
@@ -114,7 +114,7 @@ function test_imap {
 	eval "$(test_exec_backupdocker 1 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
 		"$MAIL_SRV" \
 		--dstsecret /secrets/id_rsa
 		)"
@@ -151,7 +151,7 @@ function test_imap {
 	eval "$(test_exec_backupdocker 0 \
 		"backup imap" \
 		"$MAIL_ADR" \
-		"$my_ip:$TESTSETDIR/backup-rem/imap" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
 		"$MAIL_SRV" \
 		--srcsecret /backup/imap_password.password \
 		--dstsecret /secrets/id_rsa
