@@ -818,6 +818,14 @@ function test_exec_sendmail {
 	fi
 }
 
+function test_exec_issuccess {
+	if [ "${TESTSET_TESTFAILED##* }" == "$TESTSET_LAST_CHECK_NR" ] ; then
+		return 1
+	else
+		return 0
+	fi
+}
+
 function test_assert {
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	local testrc
@@ -1115,13 +1123,13 @@ function testset_init {
 	local testsetparm
 
 	printf "TESTS Starting.\n"
-	declare -g TESTSET_LAST_CHECK_NR=0
-	declare -g TESTSET_LAST_TEST_NR=0
-	declare -g TESTSET_TESTSOK=0
-	declare -g TESTSET_TESTFAILED=""
-	declare -g TESTSET_LOG_ALWAYS=0
-	declare -g TESTSET_NAME="TestSet"
-	declare -g TEST_SNAIL=""
+	TESTSET_LAST_CHECK_NR=0
+	TESTSET_LAST_TEST_NR=0
+	TESTSET_TESTSOK=0
+	TESTSET_TESTFAILED=""
+	TESTSET_LOG_ALWAYS=0
+	TESTSET_NAME="TestSet"
+	TEST_SNAIL=""
 
 	if [[ "$OSTYPE" =~ darwin* ]] ; then
 		if ! which ip ; then
