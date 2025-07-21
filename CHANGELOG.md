@@ -1,5 +1,14 @@
 # nafets227/backup CHANGELOG
 
+## 0.9.1 (2025-07-21)
+
+- copy our version of rclone to foreign machines.
+  This avoids version conflicts or incompatibilities
+- alpine 3.22.1
+- rclone 1.70.3
+- improve tests
+- SuperLinter 7.3
+
 ## 0.9 (2025-03-04) Incompatible
 
 Move to non-root container
