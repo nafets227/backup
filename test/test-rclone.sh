@@ -58,7 +58,8 @@ function test_cleanRclone () {
 		"$rclone_name" "$rclone_conf"
 
 	test_rclone_execraw "$rclone_conf" \
-		delete "$rclone_name" --rmdirs
+		delete "$rclone_name" --rmdirs \
+		--exclude '/UnusedVault/**'
 
 	return $?
 }
@@ -168,6 +169,7 @@ function test_rclone2file {
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
 		--srcsecret /backup/rclone2file.conf \
+		--exclude '/UnusedVault/**' \
 		)" &&
 	test_expect_files "backup/rclone2file" 0
 
@@ -215,6 +217,7 @@ function test_rclone2file {
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
 		--srcsecret /backup/rclone2file.conf \
+		--exclude '/UnusedVault/**' \
 		)" &&
 	test_expect_files "backup/rclone2file" 0
 
@@ -225,7 +228,8 @@ function test_rclone2file {
 		"$RCLONE_NAME" \
 		"$my_ip:$TESTSET_DIR/backup-rem/rclone2file" \
 		--srcsecret /backup/rclone2file.conf \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_rsa \
+		--exclude '/UnusedVault/**' \
 		)" &&
 	test_expect_files "backup-rem/rclone2file" 0
 
@@ -239,7 +243,7 @@ function test_rclone2file {
 		"backup rclone_unittest_updateconf" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
-		--srcsecret /backup/rclone-update.conf
+		--srcsecret /backup/rclone-update.conf \
 		)" &&
 	test_exec_cmd "" "" \
 		fgrep '[rclone-unittest-dummy]' "$TESTSET_DIR/backup/rclone-update.conf"
@@ -254,7 +258,7 @@ function test_rclone2file {
 		"$RCLONE_NAME" \
 		"$my_ip:$TESTSET_DIR/backup-rem/rclone2file" \
 		--srcsecret /backup/rclone-update.conf \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_rsa \
 		)" &&
 	test_exec_cmd "" "" \
 		fgrep '[rclone-unittest-dummy]' "$TESTSET_DIR/backup/rclone-update.conf"
@@ -270,7 +274,8 @@ function test_rclone2file {
 		"backup rclone2file" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
-		--srcsecret /backup/rclone2file.conf
+		--srcsecret /backup/rclone2file.conf \
+		--exclude '/UnusedVault/**' \
 		)" &&
 	test_expect_files "backup/rclone2file" 2 &&
 	test_expect_files "backup/rclone2file/testdir" 1
@@ -282,7 +287,8 @@ function test_rclone2file {
 		"$RCLONE_NAME" \
 		"$my_ip:$TESTSET_DIR/backup-rem/rclone2file" \
 		--srcsecret /backup/rclone2file.conf \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_rsa \
+		--exclude '/UnusedVault/**' \
 		)" &&
 	test_expect_files "backup-rem/rclone2file" 2 &&
 	test_expect_files "backup-rem/rclone2file/testdir" 1
@@ -295,7 +301,8 @@ function test_rclone2file {
 		"backup rclone2file" \
 		"$RCLONE_NAME" \
 		/backup/rclone2file \
-		--srcsecret /backup/rclone2file.conf
+		--srcsecret /backup/rclone2file.conf \
+		--exclude '/UnusedVault/**' \
 		)" &&
 	test_expect_files "backup/rclone2file" 0
 
@@ -306,7 +313,8 @@ function test_rclone2file {
 		"$RCLONE_NAME" \
 		"$my_ip:$TESTSET_DIR/backup-rem/rclone2file" \
 		--srcsecret /backup/rclone2file.conf \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_rsa \
+		--exclude '/UnusedVault/**' \
 		)" &&
 	test_expect_files "backup-rem/rclone2file" 0
 
@@ -341,6 +349,7 @@ function test_rclone2file_hist {
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
+		--exclude '/UnusedVault/**' \
 		)"
 	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
@@ -349,6 +358,7 @@ function test_rclone2file_hist {
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
+		--exclude '/UnusedVault/**' \
 		)"
 
 	# Time 10+11: Added file
@@ -364,6 +374,7 @@ function test_rclone2file_hist {
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
+		--exclude '/UnusedVault/**' \
 		)"
 	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
@@ -372,6 +383,7 @@ function test_rclone2file_hist {
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
+		--exclude '/UnusedVault/**' \
 		)"
 
 	# Time 20+21: modified file
@@ -387,6 +399,7 @@ function test_rclone2file_hist {
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
+		--exclude '/UnusedVault/**' \
 		)"
 	eval "$(test_exec_backupdocker  0 \
 		"backup rclone2file" \
@@ -395,6 +408,7 @@ function test_rclone2file_hist {
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
+		--exclude '/UnusedVault/**' \
 		)"
 
 	# Time 30: deleted file
@@ -407,6 +421,7 @@ function test_rclone2file_hist {
 		"$RCLONE_NAME" \
 		/backup/rclone2file-hist \
 		--srcsecret /backup/rclone2file-hist.conf \
+		--exclude '/UnusedVault/**' \
 		)"
 
 	# Finally check:
@@ -547,6 +562,7 @@ function test_file2rclone {
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
+			--exclude '/UnusedVault/**' \
 			)"
 
 		# history backup should fail
@@ -557,7 +573,8 @@ function test_file2rclone {
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
-			--hist
+			--hist \
+			--exclude '/UnusedVault/**' \
 			)"
 
 		# rclone OK with Empty Dir
@@ -568,6 +585,7 @@ function test_file2rclone {
 			"$RCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
+			--exclude '/UnusedVault/**' \
 			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 0
 
@@ -582,6 +600,7 @@ function test_file2rclone {
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			"$@" \
+			--exclude '/UnusedVault/**' \
 			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 1
 
@@ -598,6 +617,7 @@ function test_file2rclone {
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			"$@" \
+			--exclude '/UnusedVault/**' \
 			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 2 && # includes subdir!
 		test_expect_rclone_files "${RCLONE_NAME}testsubdir" "$RCLONE_CONF" 1
@@ -613,6 +633,7 @@ function test_file2rclone {
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			"$@" \
+			--exclude '/UnusedVault/**' \
 			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 1 && # includes subdir!
 		test_expect_rclone_files "${RCLONE_NAME}testsubdir" "$RCLONE_CONF" 1
@@ -628,6 +649,7 @@ function test_file2rclone {
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			"$@" \
+			--exclude '/UnusedVault/**' \
 			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 1 && # includes subdir!
 		test_expect_rclone_files "${RCLONE_NAME}testsubdir" "$RCLONE_CONF" 0
@@ -643,6 +665,7 @@ function test_file2rclone {
 			--dstsecret /backup/file2rclone.conf \
 			$secretparm \
 			"$@" \
+			--exclude '/UnusedVault/**' \
 			)" &&
 		test_expect_rclone_files "$RCLONE_NAME" "$RCLONE_CONF" 0
 
