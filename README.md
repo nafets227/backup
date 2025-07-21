@@ -246,7 +246,7 @@ area of secrets:
 
 - GH_SECRETS_ADMIN_TOKEN hold the value of the token named
   `dependabot_ghaction_nafet227backup`. See
-  [here](https://github.com/settings/personal-access-tokens/2796058)
+  [Token on GitHub](https://github.com/settings/personal-access-tokens/2796058)
   This is needed to let the action update RCLONE config after re-authentication.
 - MAIL_PW holds the mail password of the dummy accounts
   `nafets227.backup.test@nafets.de`. This account has limited send-rate to
