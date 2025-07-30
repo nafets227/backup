@@ -40,7 +40,7 @@ user "backupuser" with UID 41598.
 ## 0.7.1 (2022-12-14)
 
 - improve CI by using GitHub Actions also for testing
-- BREAKING CHANGE: focus on ghcr.io registry, stop updating docker hub
+- BREAKING CHANGE: focus on ghcr.io registry, stop updating Docker hub
   (docker.io/nafets227/backup)
 
 ## 0.7. (2022-11-26)

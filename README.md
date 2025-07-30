@@ -203,10 +203,10 @@ Features planned in the future
 
 If you want to develop and test on macOS, you need:
 
-- brew install offlineimap jq bash rsync rclone
+- `brew install offlineimap jq bash rsync rclone`
 - activated local SSH server
 - trust your own SSH key (e.g. ~/.ssh/id_rsa.pub must be in authorized_keys)
-- tested with docker desktop for Mac
+- tested with Docker Desktop for Mac
 
 To run tests in test subdirectory you need to have some test data available.
 ATTENTION: Test data will be DELETED on every run, so make sure you don´t have
@@ -246,7 +246,7 @@ area of secrets:
 
 - GH_SECRETS_ADMIN_TOKEN hold the value of the token named
   `dependabot_ghaction_nafet227backup`. See
-  [here](https://github.com/settings/personal-access-tokens/2796058)
+  [Token on GitHub](https://github.com/settings/personal-access-tokens/2796058)
   This is needed to let the action update RCLONE config after re-authentication.
 - MAIL_PW holds the mail password of the dummy accounts
   `nafets227.backup.test@nafets.de`. This account has limited send-rate to
