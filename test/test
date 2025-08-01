@@ -139,28 +139,31 @@ function test_runempty {
 ##### Test: Email alerting ###################################################
 function test_email {
 	if \
-		! test_assert_vars "MAIL_ADR" "MAIL_PW" "MAIL_SRV" "MAIL_URL" ||
 		! test_assert_tools "curl" "$TEST_SNAIL"
 	then
 		printf "\tSkipping IMAP Tests.\n"
 		return 0
 	fi
 
-	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$MAIL_SRV"
+	local imappw imapurl
+	imappw="$(cat "$TESTALERTMAIL_IMAP_SECRET")"
+	imapurl="imap://${TESTALERTMAIL_ADR//@/%40}"
+	imapurl+=":$($TEST_SNAIL -# <<<"urlcodec encode $imappw")"
+	imapurl+="@$TESTALERTMAIL_IMAP_URL/INBOX"
+
+	test_cleanImap "$TESTALERTMAIL_ADR" "$imappw" "$TESTALERTMAIL_IMAP_URL"
 	test_assert "$?" "clean IMAP" || return 1
 
 	# Trigger Error Email with empty command
-	export MAIL_TO=$MAIL_ADR
-	export MAIL_URL="smtp://$MAIL_URL"
-	export MAIL_FROM
+	export MAIL_TO=$TESTALERTMAIL_ADR
+	export MAIL_URL="$TESTALERTMAIL_URL"
+	export MAIL_FROM="$TESTALERTMAIL_FROM"
 	eval "$(test_exec_backupdocker 0 "")"
 
 	sleep 10 # let mail be processed
 
-	mail_pwd="$($TEST_SNAIL -# <<<"urlcodec encode $(cat "$MAIL_PW")")"
-	mailimapurl="imap://${MAIL_TO//@/%40}:$mail_pwd@$MAIL_SRV/INBOX"
-	test_exec_recvmail "$mailimapurl" 0 "-S 'imap-use-starttls'"
-	test_cleanImap "$MAIL_ADR" "$(cat "$MAIL_PW")" "$MAIL_SRV"
+	test_exec_recvmail "$imapurl" 0 "-S 'imap-use-starttls'"
+	test_cleanImap "$TESTALERTMAIL_ADR" "$imappw" "$TESTALERTMAIL_IMAP_URL"
 
 	# @TODO execute test succeeding and verify EMail sent
 	#eval $(test_exec_backupdocker 0 \
@@ -174,11 +177,11 @@ function test_email {
 	#sleep 10 &&
 	#
 	#test_exec_recvmail "$mailimapurl" 0 "-S 'imap-use-starttls'"
-	#test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV"
+	#test_cleanImap "$TESTALERTMAIL_ADR" "$imappw" "$TESTALERTMAIL_IMAP_URL"
 
 	# @ TODO test MAIL_HOSTNAME
 
-	unset MAIL_TO MAIL_URL
+	unset MAIL_TO MAIL_URL MAIL_FROM # works even for exported vars
 
 	return 0
 }
@@ -186,11 +189,9 @@ function test_email {
 ##### Main ###################################################################
 BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 
-MAIL_FROM="${MAIL_FROM:-"nafets227/backup CI <no-reply@nafets.de>"}"
 MAIL_ADR="${MAIL_ADR:-"nafets227.backup.test@nafets.de"}"
 MAIL_PW="${MAIL_PW:-"$BASEDIR/mail.password"}"
 MAIL_SRV="${MAIL_SRV:-nafets.de:143}"
-MAIL_URL="${MAIL_URL:-nafets.de}"
 RCLONE_CONF="${RCLONE_CONF:-"$BASEDIR/rclone.conf"}"
 RCLONE_NAME="${RCLONE_NAME:-"nafets227_nafets_de:/"}"
 
@@ -200,14 +201,27 @@ for f in "$BASEDIR"/*.sh ; do
 done
 
 testset_init || exit 1
-if [ ! -d "$TESTSET_DIR/backup" ] ; then
-	mkdir "$TESTSET_DIR/backup" || return 1
-fi
-test_chown "$TESTSET_DIR/backup" || return 1
-test_chown "$RCLONE_CONF" || return 1
 
-: "$my_fileopt" # make shellcheck happy, its used in test-file*.sh
-if test_build "$1" && test_init ; then
+test_assert_vars \
+	TESTALERTMAIL_ADR \
+	TESTALERTMAIL_FROM \
+	TESTALERTMAIL_URL \
+	TESTALERTMAIL_IMAP_URL \
+	TESTALERTMAIL_IMAP_SECRET \
+	&&
+# TESTALERTMAIL_HOSTNAME can be intendedly empty so dont check it
+
+if [ ! -d "$TESTSET_DIR/backup" ] ; then
+	mkdir "$TESTSET_DIR/backup" || exit 1
+fi
+test_chown "$TESTSET_DIR/backup" &&
+test_chown "$RCLONE_CONF" &&
+test_build "$1" &&
+test_init &&
+true
+
+#shellcheck disable=SC2181 # using $? here helps to keep the structure
+if [ "$?" == "0" ] ; then
 	test_runempty
 	test_email
 	test_rclone2file
@@ -217,6 +231,7 @@ if test_build "$1" && test_init ; then
 	test_file_hist
 	test_imap
 	test_imap_hist
+	: "$my_fileopt" # make shellcheck happy, its used in test-file*.sh
 fi
 
 testset_summary

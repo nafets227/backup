@@ -227,10 +227,14 @@ any data on it!
 
 - alert test settings
 
-  Set variables MAIL_ADR MAIL_PW MAIL_SRV MAIL_URL, see test/test for details.
-  Tests will use this vars to write alert logs to and check if they are there.
-  IMAP Test Account can be reused. be aware that ALL Emails in this account will
-  be deleted on every test run.
+  Tests will use specified mailbox to write alert logs to and check if they
+  are there. IMAP Test Account can be reused. Be aware that ALL Emails in this
+  account will be deleted on every test run. See test/test for details.
+  - TESTALERTMAIL_TO
+  - TESTALERTMAIL_FROM
+  - TESTALERTMAIL_URL
+  - TESTALERTMAIL_HOSTNAME
+  - TESTALERTMAIL_IMAPxxx
 
 start with running test/test to verify your environment
 

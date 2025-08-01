@@ -110,11 +110,25 @@ jobs:
           cat >test/mail.password <<<"$MAIL_PW"
           unset RCLONE_CONF MAIL_PW
 
+          export TESTALERTMAIL_FROM="nafets227/backup CI <no-reply@nafets.de>"
+          export TESTALERTMAIL_ADR="nafets227.backup.test@nafets.de"
+          export TESTALERTMAIL_URL=nafets.de
+          export TESTALERTMAIL_IMAP_URL="nafets.de:143"
+          export TESTALERTMAIL_IMAP_SECRET=test/mail.password
+
           sudo bash -c 'ssh-keygen -N "" -f ~/.ssh/id_rsa'
           sudo bash -c 'cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys'
           sudo bash -c 'touch ~/.hushlogin'
 
-          sudo bash -c "$DEBUGSH . test/test $IMG_URL"
+          sudo \
+            --preserve-env=TESTALERTMAIL_FROM \
+            --preserve-env=TESTALERTMAIL_ADR \
+            --preserve-env=TESTALERTMAIL_URL \
+            --preserve-env=TESTALERTMAIL_IMAP_URL \
+            --preserve-env=TESTALERTMAIL_IMAP_SECRET \
+            bash -c "$DEBUGSH . test/test $IMG_URL"
+          : "$TESTALERTMAIL_FROM $TESTALERTMAIL_ADR $TESTALERTMAIL_URL"
+          : "$TESTALERTMAIL_IMAP_URL $TESTALERTMAIL_IMAP_SECRET"
 
           gh secret set RCLONE_CONF < test/rclone.conf
           rm test/rclone.conf test/mail.password

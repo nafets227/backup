@@ -28,10 +28,6 @@ function test_rclone_execraw {
 			-v "$TESTSET_DIR/backup:/backup" \
 			-v "$TESTSET_DIR/id_rsa:/secrets/id_rsa:ro" \
 			-e DEBUG=1 \
-			-e MAIL_TO \
-			-e MAIL_FROM \
-			-e MAIL_URL \
-			-e MAIL_HOSTNAME \
 			--entrypoint /usr/lib/nafets227.backup/rclone \
 			"$TESTIMG" \
 			--config /backup/rcloneraw.conf \
