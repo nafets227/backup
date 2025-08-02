@@ -192,8 +192,6 @@ BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 MAIL_ADR="${MAIL_ADR:-"nafets227.backup.test@nafets.de"}"
 MAIL_PW="${MAIL_PW:-"$BASEDIR/mail.password"}"
 MAIL_SRV="${MAIL_SRV:-nafets.de:143}"
-RCLONE_CONF="${RCLONE_CONF:-"$BASEDIR/rclone.conf"}"
-RCLONE_NAME="${RCLONE_NAME:-"nafets227_nafets_de:/"}"
 
 for f in "$BASEDIR"/*.sh ; do
 	#shellcheck disable=SC1090 # shellcheck cant follow dynamic includes
@@ -202,6 +200,10 @@ done
 
 testset_init || exit 1
 
+test_assert_vars \
+	TESTRCLONE_CONF \
+	TESTRCLONE_NAME \
+	&&
 test_assert_vars \
 	TESTALERTMAIL_ADR \
 	TESTALERTMAIL_FROM \
@@ -215,7 +217,7 @@ if [ ! -d "$TESTSET_DIR/backup" ] ; then
 	mkdir "$TESTSET_DIR/backup" || exit 1
 fi
 test_chown "$TESTSET_DIR/backup" &&
-test_chown "$RCLONE_CONF" &&
+test_chown "$TESTRCLONE_CONF" &&
 test_build "$1" &&
 test_init &&
 true

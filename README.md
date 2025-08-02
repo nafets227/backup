@@ -220,8 +220,8 @@ any data on it!
 - rclone Test Cloud
 
   Setup a Test-Cloud (I use Microsoft OneDrive that is for free).
-  Create an rclone.cfg and pass its filename in $RCLONE_CONF and the Cloud
-  config to be used in $RCLONE_NAME.
+  Create an rclone.cfg and pass its filename in $TESTRCLONE_CONF and the Cloud
+  config to be used in $TESTRCLONE_NAME.
   You may wan to use something like
   `rclone --config ./rclonf.conf config` to create the file.
 
