@@ -875,7 +875,7 @@ function test_assert_vars {
 	printf "Executing Assert %s (Vars %s) ... " "$TESTSET_LAST_CHECK_NR" "$*"
 
 	for f in "$@" ; do
-		if eval "[ -z \$$f ]" ; then
+		if eval "[ -z \"\$$f\" ]" ; then
 			printf "FAILED: Missing %s\n" "$f"
 			testrc=1
 			TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
