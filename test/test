@@ -176,6 +176,8 @@ function test_email {
 	#test_exec_recvmail "$mailimapurl" 0 "-S 'imap-use-starttls'"
 	#test_cleanImap "$MAIL_ADR" "$(cat $MAIL_PW)" "$MAIL_SRV"
 
+	# @ TODO test MAIL_HOSTNAME
+
 	unset MAIL_TO MAIL_URL
 
 	return 0
