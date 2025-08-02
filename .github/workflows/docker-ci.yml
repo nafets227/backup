@@ -110,6 +110,10 @@ jobs:
           cat >test/mail.password <<<"$MAIL_PW"
           unset RCLONE_CONF MAIL_PW
 
+          export TESTIMAP_SRC="nafets227.backup.test@nafets.de"
+          export TESTIMAP_SECRET=test/mail.password
+          export TESTIMAP_URL=nafets.de:143
+
           export TESTRCLONE_CONF="test/rclone.conf"
           export TESTRCLONE_NAME="nafets227_nafets_de:/"
 
@@ -124,6 +128,9 @@ jobs:
           sudo bash -c 'touch ~/.hushlogin'
 
           sudo \
+            --preserve-env=TESTIMAP_SRC \
+            --preserve-env=TESTIMAP_SECRET \
+            --preserve-env=TESTIMAP_URL \
             --preserve-env=TESTRCLONE_CONF \
             --preserve-env=TESTRCLONE_NAME \
             --preserve-env=TESTALERTMAIL_FROM \
@@ -132,6 +139,7 @@ jobs:
             --preserve-env=TESTALERTMAIL_IMAP_URL \
             --preserve-env=TESTALERTMAIL_IMAP_SECRET \
             bash -c "$DEBUGSH . test/test $IMG_URL"
+          : "$TESTIMAP_SRC $TESTIMAP_SECRET $TESTIMAP_URL"
           : "$TESTRCLONE_CONF $TESTRCLONE_NAME"
           : "$TESTALERTMAIL_FROM $TESTALERTMAIL_ADR $TESTALERTMAIL_URL"
           : "$TESTALERTMAIL_IMAP_URL $TESTALERTMAIL_IMAP_SECRET"

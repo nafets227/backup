@@ -189,10 +189,6 @@ function test_email {
 ##### Main ###################################################################
 BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 
-MAIL_ADR="${MAIL_ADR:-"nafets227.backup.test@nafets.de"}"
-MAIL_PW="${MAIL_PW:-"$BASEDIR/mail.password"}"
-MAIL_SRV="${MAIL_SRV:-nafets.de:143}"
-
 for f in "$BASEDIR"/*.sh ; do
 	#shellcheck disable=SC1090 # shellcheck cant follow dynamic includes
 	. "$f" || exit 1
@@ -200,6 +196,11 @@ done
 
 testset_init || exit 1
 
+test_assert_vars \
+	TESTIMAP_SRC \
+	TESTIMAP_SECRET \
+	TESTIMAP_URL \
+	&&
 test_assert_vars \
 	TESTRCLONE_CONF \
 	TESTRCLONE_NAME \

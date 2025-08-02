@@ -214,8 +214,10 @@ any data on it!
 
 - IMAP Test Account
 
-  Setup an IMAP Test Account and set Environment variables
-  $MAIL_ADR, $MAIL_SRV and $MAIL_PW accordingly
+  Setup an IMAP Test Account and set Environment variables accordingly:
+  - TESTIMAP_SRC
+  - TESTIMAP_SECRET
+  - TESTIMAP_URL
 
 - rclone Test Cloud
 
