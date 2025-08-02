@@ -1,5 +1,9 @@
 # nafets227/backup CHANGELOG
 
+## 0.9.2 (2025-08-02)
+
+- Support STARTTLS for Alert Emails (see README.md for details)
+
 ## 0.9.1 (2025-07-21)
 
 - copy our version of rclone to foreign machines.
