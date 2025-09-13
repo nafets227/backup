@@ -598,8 +598,7 @@ fi
 #Source all modules in install.d
 for f in "$(dirname "$0")"/*.sh ; do
 	#shellcheck disable=SC1090 # shellcheck cannot follow dynamic sources
-	. "$f"
-	if [ x$? != x0 ] ; then
+	if ! . "$f" ; then
 		printf "Error loading module %s\n" "$f"
 		exit 1
 	fi
