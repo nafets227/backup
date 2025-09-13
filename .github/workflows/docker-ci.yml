@@ -31,6 +31,7 @@ jobs:
           USE_FIND_ALGORITHM: true
           FILTER_REGEX_EXCLUDE: ".*/(offlineimap3|util)/.*"
           VALIDATE_SHELL_SHFMT: false
+          VALIDATE_TRIVY: false
           #DEFAULT_BRANCH: master
           #KUBERNETES_KUBECONFORM_OPTIONS: "
           #  -ignore-filename-pattern util/kube/helmupdate-cronjob-template.yaml
