@@ -1,0 +1,5 @@
+# Config for zizmor Linter inside SuperLinter
+rules:
+  unpinned-uses:
+    ignore:
+      - docker-ci.yml
