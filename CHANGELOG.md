@@ -1,5 +1,12 @@
 # nafets227/backup CHANGELOG
 
+## 0.9.3 (2025-11-08)
+
+- rclone 1.71.2
+- alpine 3.22.2
+- offlineimap bcf2238 (there is no version number in offlineimap)
+- Code & CI enhancements
+
 ## 0.9.2 (2025-08-02)
 
 - Support STARTTLS for Alert Emails (see README.md for details)
