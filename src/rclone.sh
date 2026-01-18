@@ -68,24 +68,24 @@ function backup2_rclone2file {
 		"$bckrclone_src" \
 		"$bckrclone_dst" \
 		$bckrclone_opts \
-		--backup-dir="$bckrclone_dst.del" &&
-	$RCLONE_BIN \
-		--config "$bckrclone_src_secret" \
-		--stats-log-level NOTICE \
-		--stats-one-line \
-		rmdirs --leave-root \
-		"$bckrclone_dst" \
-		$bckrclone_opts \
-		--backup-dir="$bckrclone_dst.del" &&
-	$RCLONE_BIN \
-		--config "$bckrclone_src_secret" \
-		--stats-log-level NOTICE \
-		--stats-one-line \
-		sync --create-empty-src-dirs \
-		"$bckrclone_src" \
-		"$bckrclone_dst" \
-		$bckrclone_opts \
 		--backup-dir="$bckrclone_dst.del"
+	# $RCLONE_BIN \
+	# 	--config "$bckrclone_src_secret" \
+	# 	--stats-log-level NOTICE \
+	# 	--stats-one-line \
+	# 	rmdirs --leave-root \
+	# 	"$bckrclone_dst" \
+	# 	$bckrclone_opts \
+	# 	--backup-dir="$bckrclone_dst.del" &&
+	# $RCLONE_BIN \
+	# 	--config "$bckrclone_src_secret" \
+	# 	--stats-log-level NOTICE \
+	# 	--stats-one-line \
+	# 	sync --create-empty-src-dirs \
+	# 	"$bckrclone_src" \
+	# 	"$bckrclone_dst" \
+	# 	$bckrclone_opts \
+	# 	--backup-dir="$bckrclone_dst.del"
 
 	rc=$?
 	if [ "$rc" -ne 0 ] ; then
@@ -167,22 +167,22 @@ function backup2_file2rclone {
 		sync \
 		"$bckrclone_src" \
 		"$bckrclone_dst" \
-		$bckrclone_opts &&
-	$RCLONE_BIN \
-		--config "$bckrclone_dst_secret" \
-		--stats-log-level NOTICE \
-		--stats-one-line \
-		rmdirs --leave-root \
-		"$bckrclone_dst" \
-		$bckrclone_opts &&
-	$RCLONE_BIN \
-		--config "$bckrclone_dst_secret" \
-		--stats-log-level NOTICE \
-		--stats-one-line \
-		sync --create-empty-src-dirs \
-		"$bckrclone_src" \
-		"$bckrclone_dst" \
 		$bckrclone_opts
+	# $RCLONE_BIN \
+	# 	--config "$bckrclone_dst_secret" \
+	# 	--stats-log-level NOTICE \
+	# 	--stats-one-line \
+	# 	rmdirs --leave-root \
+	# 	"$bckrclone_dst" \
+	# 	$bckrclone_opts &&
+	# $RCLONE_BIN \
+	# 	--config "$bckrclone_dst_secret" \
+	# 	--stats-log-level NOTICE \
+	# 	--stats-one-line \
+	# 	sync --create-empty-src-dirs \
+	# 	"$bckrclone_src" \
+	# 	"$bckrclone_dst" \
+	# 	$bckrclone_opts
 
 	rc=$?
 	if [ "$rc" -ne 0 ] ; then
