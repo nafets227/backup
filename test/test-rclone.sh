@@ -85,9 +85,6 @@ function test_putRclone () {
 }
 
 function test_expect_rclone_files {
-	testnr=$(( ${testnr-0} + 1))
-	# not increasing testexecnr
-
 	local rclone_namepath="$1"
 	local rclone_conf="$2"
 	local testexpected="$3"
@@ -105,19 +102,10 @@ function test_expect_rclone_files {
 	rc=$?
 
 	if [ "$rc" != 0 ] ; then
-		printf "\tCHECK %s FAILED. Cannot get files in '%s'\n" \
-			"$testnr" "$rclone_namepath"
-		testsetfailed="$testsetfailed $testnr"
+		test_assert 1 "Cannot get files in '$rclone_namepath'"
 		return 1
-	elif [ "$testresult" != "$testexpected" ] ; then
-		# nr of files differ from expected
-		printf "\tCHECK %s FAILED. nr of files in '%s' is %s (exp=%s)\n" \
-			"$testnr" "$rclone_namepath" "$testresult" "$testexpected"
-		testsetfailed="$testsetfailed $testnr"
-		return 0
 	else
-		printf "\tCHECK %s OK.\n" "$testnr"
-		testsetok=$(( ${testsetok-0} + 1))
+		test_expect_value "$testresult" "$testexpected"
 		return 0
 	fi
 
