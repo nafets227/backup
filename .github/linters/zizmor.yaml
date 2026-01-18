@@ -3,3 +3,6 @@ rules:
   unpinned-uses:
     ignore:
       - docker-ci.yml
+  dependabot-cooldown:
+    ignore:
+      - dependabot.yaml
