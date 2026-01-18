@@ -1,9 +1,9 @@
 # nafets227/backup CHANGELOG
 
-## 0.9.3 (2025-11-08)
+## 0.9.3 (2026-01-18)
 
-- rclone 1.71.2
-- alpine 3.22.2
+- rclone 1.72.0
+- alpine 3.23.2
 - offlineimap bcf2238 (there is no version number in offlineimap)
 - Code & CI enhancements
 
