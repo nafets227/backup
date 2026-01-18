@@ -88,7 +88,7 @@ function backup2_rclone2file {
 		--backup-dir="$bckrclone_dst.del"
 
 	rc=$?
-	if [ $rc -ne 0 ] ; then
+	if [ "$rc" -ne 0 ] ; then
 		printf "##### Error connecting to rclone %s. Config:\n" "$bckrclone_src"
 		cat "$bckrclone_src_secret"
 		printf "##### Enf od Config for rclone %s\n" "$bckrclone_src"
@@ -96,7 +96,7 @@ function backup2_rclone2file {
 	fi
 
 	rm -rf "$bckrclone_dst.del"
-	if [ $rc -ne 0 ] ; then
+	if [ "$rc" -ne 0 ] ; then
 		printf "Error removing del-dir %s.\n" "$bckrclone_dst.del"
 		return 1
 	fi
@@ -185,7 +185,7 @@ function backup2_file2rclone {
 		$bckrclone_opts
 
 	rc=$?
-	if [ $rc -ne 0 ] ; then
+	if [ "$rc" -ne 0 ] ; then
 		printf "##### Error connecting to rclone %s. Config:\n" "$bckrclone_dst"
 		cat "$bckrclone_dst_secret"
 		printf "##### Enf od Config for rclone %s\n" "$bckrclone_dst"
