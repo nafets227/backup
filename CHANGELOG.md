@@ -1,5 +1,14 @@
 # nafets227/backup CHANGELOG
 
+## 0.9.4 (2026-02-01)
+
+- rclone 1.73.0
+- alpine 3.23.3
+- remove old MySQL backup.
+  MySQL backup is beyond the scope of this program/repository. If needed,
+  create a dump outside this program/repository and backup the dump.
+  Maybe we revisit this decision at a later point in time.
+
 ## 0.9.3 (2026-01-18)
 
 - rclone 1.72.0
