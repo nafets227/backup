@@ -93,18 +93,18 @@ see also [Example][1].
   sender of the Alerting emails
 - MAIL_URL: Email Server
   where to deliver the Alerting emails like
-  'smtp[s]://user:password@some.host:port'
+  `smtp[s]://user:password@some.host:port`
 - MAIL_SSL: Use SSL to deliver mail
   if set to 1 Emails will be delivered to the mail server using STARTTLS
 - MAIL_HOSTNAME: hostname reported in SMTP HELO
   optionally give the hostname that we report to SMTP server in
-  HELO command. Usefule if the SMTP server requires a FQDN. Defaults to
+  HELO command. Useful if the SMTP server requires a FQDN. Defaults to
   hostname.
 
 ## UserID´s in this Non-root image
 
 This image is using non-root user "backupuser" with UID 41598.
-Using a diffferent non-root user is not supported (email wont work), so
+Using a different non-root user is not supported (email will not work), so
 if you need to specify the user for the container runtime
 (e.g. in Kubernetes "runAsUser") you MUST use 41598.
 
@@ -136,9 +136,9 @@ Backups data from any server reachable via rsync and/or SSH. It is based on
 rsync, so only modified files are copied (delta-approach). No more existing
 files are deleted in the target.
 
-### File Global paramaters
+### File Global parameters
 
-- Source - Directoy of Files to be backed up. Optionally prefixed by Server
+- Source - Directory of Files to be backed up. Optionally prefixed by Server
   name followed by a colon
 - Destination - Directory where to store the downloaded EMails. Optionally
   prefixed by Server name followed by a colon.
@@ -153,7 +153,7 @@ files are deleted in the target.
 
 Backups data from various Clouds, leveraging [rclone](https://rclone.org/).
 
-### rclone2file Global paramaters
+### rclone2file Global parameters
 
 - Source - Name of the cloud in rclone config
 - Destination - Directory where to store the download.
@@ -165,7 +165,7 @@ Backups data from various Clouds, leveraging [rclone](https://rclone.org/).
 Backups data from local to various Clouds, leveraging
 [rclone](https://rclone.org/).
 
-### file2rclone Global paramaters
+### file2rclone Global parameters
 
 - Source - Name of the cloud in rclone config
 - Destination - Directory where to store the download.

@@ -1,7 +1,7 @@
 #!/bin/bash
 # (C) 2020 Stefan Schallenberg
 #
-# Example Backup Configuration Sciprt
+# Example Backup Configuration Script
 
 # NB This script is source in bash scripts, so bash syntax applies
 

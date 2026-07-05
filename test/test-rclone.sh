@@ -42,7 +42,7 @@ function test_rclone_execraw {
 
 function test_cleanRclone () {
 	if [ "$#" -ne 2 ] ; then
-		printf "%s: Internal Error. Got %s parms (exp=3)\n" \
+		printf "%s: Internal Error. Got %s params (exp=3)\n" \
 			"${FUNCNAME[0]}" "$#"
 		return 1
 	fi
@@ -62,7 +62,7 @@ function test_cleanRclone () {
 
 function test_putRclone () {
 	if [ "$#" -lt 2 ] ; then
-		printf "%s: Internal Error. Got %s parms (exp=2+)\n" \
+		printf "%s: Internal Error. Got %s params (exp=2+)\n" \
 			"${FUNCNAME[0]}" "$#"
 		return 1
 	fi
@@ -536,45 +536,45 @@ function test_file2rclone {
 
 	for source in "/backup/file2rclone" "$my_ip:$TESTSET_DIR/backup/file2rclone"
 	do
-		secretparm=""
+		secretparam=""
 		if [[ "$source" == *":"* ]] ; then
-			secretparm+="--srcsecret /secrets/id_rsa "
+			secretparam+="--srcsecret /secrets/id_rsa "
 		fi
 
 		test_cleanRclone "$TESTRCLONE_NAME" "$TESTRCLONE_CONF"
 		test_assert "$?" "clean rclone" || return 1
 
 		# backup from non-existing source should fail
-		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 		eval "$(test_exec_backupdocker 1 \
 			"backup file2rclone" \
 			"$source/thisdirdoesnotexist" \
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
-			$secretparm \
+			$secretparam \
 			--exclude '/UnusedVault/**' \
 			)"
 
 		# history backup should fail
-		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 		eval "$(test_exec_backupdocker 1 \
 			"backup file2rclone" \
 			"$source" \
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
-			$secretparm \
+			$secretparam \
 			--hist \
 			--exclude '/UnusedVault/**' \
 			)"
 
 		# rclone OK with Empty Dir
-		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
-			$secretparm \
+			$secretparam \
 			--exclude '/UnusedVault/**' \
 			)" &&
 		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 0
@@ -582,13 +582,13 @@ function test_file2rclone {
 		# backup one file
 		cat >"$TESTSET_DIR/backup/file2rclone/dummyfile" <<<"Dummyfile"
 		test_assert "$?" "Creating dummyfile" || return 1
-		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
-			$secretparm \
+			$secretparam \
 			"$@" \
 			--exclude '/UnusedVault/**' \
 			)" &&
@@ -599,13 +599,13 @@ function test_file2rclone {
 		test_assert "$?" "Creating testsubdir" || return 1
 		cat >"$TESTSET_DIR/backup/file2rclone/testsubdir/dummyfile2" <<<"Dummyfile2"
 		test_assert "$?" "Creating dummyfile2" || return 1
-		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
-			$secretparm \
+			$secretparam \
 			"$@" \
 			--exclude '/UnusedVault/**' \
 			)" &&
@@ -617,13 +617,13 @@ function test_file2rclone {
 		# delete no longer existing file
 		rm "$TESTSET_DIR/backup/file2rclone/dummyfile"
 		test_assert "$?" "remove Dummyfile" || return 1
-		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
-			$secretparm \
+			$secretparam \
 			"$@" \
 			--exclude '/UnusedVault/**' \
 			)" &&
@@ -635,13 +635,13 @@ function test_file2rclone {
 		# delete no longer existing file in subdir
 		rm "$TESTSET_DIR/backup/file2rclone/testsubdir/dummyfile2"
 		test_assert "$?" "remove Dummyfile2" || return 1
-		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
-			$secretparm \
+			$secretparam \
 			"$@" \
 			--exclude '/UnusedVault/**' \
 			)" &&
@@ -653,13 +653,13 @@ function test_file2rclone {
 		# delete no longer existing subdir
 		rmdir "$TESTSET_DIR/backup/file2rclone/testsubdir"
 		test_assert "$?" "remove testsubdir" || return 1
-		#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+		#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 		eval "$(test_exec_backupdocker 0 \
 			"backup file2rclone" \
 			"$source" \
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
-			$secretparm \
+			$secretparam \
 			"$@" \
 			--exclude '/UnusedVault/**' \
 			)" &&

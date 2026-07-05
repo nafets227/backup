@@ -246,16 +246,16 @@ function test_file_hist {
 	#shellcheck disable=SC2043
 	for dest in "/backup" ; do
 		for source in "/backup" "$my_ip:$TESTSET_DIR/backup" ; do
-			secretparm=""
+			secretparam=""
 			[[ "$source" == *":"* ]] &&
-				secretparm+="--srcsecret /secrets/id_rsa "
+				secretparam+="--srcsecret /secrets/id_rsa "
 
-			#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+			#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 			test_file_hist_srcdest \
 				"$source" \
 				"$dest" \
 				"$my_fileopt $TEST_RSYNCOPT" \
-				$secretparm \
+				$secretparam \
 			|| return 1
 		done
 	done
@@ -278,32 +278,32 @@ function test_file_hist {
 		done
 		for source in  "$my_ip:$TESTSET_DIR/backup" ; do
 			if [[ $source == *":"* ]] ; then
-				secretparm="--srcsecret /secrets/id_rsa "
-				secretparm+="--dstsecret /secrets/id_rsa "
+				secretparam="--srcsecret /secrets/id_rsa "
+				secretparam+="--dstsecret /secrets/id_rsa "
 			fi
 
 			# Backup to remote in history mod should fail if running on src
 			# BUT since our src and dst are equal, we cannot test this situation
 
 			# Backup to remote in history mod should work if running on dst
-			#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+			#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 			test_file_hist_srcdest \
 				"$source" \
 				"$dest" \
 				"$my_fileopt $TEST_RSYNCOPT" \
 				--runondst \
-				$secretparm \
+				$secretparam \
 			|| return 1
 		done
 	done
 
 	# Test --histkeep only with local/local
-	#shellcheck disable=SC2086 # secretparm intentionally may conatain >1 word
+	#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 	test_file_hist_srcdest \
 		"/backup" \
 		"/backup" \
 		"$TEST_RSYNCOPT" \
-		$secretparm \
+		$secretparam \
 		--histkeep \
 	|| return 1
 

@@ -53,11 +53,11 @@ function backup2_imap_mkconfig {
 #	bck_dst		Destination URL
 #	bck_src_secret	Source Secret Filename
 #	bck_dst_secret	Destination Secret Filename
-#	[ ...]		type specific futher options
+#	[ ...]		type specific further options
 function backup2_imap {
 	if [ "$#" -ne 5 ] ; then
 		printf "Error in custom config script. "
-		printf "Calling backup imap with parms:\n\t%s\n" "$*"
+		printf "Calling backup imap with params:\n\t%s\n" "$*"
 		return 1
 	elif [ "$DEBUG" == 1 ] ; then
 		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"

@@ -28,7 +28,7 @@ function test_init {
 		|| return 1
 	else
 		my_ip=""
-		test_assert "1" "Could not get IP (not on MacO and command ip missing)"
+		test_assert "1" "Could not get IP (not on MacOS and command ip missing)"
 		return 1
 	fi
 
@@ -65,7 +65,7 @@ function test_chown {
 #     2 - expected RC [default: 0]
 function test_exec_backupdocker {
 	if [ "$#" -lt 1 ] ; then
-		test_assert "1" "got %s parms (exp 1+)" >&2 || return 1
+		test_assert "1" "got %s params (exp 1+)" >&2 || return 1
 	fi
 	rc_exp="$1"
 	shift
@@ -170,7 +170,7 @@ function test_email {
 	test_exec_recvmail "$imapurl" 0 "-S 'imap-use-starttls'"
 	test_cleanImap "$TESTALERTMAIL_ADR" "$imappw" "$TESTALERTMAIL_IMAP_URL"
 
-	# @TODO Trigger Error Email eith MAIL_SSL=0
+	# @TODO Trigger Error Email with MAIL_SSL=0
 
 	# Trigger Error Email with empty command and send with STARTTLS
 	export MAIL_TO=$TESTALERTMAIL_ADR
@@ -209,7 +209,7 @@ function test_email {
 BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 
 for f in "$BASEDIR"/*.sh ; do
-	#shellcheck disable=SC1090 # shellcheck cant follow dynamic includes
+	#shellcheck disable=SC1090 # shellcheck cannot follow dynamic includes
 	. "$f" || exit 1
 done
 

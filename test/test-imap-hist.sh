@@ -23,7 +23,7 @@ function test_imap_hist {
 		exec_remote=false
 	fi
 
-	printf "Testing IMAP History using Mail Adress \"%s\"\n" "$TESTIMAP_SRC"
+	printf "Testing IMAP History using Mail Address \"%s\"\n" "$TESTIMAP_SRC"
 
 	local mail_smtpsrv=${TESTIMAP_URL%%:*}
 	cp "$TESTIMAP_SECRET" \

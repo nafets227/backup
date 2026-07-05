@@ -6,7 +6,7 @@
 
 function test_cleanImap {
 	if [ "$#" -ne 3 ] ; then
-		printf "%s: Internal Error. Got %s parms (exp=3)\n" \
+		printf "%s: Internal Error. Got %s params (exp=3)\n" \
 			"${FUNCNAME[0]}" "$#"
 		return 1
 	fi
@@ -57,7 +57,7 @@ function test_cleanImap {
 
 function test_putImap {
 	if [ "$#" -ne 3 ] ; then
-		printf "%s: Internal Error. Got %s parms (exp=3)\n" \
+		printf "%s: Internal Error. Got %s params (exp=3)\n" \
 			"${FUNCNAME[0]}" "$#"
 		return 1
 	fi
@@ -122,7 +122,7 @@ function test_lastoutput_contains {
 	local altsearch="$4"
 
 	local grep_cnt
-	#shellcheck disable=SC2086 # grepopts contains multiple parms
+	#shellcheck disable=SC2086 # grepopts contains multiple params
 	grep_cnt=$(
 		grep -c $grepopts "$search" \
 		<"$TESTSET_DIR/$TESTSET_LAST_TEST_NR$extension"
@@ -481,7 +481,7 @@ function test_internal_exec_kube {
 			>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
 	fi
 
-	#shellcheck disable=SC2086 # cmd and kubecmd contains more than one parm
+	#shellcheck disable=SC2086 # cmd and kubecmd contains more than one param
 	TEST_INTERNAL_EXEC_KUBE_OUTPUT=$(set +x ; eval $cmd $kubecmd 2>&1)
 	rc=$?
 	if [ -z "$kubenolog" ] || [ "$rc" != 0 ] ; then
@@ -603,7 +603,7 @@ function test_exec_kubecron {
 		cmd+=" delete job/$cronjobname-test"
 		printf "#----- Delete Job\n#----- Command: %s\n" "$cmd" \
 			>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
-		#shellcheck disable=SC2086 # cmd contains multiple parms
+		#shellcheck disable=SC2086 # cmd contains multiple params
 		# ignore if deleting job fails.
 		eval $cmd >>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" 2>&1 || true
 
@@ -637,7 +637,7 @@ function test_exec_kubenode {
 	shift 3
 
 	if [ "$prm_count" -lt 3 ] ; then
-		printf "%s: Internal Error, less than 3 parms\n" "${FUNCNAME[0]}"
+		printf "%s: Internal Error, less than 3 params\n" "${FUNCNAME[0]}"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 		return 1
 	elif [ -z "$nodename" ] ; then
@@ -754,7 +754,7 @@ function test_exec_recvmail {
 	readonly MAIL_STD_OPT
 	local MAIL_OPT="-S 'inbox=$url'"
 
-	#shellcheck disable=SC2086 # vars contain multiple parms
+	#shellcheck disable=SC2086 # vars contain multiple params
 	LC_ALL=C MAILRC=/dev/null \
 		eval $TEST_SNAIL $MAIL_STD_OPT $MAIL_OPT "$*" \
 		>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.mailout" \
@@ -793,7 +793,7 @@ function test_exec_sendmail {
 	MAIL_OPT="$MAIL_OPT -s 'Subject TestMail $TESTSET_LAST_CHECK_NR'"
 	MAIL_OPT="$MAIL_OPT -r '$from'"
 
-	#shellcheck disable=SC2086 # vars contain multiple parms
+	#shellcheck disable=SC2086 # vars contain multiple params
 	LC_ALL=C MAILRC=/dev/null \
 		eval $TEST_SNAIL $MAIL_STD_OPT $MAIL_OPT "$*" '$to' \
 		>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.mailout" \
@@ -914,7 +914,7 @@ function test_expect_value {
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	# not increasing TESTSET_LAST_TEST_NR
 
-	# parm 1: file
+	# param 1: file
 	local testvalue="$1"
 	local testvalexpected="$2"
 	local rc
@@ -939,7 +939,7 @@ function test_expect_file_missing {
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	# not increasing TESTSET_LAST_TEST_NR
 
-	# parm 1: file
+	# param 1: file
 	local testfile="$1"
 	local rc
 
@@ -975,8 +975,8 @@ function test_expect_files {
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	# not increasing TESTSET_LAST_TEST_NR
 
-	# parm 1: directory
-	# parm 2: nr of files (except . and ..)
+	# param 1: directory
+	# param 2: nr of files (except . and ..)
 	local testdir="$1"
 	local testexpected="$2"
 	local testresult
@@ -1024,8 +1024,8 @@ function test_expect_file_contains {
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	# not increasing TESTSET_LAST_TEST_NR
 
-	# parm 1: file
-	# parm 2: text to search for
+	# param 1: file
+	# param 2: text to search for
 	local testfile="$1"
 	local testexpected="$2"
 	local testresult
@@ -1058,7 +1058,7 @@ function test_expect_linkedfiles {
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1 ))
 	# not increasing TESTSET_LAST_TEST_NR
 
-	# parm 1-n: files that should be hard-linked to each other
+	# param 1-n: files that should be hard-linked to each other
 
 	local fnam
 	local testexpected
@@ -1120,7 +1120,7 @@ function testset_init {
 	#    TESTSET_LOG_ALWAYS      0 (default) or 1 (if --log is supplied).
 	#    TESTSET_NAME            Name of Testset (--testsetname or default)
 	#    TEST_SNAIL              Executable for snail mail program
-	local testsetparm
+	local testsetparam
 
 	printf "TESTS Starting.\n"
 	TESTSET_LAST_CHECK_NR=0
@@ -1162,7 +1162,7 @@ function testset_init {
 			TESTSET_NAME="${1##--testsetname=}"
 			;;
 		* )
-			testsetparm+="$1"
+			testsetparam+="$1"
 			;;
 		esac
 		shift
@@ -1172,10 +1172,10 @@ function testset_init {
 		|| return 1
 	printf "\tTESTSET_DIR=%s\n" "$TESTSET_DIR"
 	printf "\tTESTSET_LOG_ALWAYS=%s\n" "$TESTSET_LOG_ALWAYS"
-	printf "\tParms=%s\n" "$testsetparm"
+	printf "\tParms=%s\n" "$testsetparam"
 
 	#shellcheck disable=SC2086
-	set -- $testsetparm
+	set -- $testsetparam
 
 	return 0
 }

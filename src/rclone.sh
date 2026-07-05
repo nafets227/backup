@@ -16,7 +16,7 @@ function backup2_rclone2file {
 	# jscpd:ignore-start
 	if [ "$#" -lt 4 ] ; then
 		printf "Error in custom config script. "
-		printf "Calling backup rclone with parms:\n\t%s\n" "$*"
+		printf "Calling backup rclone with params:\n\t%s\n" "$*"
 			return 1
 	elif [ "$DEBUG" == 1 ] ; then
 		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"
@@ -115,7 +115,7 @@ function backup2_file2rclone {
 	# jscpd:ignore-start
 	if [ "$#" -lt 4 ] ; then
 		printf "Error in custom config script. "
-		printf "Calling backup rclone with parms:\n\t%s\n" "$*"
+		printf "Calling backup rclone with params:\n\t%s\n" "$*"
 			return 1
 	elif [ "$DEBUG" == 1 ] ; then
 		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"
@@ -205,7 +205,7 @@ function backup2_rclone_unittest_updateconf {
 	# jscpd:ignore-start
 	if [ "$#" -ne 4 ] ; then
 		printf "Error in custom config script. "
-		printf "Calling backup rclone with parms:\n\t%s\n" "$*"
+		printf "Calling backup rclone with params:\n\t%s\n" "$*"
 			return 1
 	elif [ "$DEBUG" == 1 ] ; then
 		printf "DEBUG: %s %s\n" "${FUNCNAME[0]}" "$*"

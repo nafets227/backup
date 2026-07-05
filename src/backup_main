@@ -31,7 +31,7 @@ function backup_remote {
 	bck_src="${bck_src##"$remotemachine":}"
 	bck_dst="${bck_dst##"$remotemachine":}"
 
-	#----- set hist parm if present ------
+	#----- set hist param if present ------
 	local rem_hist=""
 	if [ -n "$bck_histdate" ] ; then
 		rem_hist="--histraw \"$bck_histdate\""
@@ -195,7 +195,7 @@ function backup_local {
 	#	bck_dst		Destination URL
 	#	bck_src_secret	Source Secret Filename
 	#	bck_dst_secret	Destination Secret Filename
-	#	[ ...]		type specific futher options
+	#	[ ...]		type specific further options
 	"backup2_$bck_type" \
 		"$bck_src" \
 		"$bck_dst_full" \
@@ -274,7 +274,7 @@ function backup_notify {
 function check_runon_empty {
 	local bck_runon="$1"
 	if [ -n "$bck_runon" ] ; then
-		printf "Parm Conflict: More than one of %s\n" \
+		printf "Param Conflict: More than one of %s\n" \
 			"--runonsrc --runondst --local"
 		return 1
 	else
@@ -282,14 +282,14 @@ function check_runon_empty {
 	fi
 }
 
-##### Helper: Check that parm#2 is not empty #################################
-function check_another_parm {
-	local parms="$1"
-	local parm1="$2"
+##### Helper: Check that param#2 is not empty ################################
+function check_another_param {
+	local params="$1"
+	local param1="$2"
 
-	if [ "$parms" -lt 2 ] ; then
+	if [ "$params" -lt 2 ] ; then
 		printf "Error: parameter %s needs a value\n" \
-			"$parm1"
+			"$param1"
 		return 1
 	else
 		return 0
@@ -364,26 +364,26 @@ function backup {
 			bck_histdate="$(date +%Y/%m/%d)" || return 1
 			shift
 		elif [ "$1" == "--histdate" ] ; then
-			check_another_parm "$#" "$1" || return 1
+			check_another_param "$#" "$1" || return 1
 			bck_histdate="$(date +%Y/%m/%d "--date=$2")" || return 1
 			shift 2
 		elif [ "$1" == "--histraw" ] ; then
-			check_another_parm "$#" "$1" || return 1
+			check_another_param "$#" "$1" || return 1
 			bck_histdate="$2"
 			shift 2
 		elif [ "$1" == "--histkeep" ] ; then
 			bck_hist_keep=1
 			shift
 		elif [ "$1" == "--srcsecret" ] ; then
-			check_another_parm "$#" "$1" || return 1
+			check_another_param "$#" "$1" || return 1
 			bck_src_secret="$2"
 			shift 2
 		elif [ "$1" == "--dstsecret" ] ; then
-			check_another_parm "$#" "$1" || return 1
+			check_another_param "$#" "$1" || return 1
 			bck_dst_secret="$2"
 			shift 2
-		elif [ "$1" == "--" ] ; then # end of global parms
-			shift # ignore parm "--"
+		elif [ "$1" == "--" ] ; then # end of global params
+			shift # ignore param "--"
 			bck_local_prm+=( "$@" )
 			shift $#
 		elif [ "$bck_global_prm" == 0 ] ; then
@@ -398,7 +398,7 @@ function backup {
 			local bck_dst="$1"
 			((bck_global_prm++))
 			shift
-		else # unknown parm -> probably type-specific
+		else # unknown param -> probably type-specific
 			bck_local_prm+=( "$1" )
 			shift
 		fi
@@ -408,9 +408,9 @@ function backup {
 	if [ "$bck_global_prm" != 3 ] ; then
 		printf "%s %s :\n\t%s\n\t---%s %s %s\n" \
 			"Error in custom config script" \
-			"when calling backup with parms" \
+			"when calling backup with params" \
 			"$*" \
-			"Missing non-option parms" \
+			"Missing non-option params" \
 			"(type, source, dest) - got " \
 			"$bck_global_prm"
 		NAFETS227BACKUP_GRC=1
@@ -568,7 +568,7 @@ function backup {
 ##### Main ###################################################################
 printf "starting ENTRYPOINT backup_main\n"
 
-##### Parse Configs / Envirionment ###########################################
+##### Parse Configs / Environment ############################################
 DEBUG=${DEBUG-0}
 
 ##### Ensure running on bash v4+ #############################################
@@ -610,7 +610,7 @@ fi
 
 NAFETS227BACKUP_GRC=0
 NAFETS227BACKUP_GMSG=""
-##### Now start the custom scipt
+##### Now start the custom script
 if [ $# == 0 ] ; then
 	printf "No command given.\n"
 	exit 1
