@@ -23,7 +23,7 @@ function test_imap {
 		exec_remote=false
 	fi
 
-	printf "Testing IMAP using Mail Adress \"%s\"\n" "$TESTIMAP_SRC"
+	printf "Testing IMAP using Mail Address \"%s\"\n" "$TESTIMAP_SRC"
 
 	local mail_smtpsrv=${TESTIMAP_URL%%:*}
 	cat >"$TESTSET_DIR/backup/imap_wrongpassword.password" <<<"wrongpassword"

@@ -13,11 +13,11 @@
 #     unchanged in the source, the hard link will remain. After successful
 #     Backup, YYYY/MM/YY.in-progress is renamed to YYYY/MM/DD.
 #     Only compliant directories are considered as previous backup,
-#     exluding .in-progress dirs.
+#     excluding .in-progress dirs.
 
 ##### Initialise history backup ##############################################
 function backup_inithist {
-	# Parm:
+	# Param:
 	#     - backup destination (without YYYY/mm/dd)
 	#     - backup date in format of YYYY/mm/dd
 	#     - Flag is in-progress updates can be used as base (hist-keep)
@@ -87,7 +87,7 @@ function backup_inithist {
 
 ##### Find last history backup ###############################################
 function backup_findlasthist {
-	# Parm:
+	# Param:
 	#     backup destination, must be local, without YYYY/mm/dd
 	#     - Flag is in-progress updates can be used as base (hist-keep)
 	# Output:

@@ -83,7 +83,7 @@ user "backupuser" with UID 41598.
 ## 0.6 (2022-06-02)
 
 - Send Alert Emails with backup status (#12)
-- reuse in-progress backups if --histkeep parm is set (#8)
+- reuse in-progress backups if --histkeep param is set (#8)
 - logg stats every minute in rclone (#11)
 - Improve Logging (#9)
 - fix an issue with rclone update in history mode (#7)

@@ -17,7 +17,7 @@ FROM alpine:3.24.1 AS offlineimap3
 COPY ./offlineimap3 /offlineimap3
 RUN \
 	apk add --no-cache curl gcc git krb5-dev python3-dev musl-dev py3-pip
-# ignoreing portalocker due to issues.
+# ignoring portalocker due to issues.
 #     See https://github.com/OfflineIMAP/offlineimap3/issues/192
 # patching offlineimap to Python 3.12 of Alping 3.20+:
 #     replace distutils.core by setuptools

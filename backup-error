@@ -1,9 +1,10 @@
+#!/bin/bash
 # Standard backup file
 # (C) 2017 Stefan Schallenberg
 
 # default user script just reporting an error
 
-printf "you need to mount your own backup scipt on /backup/backup\n"
+printf "you need to mount your own backup script on /backup/backup\n"
 printf "or supply all backup action parameters directly to the container\n"
 printf "see https://github.com/nafets227/backup for documentation\n"
 
