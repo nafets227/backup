@@ -13,7 +13,7 @@ updates:
       interval: "daily"
     assignees:
       - "nafets227"
-  - package-ecosystem: "gitsubmodule"
+  - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "daily"
