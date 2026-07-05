@@ -27,9 +27,7 @@ RUN \
 	set -x && \
 	python3 -m venv /usr/local && \
 	. /usr/local/bin/activate && \
-	pip install --no-cache-dir -r requirements.txt && \
-	pip install --no-cache-dir setuptools==75.8.2 && \
-	python3 setup.py install
+	pip install -e .
 
 FROM alpine:3.24.1
 
