@@ -27,7 +27,7 @@ RUN \
 	set -x && \
 	python3 -m venv /usr/local && \
 	. /usr/local/bin/activate && \
-	pip install -e .
+	pip install --no-cache-dir -e .
 
 FROM alpine:3.24.1
 
