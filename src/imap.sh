@@ -90,18 +90,27 @@ function backup2_imap {
 		mkdir -p "$bckimap_dst" || return 1
 	fi
 
-	backup2_imap_mkconfig | offlineimap -c /dev/stdin
+	# WORKAROUND a bug introduced in offlineimap 8.0.2:
+	#   offlineimap returns with RC=0 if it cannot fetch the folderlist,
+	#   e.g. because of weong or missing password
+	#   see https://github.com/OfflineIMAP/offlineimap3/issues/259
+	backup2_imap_mkconfig | offlineimap --info -c /dev/stdin
 	rc=$?
-	if [ $rc -ne 0 ] ; then
-		# on first error delete the .offlineimap files to workaround the
-		# UID validity issue. See
-		# http://www.offlineimap.org/doc/FAQ.html
-		# #what-is-the-uid-validity-problem-for-folder
-		printf "Error connecting to IMAP %s. %s\n" \
-			"$emailuser" "Will delete .offlineimap and retry"
-		rm -rf "$bckimap_dst/.offlineimap" &&
+
+	if [ $rc -eq 0 ] ; then
 		backup2_imap_mkconfig | offlineimap -c /dev/stdin
 		rc=$?
+		if [ $rc -ne 0 ] ; then
+			# on first error delete the .offlineimap files to workaround the
+			# UID validity issue. See
+			# http://www.offlineimap.org/doc/FAQ.html
+			# #what-is-the-uid-validity-problem-for-folder
+			printf "Error connecting to IMAP %s. %s\n" \
+				"$emailuser" "Will delete .offlineimap and retry"
+			rm -rf "$bckimap_dst/.offlineimap" &&
+			backup2_imap_mkconfig | offlineimap -c /dev/stdin
+			rc=$?
+		fi
 	fi
 
 	if [ $rc -ne 0 ] ; then
