@@ -1,2 +1,4 @@
 test/rclone.conf
 test/mail.password
+tests/rclone.conf
+tests/mail.password

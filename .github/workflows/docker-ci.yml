@@ -109,24 +109,24 @@ jobs:
             exit 1
           fi
 
-          cat >test/rclone.conf <<<"$RCLONE_CONF"
-          cat >test/mail.password <<<"$MAIL_PW"
+          cat >tests/rclone.conf <<<"$RCLONE_CONF"
+          cat >tests/mail.password <<<"$MAIL_PW"
           unset RCLONE_CONF MAIL_PW
 
           export TESTIMAP_SRC="nafets227.backup.test@nafets.de"
-          export TESTIMAP_SECRET=test/mail.password
+          export TESTIMAP_SECRET=tests/mail.password
           export TESTIMAP_URL=nafets.de:143
 
-          export TESTRCLONE_CONF="test/rclone.conf"
+          export TESTRCLONE_CONF="tests/rclone.conf"
           export TESTRCLONE_NAME="nafets227_nafets_de:/"
 
           export TESTALERTMAIL_FROM="nafets227/backup CI <no-reply@nafets.de>"
           export TESTALERTMAIL_ADR="nafets227.backup.test@nafets.de"
           export TESTALERTMAIL_URL=nafets.de
           export TESTALERTMAIL_USER=nafets.de
-          export TESTALERTMAIL_SECRET=test/mail.password
+          export TESTALERTMAIL_SECRET=tests/mail.password
           export TESTALERTMAIL_IMAP_URL="nafets.de:143"
-          export TESTALERTMAIL_IMAP_SECRET=test/mail.password
+          export TESTALERTMAIL_IMAP_SECRET=tests/mail.password
 
           sudo bash -c 'ssh-keygen -N "" -f ~/.ssh/id_rsa'
           sudo bash -c 'cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys'
@@ -145,15 +145,15 @@ jobs:
             --preserve-env=TESTALERTMAIL_SECRET \
             --preserve-env=TESTALERTMAIL_IMAP_URL \
             --preserve-env=TESTALERTMAIL_IMAP_SECRET \
-            bash -c "$DEBUGSH . test/test $IMG_URL"
+            bash -c "$DEBUGSH . tests/run-tests $IMG_URL"
           : "$TESTIMAP_SRC $TESTIMAP_SECRET $TESTIMAP_URL"
           : "$TESTRCLONE_CONF $TESTRCLONE_NAME"
           : "$TESTALERTMAIL_FROM $TESTALERTMAIL_ADR $TESTALERTMAIL_URL"
           : "$TESTALERTMAIL_USER $TESTALERTMAIL_SECRET"
           : "$TESTALERTMAIL_IMAP_URL $TESTALERTMAIL_IMAP_SECRET"
 
-          gh secret set RCLONE_CONF < test/rclone.conf
-          rm test/rclone.conf test/mail.password
+          gh secret set RCLONE_CONF < tests/rclone.conf
+          rm tests/rclone.conf tests/mail.password
 
       - name: Push Docker image
         uses: docker/build-push-action@v7

@@ -1,6 +1,6 @@
 {
 	"threshold": 0,
 	"reporters": ["consoleFull"],
-	"ignore": ["**/offlineimap3/**", "**/util/**", "**/test/test-functions.sh"],
+	"ignore": ["**/offlineimap3/**", "**/util/**", "**/tests/test-functions.sh"],
 	"absolute": true
 }

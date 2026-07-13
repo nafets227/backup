@@ -233,7 +233,7 @@ any data on it!
 
   Tests will use specified mailbox to write alert logs to and check if they
   are there. IMAP Test Account can be reused. Be aware that ALL Emails in this
-  account will be deleted on every test run. See test/test for details.
+  account will be deleted on every test run. See tests/run-tests for details.
   - TESTALERTMAIL_TO
   - TESTALERTMAIL_FROM
   - TESTALERTMAIL_URL
@@ -242,7 +242,7 @@ any data on it!
   - TESTALERTMAIL_HOSTNAME
   - TESTALERTMAIL_IMAPxxx
 
-start with running test/test to verify your environment
+start with running tests/run-tests to verify your environment
 
 ### GitHub Actions setup
 
