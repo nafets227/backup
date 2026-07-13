@@ -208,6 +208,8 @@ function test_email {
 ##### Main ###################################################################
 BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 
+. "$BASEDIR/../util/util_test_functions.sh"
+
 for f in "$BASEDIR"/*.sh ; do
 	#shellcheck disable=SC1090 # shellcheck cannot follow dynamic includes
 	. "$f" || exit 1

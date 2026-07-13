@@ -1,2 +1,2 @@
 [codespell]
-skip = **/tests/test-functions.sh
+skip = **/util/util_test_functions.sh
