@@ -1,31 +1,28 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Allgemeine Test Bibliothek
 #
 # (C) 2017 Stefan Schallenberg
 
 function test_cleanImap {
-	if [ "$#" -ne 3 ] ; then
-		printf "%s: Internal Error. Got %s params (exp=3)\n" \
-			"${FUNCNAME[0]}" "$#"
-		return 1
-	fi
-
 	local mail_adr="$1"
 	local mail_pw="$2"
 	local mail_srv="$3"
 
 	local imapstatus
 
+	util_err_verify_or_exit
+
 	printf "Cleaning %s at %s. Deleting all Mails.\n" \
 		"$mail_adr" "$mail_srv"
 
+	# intentionally not using util_curl here
 	imapstatus=$(
 		curl --ssl-reqd --silent --show-error \
 		"imap://$mail_srv" \
 		--user "$mail_adr:$mail_pw" \
 		--request 'STATUS INBOX (MESSAGES)'
-	) || return 1
+	)
 	imapstatus=${imapstatus%%$'\r'} # delete CR LF
 
 	#DEBUG printf "DEBUG: Status=%s\n" "$imapstatus"
@@ -38,38 +35,31 @@ function test_cleanImap {
 		return 0
 	fi
 
-	imapstatus=$(
-		curl --ssl-reqd --silent --show-error \
+	# intentionally not using util_curl here
+	curl --ssl-reqd --silent --show-error \
 		"imap://$mail_srv/INBOX" \
 		--user "$mail_adr:$mail_pw" \
 		--request 'STORE 1:* +FLAGS \Deleted'
-	) || return 1
 
-	imapstatus=$(
-		curl --ssl-reqd --silent --show-error \
+	curl --ssl-reqd --silent --show-error \
 		"imap://$mail_srv/INBOX" \
 		--user "$mail_adr:$mail_pw" \
 		--request 'EXPUNGE'
-	) || return 1
 
 	return 0
 }
 
 function test_putImap {
-	if [ "$#" -ne 3 ] ; then
-		printf "%s: Internal Error. Got %s params (exp=3)\n" \
-			"${FUNCNAME[0]}" "$#"
-		return 1
-	fi
-
 	local mail_adr="$1"
 	local mail_pw="$2"
 	local mail_srv="$3"
 
+	util_err_verify_or_exit
+
 	printf "Storing a Mail into %s at %s.\n" \
 		"$mail_adr" "$mail_srv"
 
-	cat >"$TESTSET_DIR/testmsg" <<-EOF &&
+	cat >"$TESTSET_DIR/testmsg" <<-EOF
 		Return-Path: <$mail_adr>
 		From: Test-From <$mail_adr>
 		Content-Type: text/plain; charset=us-ascii
@@ -82,29 +72,32 @@ function test_putImap {
 		Test
 		EOF
 
+	# intentionally not using util_curl here
 	curl --ssl-reqd --silent --show-error \
 		"imap://$mail_srv/INBOX" \
 		--user "$mail_adr:$mail_pw" \
-		-T "$TESTSET_DIR/testmsg" &&
+		-T "$TESTSET_DIR/testmsg"
 
 	curl --ssl-reqd --silent --show-error \
 		"imap://$mail_srv/INBOX" \
 		--user "$mail_adr:$mail_pw" \
-		--request 'STORE 1 -Flags /Seen' &&
-
-	true || return 1
+		--request 'STORE 1 -Flags /Seen'
 
 	return 0
 }
 
-function test_exec_init {
-	local testdesc="$1"
+function test_internal_exec_init {
+	local testdesc="${1-}"
+	local calldepth="${TEST_CALLDEPTH:-0}"
 
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	TESTSET_LAST_TEST_NR=$TESTSET_LAST_CHECK_NR
 
+
 	printf "Executing Test %d (%s:%s %s) ... " "$TESTSET_LAST_CHECK_NR" \
-		"${BASH_SOURCE[2]}" "${BASH_LINENO[1]}" "${FUNCNAME[2]}"
+		"${BASH_SOURCE[$((calldepth+2))]}" \
+		"${BASH_LINENO[$((calldepth+1))]}" \
+		"${FUNCNAME[$((calldepth+2))]}"
 
 	if [ -n "$testdesc" ] ; then
 		printf "\t%s\n" "$testdesc"
@@ -113,34 +106,33 @@ function test_exec_init {
 	return 0
 }
 
-function test_lastoutput_contains {
+function test_expect_lastoutput_contains {
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	# not increasing TESTSET_LAST_TEST_NR
 	local search="$1"
 	local extension="${2:-.out}"
-	local grepopts="$3"
-	local altsearch="$4"
+	local grepopts="${3-}"
+	local altsearch="${4-}"
 
 	local grep_cnt
+
+	util_err_verify_or_exit
+
 	#shellcheck disable=SC2086 # grepopts contains multiple params
 	grep_cnt=$(
 		grep -c $grepopts "$search" \
-		<"$TESTSET_DIR/$TESTSET_LAST_TEST_NR$extension"
+		<"$TESTSET_DIR/$TESTSET_LAST_TEST_NR$extension" \
+		|| [ "$?" == 1 ] # ignore RC=1 for not found
 		)
-	if [ $? -gt 1 ] ; then
-		# grep error
-		printf "ERROR checking %s. Search: '%s'\n" \
-			"$TESTSET_LAST_CHECK_NR" "$search"
-		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-		return 1
-	elif [ "$grep_cnt" == "0" ] ; then
+	if [ "$grep_cnt" == "0" ] ; then
 		# expected text not in output.
 		printf "CHECK %s FAILED. '%s' not found in output of test %s\n" \
 			"$TESTSET_LAST_CHECK_NR" "$search" "$TESTSET_LAST_TEST_NR"
 		if [ -n "$altsearch" ] ; then
 			printf "========== Selected Output Test %d Begin ==========\n" \
 				"$TESTSET_LAST_TEST_NR"
-			grep "$altsearch" "$TESTSET_DIR/$TESTSET_LAST_TEST_NR$extension"
+			grep "$altsearch" "$TESTSET_DIR/$TESTSET_LAST_TEST_NR$extension" \
+				|| true
 			printf "========== Selected Output Test %d End ==========\n" \
 				"$TESTSET_LAST_TEST_NR"
 		fi
@@ -158,18 +150,20 @@ function test_expect_lastoutput {
 	# not increasing TESTSET_LAST_TEST_NR
 	local exp="$1"
 	local extension="${2:-.out}"
-	local RC
+	local rc
+
+	util_err_verify_or_exit
 
 	cmp --quiet \
 		<(printf "%s" "$exp") \
-		<(tail --lines=+4 "$TESTSET_DIR/$TESTSET_LAST_TEST_NR$extension")
-	RC="$?"
-	if [ "$RC" -gt 1 ] ; then
+		<(tail --lines=+4 "$TESTSET_DIR/$TESTSET_LAST_TEST_NR$extension") \
+	&& rc=0 || rc=$?
+	if [ "$rc" -gt 1 ] ; then
 		# cmp error
 		printf "ERROR checking lastoutput %s.\n" "$TESTSET_LAST_CHECK_NR"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 		return 1
-	elif [ "$RC" -gt 0 ] ; then
+	elif [ "$rc" -gt 0 ] ; then
 		# values not equal
 		printf "CHECK %s FAILED. Value of test %s is not as expected\n" \
 			"$TESTSET_LAST_CHECK_NR" "$TESTSET_LAST_TEST_NR"
@@ -193,6 +187,8 @@ function test_expect_lastoutput {
 }
 
 function test_expect_lastoutput_linecount {
+	util_err_verify_or_exit
+
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	# not increasing TESTSET_LAST_TEST_NR
 	local linecountexp="$1"
@@ -202,12 +198,8 @@ function test_expect_lastoutput_linecount {
 	linecountact=$(wc -l <"$TESTSET_DIR/$TESTSET_LAST_TEST_NR$extension")
 	# Ignore Log Lines inserted at the beginning
 	linecountact=$(( linecountact - 3 ))
-	if [ $? -gt 1 ] ; then
-		# wc error
-		printf "ERROR checking linecount %s.\n" "$TESTSET_LAST_CHECK_NR"
-		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-		return 1
-	elif [ "$linecountact" == "$linecountexp" ] ; then
+
+	if [ "$linecountact" == "$linecountexp" ] ; then
 		# line count as expected -> OK
 		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
 	else
@@ -229,82 +221,11 @@ function test_expect_lastoutput_linecount {
 function test_get_lastoutput {
 	local extension="${2:-.out}"
 
-	tail --lines=+4 "$TESTSET_DIR/$TESTSET_LAST_TEST_NR$extension" || return 1
+	util_err_verify_or_exit
+
+	tail --lines=+4 "$TESTSET_DIR/$TESTSET_LAST_TEST_NR$extension"
 
 	return 0
-}
-
-function test_wait_url {
-	# Parameters:
-	#     1 - url
-	#     2 - timeout in seconds
-	#     3ff - additional dnsnames or IPs to wait for
-	#           the request is done with the original url but network
-	#           connects to this adresses (curl --connect-to)
-	local -r url="$1"
-	local -r timeout="$2"
-	shift 2
-
-	if
-		[[ ! "$url" =~ ^http://.* ]] &&
-		[[ ! "$url" =~ ^https://.* ]]
-	then
-		printf "%s: Invalid url (not http[s]) \"%s\"\n" "${FUNCNAME[0]}" "$url"
-		return 1
-	elif [ -z "$timeout" ] ; then
-		printf "%s: No timeout given for %s\n" \
-			"${FUNCNAME[0]}" "$url"
-		return 1
-	fi
-
-	local i dnsname
-	dnsname=${url#*://}
-	dnsname=${dnsname%%/*}
-	dnsname=${dnsname%%:*}
-
-	i=$(date '+%s') || return 1
-	# tricky solution: "error error" is an invalid arithmetic producing an
-	# error and abort. Please note that "error" would just represent the value
-	# of the (unset) variable error and NOT produce an abort
-	while (( $(date '+%s' || echo "error error") - i < timeout )) ; do
-		local ips=() iptemp=() ip="" ok="1" n || return 1
-		for n in "$dnsname" "$@" ; do
-			util_getIP "$n" "" "iptemp" &&
-			ips+=( "${iptemp[@]}" ) &&
-			true || return 1
-		done
-
-		for ip in "${ips[@]}" ; do
-			if [[ "$ip" == *:* ]] ; then
-				ip="[$ip]" # curl needs IPv6 adresses enclosed in brackets
-			fi
-			if \
-				curl -k -f "$url" \
-					-o /dev/null \
-					--connect-to "$dnsname::$ip" \
-					--no-progress-meter
-			then
-				printf "Successfully connected to %s with IP %s\n" \
-					"$url" "$ip"
-			else
-				printf "Error connecting to %s with IP %s - retrying\n" \
-					"$url" "$ip"
-				ok=0
-			fi
-		done
-
-		if [ "$ok" == 1 ] ; then
-			printf "%s reachable\n" "$url"
-			return 0
-		fi
-
-		printf "waiting for url %s: sleep 5 seconds (%s/%s)\n" \
-				"$url" $(( $(date '+%s') - i)) "$timeout"
-		sleep 5
-	done
-
-	printf "timed out waiting for url %s\n" "$url"
-	return 1
 }
 
 function test_exec_cmd {
@@ -312,23 +233,66 @@ function test_exec_cmd {
 	#     1 - expected RC [default: 0]
 	#     2 - optional message to be printed if test fails
 	#     3+ - command to be executed
-	if [ "$#" -lt 3 ] ; then
-		printf "%s: Internal error: too few parameters (%s < 3)\n" \
-			"${FUNCNAME[0]}" "$#"
-		return 1
-	fi
+	local rc_exp=${1:-0}
+	local testmsg=${2-}
+	shift 2
 
-	test_exec_init || return 1
+	util_err_verify_or_exit
+	test_internal_exec_init
 
-	local -r rc_exp=${1:-0}
-	local testmsg=$2
-	shift 2 || return 1
 	local testrc
 
 	printf "#-----\n#----- Command: %s\n#-----\n" "$*" \
 		>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
-	"$@" >>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" 2>&1
-	testrc=$?
+	util_err_callfunc "$@" >>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" 2>&1
+	testrc=$UTIL_ERR_RC
+
+	if [ "$testrc" -ne "$rc_exp" ] ; then
+		printf "FAILED. RC=%d (exp=%d)\n" "$testrc" "$rc_exp"
+		if [ -n "$testmsg" ] ; then
+			printf "Info: %s\n" "$testmsg"
+		fi
+		printf "========== Output Test %d Begin ==========\n" \
+			"$TESTSET_LAST_CHECK_NR"
+		cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
+		printf "========== Output Test %d End ==========\n" \
+			"$TESTSET_LAST_CHECK_NR"
+		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
+	else
+		printf "OK\n"
+		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
+		if [ "$TESTSET_LOG_ALWAYS" == "1" ] ; then
+			printf "========== Output Test %d Begin ==========\n" \
+				"$TESTSET_LAST_CHECK_NR"
+			cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
+			printf "========== Output Test %d End ==========\n" \
+				"$TESTSET_LAST_CHECK_NR"
+		fi
+	fi
+
+	return 0
+}
+
+function test_exec_inlinecmd {
+	# WARNING: This function is not isolating the command in a subshell.
+	# USE WITH CARE!
+	# Parameters:
+	#     1 - expected RC [default: 0]
+	#     2 - optional message to be printed if test fails
+	#     3+ - command to be executed
+	local rc_exp=${1:-0}
+	local testmsg=${2-}
+	shift 2
+
+	util_err_verify_or_exit
+	test_internal_exec_init
+
+	local testrc
+
+	printf "#-----\n#----- Command: %s\n#-----\n" "$*" \
+		>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
+	"$@" >>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" 2>&1 \
+		&& testrc=0 || testrc=$?
 
 	if [ "$testrc" -ne "$rc_exp" ] ; then
 		printf "FAILED. RC=%d (exp=%d)\n" "$testrc" "$rc_exp"
@@ -361,24 +325,34 @@ function test_exec_ssh {
 	#     1 - machine name to ssh to
 	#     2 - expected RC [default: 0]
 	#     3ff - command to test
-	test_exec_init || return 1
-
 	local sshtarget="$1"
 	shift
 	local rc_exp=${1:-0}
-	shift
+	shift || true
 
-	local sshopt="-n"
-	local testrc
+	util_err_verify_or_exit
+	test_internal_exec_init
+
+	local sshopt testrc
 
 	printf "#-----\n#----- SSH Machine: %s, Command: %s\n#-----\n" \
 		"$sshtarget" "$*" \
 		>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
-	[ "$#" == 0 ] && sshopt=""
+
+	if [ "$#" == 0 ] ; then
+		sshopt=""
+	else
+		sshopt="-n"
+	fi
+	# We do NOT set -euo pipefail [-x] here because we dont know
+	# if commands executed remotely come as params or are injected
+	# via stdin. On top, we dont know if it may change the output
+	# (especially debug setting -x) that make subsequent checks fail.
+
 	#shellcheck disable=SC2029
 	ssh $sshopt "$sshtarget" "$*" \
-		>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" 2>&1
-	testrc=$?
+		>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" 2>&1 \
+	&& testrc=0 || testrc=$?
 
 	if [ "$testrc" -ne "$rc_exp" ] ; then
 		printf "FAILED. RC=%d (exp=%d)\n" "$testrc" "$rc_exp"
@@ -405,39 +379,105 @@ function test_exec_ssh {
 	return 0
 }
 
-function test_exec_url {
-	test_exec_init || return 1
-
-	local url="$1"
-	local rc_exp=${2-200}
+function test_internal_execwait_url_once {
+	#     1     expected httpcode
+	#     2     url
+	#     3ff   further parameters to curl
+	#     TEST_EXECWAIT_IPS (global variable)
+	#           IPs to connect to (name of array variable) [optional]
+	#           the requests are done with the original url but network
+	#           connects to these addresses (curl --connect-to)
+	util_err_enable
+	local httpcode_exp="$1"
+	local url="$2"
 	shift 2
-	local testrc
 
-	testrc=$(curl -s "$@" \
-		-i -v \
-		-o "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlout" \
-		--stderr "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlerr" \
-		-w "%{http_code}" \
-		"$url")
-	local rc=$?
-	if [ $rc -ne 0 ] || [ "$testrc" != "$rc_exp" ] ; then
-		printf "FAILED. RC=%d HTTP-Code=%s (exp=%s)\n" \
-		"$rc" "$testrc" "$rc_exp"
-		printf "URL: %s\n" "$url"
-		printf "Options: %s\n" "$@"
+	for ip in "${TEST_EXECWAIT_IPS[@]}" ; do
+		if [[ "$ip" == *:* ]] ; then
+			ip="[$ip]" # curl needs IPv6 addresses enclosed in brackets
+		fi
+		printf "#-----\n#----- command: %s\n#-----\n" \
+			"curl \"$url\" $* --connect-to ::$ip" \
+			> "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
+		util_curl "$url" "$@" "--connect-to" "::$ip" \
+			> "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlout"
+		printf "%s\n" "$UTIL_CURL_ERRMSG" \
+			> "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlerr"
+		printf "%s/%s\n" "$UTIL_CURL_RC" "$UTIL_CURL_HTTPCODE" \
+			> "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlresult"
+
+		if [ "$httpcode_exp" = "$UTIL_CURL_HTTPCODE" ] ; then
+			printf "\tSuccess %s with IP %s\n" \
+				"$url" "$ip"
+		elif \
+			[ "$httpcode_exp" = "xxx" ] &&
+			[ -n "$UTIL_CURL_HTTPCODE" ] &&
+			[ "$UTIL_CURL_HTTPCODE" != "000" ]
+		then
+			printf "\tSuccess (%s) %s with IP %s\n" \
+				"$UTIL_CURL_HTTPCODE" "$url" "$ip"
+		else
+			printf "\tFailed (%s/%s, exp=*/%s) %s with IP %s\n" \
+				"$UTIL_CURL_RC" "$UTIL_CURL_HTTPCODE" \
+				"$httpcode_exp" \
+				"$url" "$ip"
+			return 1
+		fi
+	done
+
+	return 0
+}
+
+function test_execwait_url {
+	# Parameters:
+	#     1 - expected httpcode (xxx for any httpcode but no connection error)
+	#     2 - timeout in seconds
+	#     3 - url
+	#     4 - IPs to connect to (name of array variable) [optional]
+	#           the requests are done with the original url but network
+	#           connects to these addresses (curl --connect-to)
+	#     5ff - further parameters to curl
+	local httpcode_exp="$1"
+	local timeout="$2"
+	local url="$3"
+	local ipvarname="${4-}"
+	shift 3 ; shift || true
+
+	local dnsname TEST_EXECWAIT_IPS=()
+	declare -n ipvar="$ipvarname" # name reference
+
+	util_err_verify_or_exit
+	test_internal_exec_init ; printf "\n"
+
+	dnsname=${url#*://}
+	dnsname=${dnsname%%/*}
+	dnsname=${dnsname%%:*}
+
+	TEST_EXECWAIT_IPS+=( "$dnsname" "${ipvar[@]}" )
+
+	util_err_callfunc util_retry "$timeout" 5 \
+		test_internal_execwait_url_once \
+			"$httpcode_exp" "$url" "$@" \
+			--connect-timeout 3 --max-time 5 --verbose
+
+	if [ "$UTIL_ERR_RC" != 0 ] ; then
+		printf "FAILED. RC=%s (exp=*/%s)\n" \
+			"$(cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlresult" || true)" \
+			"$httpcode_exp"
 		printf "========== Output Test %d Begin ==========\n" \
 			"$TESTSET_LAST_CHECK_NR"
-		cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlout"
+		cat \
+			"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" \
+			"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlout" || true
 		printf "\n"
 		printf "========== Output Test %d End ==========\n" \
 			"$TESTSET_LAST_CHECK_NR"
 		printf "========== stderr-Output Test %d Begin ==========\n" \
 			"$TESTSET_LAST_CHECK_NR"
-		cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlerr"
+		cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlerr" || true
 		printf "\n"
 		printf "========== stderr-Output Test %d End ==========\n" \
 			"$TESTSET_LAST_CHECK_NR"
-		[ "$rc" -ne 0 ] && testrc=999
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 	else
 		printf "OK\n"
@@ -445,7 +485,7 @@ function test_exec_url {
 		if [ "$TESTSET_LOG_ALWAYS" == "1" ] ; then
 			printf "========== Output Test %d Begin ==========\n" \
 				"$TESTSET_LAST_CHECK_NR"
-			cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlout"
+			cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.curlout" || true
 			printf "\n"
 			printf "========== Output Test %d End ==========\n" \
 				"$TESTSET_LAST_CHECK_NR"
@@ -457,13 +497,9 @@ function test_exec_url {
 
 function test_internal_exec_kube {
 	local -r kubecmd="$1"
-	local -r kubecomment="$2"
-	local -r kubenolog="$3"
+	local -r kubecomment="${2-}"
+	local -r kubenolog="${3-}"
 	local cmd rc
-
-	util_kube_internal_verify_initialised &&
-	util_kube_internal_create_namespace &&
-	true || return 1
 
 	cmd="kubectl"
 	cmd+=" --kubeconfig $KUBE_CONFIGFILE"
@@ -482,8 +518,8 @@ function test_internal_exec_kube {
 	fi
 
 	#shellcheck disable=SC2086 # cmd and kubecmd contains more than one param
-	TEST_INTERNAL_EXEC_KUBE_OUTPUT=$(set +x ; eval $cmd $kubecmd 2>&1)
-	rc=$?
+	TEST_INTERNAL_EXEC_KUBE_OUTPUT=$(set +x ; eval $cmd $kubecmd 2>&1) \
+	&& rc=0 || rc=$?
 	if [ -z "$kubenolog" ] || [ "$rc" != 0 ] ; then
 		printf "%s\n" \
 			"$TEST_INTERNAL_EXEC_KUBE_OUTPUT" \
@@ -491,6 +527,50 @@ function test_internal_exec_kube {
 	fi
 
 	return $rc
+}
+
+function test_internal_check_kubecron {
+	local jobname="$1"
+	local jobStatus jobActive jobFailed jobSucceeded jobCondition
+	# testrc used from global scope, i.e. the calling function test_exec_kubecron
+
+	test_internal_exec_kube \
+		"get job $jobname -o json | jq '.status'" "" "1"
+	jobStatus="$TEST_INTERNAL_EXEC_KUBE_OUTPUT"
+	jobActive=$(jq '.active // 0' <<<"$jobStatus" 2>&1)
+	jobFailed=$(jq '.failed // 0' <<<"$jobStatus" 2>&1)
+	jobSucceeded=$(jq '.succeeded // 0' <<<"$jobStatus" 2>&1)
+
+	# editorconfig-checker-disable
+	if ! jobCondition=$(jq -r \
+		'try .conditions[] | select( (.status=="True" ) and ( .type | IN("Complete","Failed") ) ).type' \
+		<<<"$jobStatus" 2>&1
+		)
+	# editorconfig-checker-enable
+	then
+		printf "%s\nACTIVE=%s\nFAILED=%s\nSUCCEEDED=%s\nCONDSTATUS=%s\n" \
+			"$jobStatus" "$jobActive" "$jobFailed" "$jobSucceeded" \
+			"$jobCondition"
+		testrc=3
+		return 255 # stop loop in util_retry
+	elif [ "$jobCondition" == "Complete" ] ; then
+		printf "  Completed Job: %s/%s/%s/%s (%s)\n" \
+			"$jobActive" "$jobFailed" "$jobSucceeded" "$jobCondition" \
+			"active/failed/succeeded/condition"
+		testrc=0
+		return 0
+	elif [ "$jobCondition" == "Failed" ] ; then
+		printf "     Failed Job: %s/%s/%s/%s (%s)\n" \
+			"$jobActive" "$jobFailed" "$jobSucceeded" "$jobCondition" \
+			"active/failed/succeeded/condition"
+		testrc=1
+		return 255 # stop look in util_retry
+	else
+		printf "\t\tWaiting for Job: %s/%s/%s/%s (%s)\n" \
+			"$jobActive" "$jobFailed" "$jobSucceeded" "$jobCondition" \
+			"active/failed/succeeded/condition"
+		return 1
+	fi
 }
 
 function test_exec_kubecron {
@@ -504,90 +584,44 @@ function test_exec_kubecron {
 	#             (Kubernetes error when creating and scheduling)
 	#     3 - optional message to be printed if test fails
 	#     4 - Timeout in seconds [optional, default=240]
-	test_assert_tools "jq" || return 1
-	test_exec_init || return 1
-
 	local -r cronjobname="$1"
 	local -r rc_exp="${2-0}"
-	local -r infomsg="$3"
-	local -r sleepMax=${4:-240}
-	local -r sleepNext=5
+	local -r infomsg="${3-}"
+	local -r sleepMax="${4:-240}"
 
-	local testrc="" jobStatus jobActive jobFailed jobSucceeded jobCondition
-	local slept=0
+	util_err_verify_or_exit
+	test_is_cmdavail "jq" || return 1 # abort test
+	test_internal_exec_init
+	util_kube_internal_verify_initialised
 
-	test_internal_exec_kube \
+	local testrc=""
+
+	util_err_callfunc util_err_notrap test_internal_exec_kube \
 		"delete job/$cronjobname-test" \
-		"try deleting previous jobs" \
-	|| true # Ignore errors here!
+		"try deleting previous jobs"
 
-	test_internal_exec_kube \
-		"create job $cronjobname-test --from=cronjob/$cronjobname" \
-		|| testrc=3
-
-	while [ -z "$testrc" ] ; do
-		test_internal_exec_kube \
-			"get job $cronjobname-test -o json | jq '.status'" \
-			"" "1" &&
-		jobStatus="$TEST_INTERNAL_EXEC_KUBE_OUTPUT" &&
-		jobActive=$(jq '.active // 0' <<<"$jobStatus" 2>&1) &&
-		jobFailed=$(jq '.failed // 0' <<<"$jobStatus" 2>&1) &&
-		jobSucceeded=$(jq '.succeeded // 0' <<<"$jobStatus" 2>&1) &&
-		# editorconfig-checker-disable
-		jobCondition=$(jq -r \
-			'try .conditions[] | select( (.status=="True" ) and ( .type | IN("Complete","Failed") ) ).type' \
-			<<<"$jobStatus" 2>&1
-			)
-		# editorconfig-checker-enable
-		#shellcheck disable=SC2181 # using $? here helps to keep the structure
-		if [ "$?" != 0 ] ; then
-			printf "%s\nACTIVE=%s\nFAILED=%s\nSUCCEEDED=%s\nCONDSTATUS=%s\n" \
-				"$jobStatus" "$jobActive" "$jobFailed" "$jobSucceeded" \
-				"$jobCondition" \
-				>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
-			testrc=3
-			break
-		elif [ "$jobCondition" == "Complete" ] ; then
-			printf "  Completed Job: %s/%s/%s/%s (%s)\n" \
-				"$jobActive" "$jobFailed" "$jobSucceeded" "$jobCondition" \
-				"active/failed/succeeded/condition" \
-				>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
-			testrc=0
-			break
-		elif [ "$jobCondition" == "Failed" ] ; then
-			printf "     Failed Job: %s/%s/%s/%s (%s)\n" \
-				"$jobActive" "$jobFailed" "$jobSucceeded" "$jobCondition" \
-				"active/failed/succeeded/condition" \
-				>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
-			testrc=1
-			break
-		elif [ "$slept" -gt "$sleepMax" ] ; then
-			printf "   TimedOut Job: %s/%s/%s/%s (%s)\n" \
-				"$jobActive" "$jobFailed" "$jobSucceeded" "$jobCondition" \
-				"active/failed/succeeded/condition" \
-				>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
-			testrc=2
-			break
-		else
-			printf "Waiting for Job: %s/%s/%s/%s (%s)" \
-				"$jobActive" "$jobFailed" "$jobSucceeded" "$jobCondition" \
-				"active/failed/succeeded/condition" \
-				>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
-			printf " sleep %s seconds (%s/%s)\n" \
-					"$sleepNext" "$slept" "$sleepMax" \
-					>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
-
-			sleep $sleepNext ; slept=$(( slept + sleepNext ))
-		fi
-	done
+	util_err_callfunc test_internal_exec_kube \
+		"create job $cronjobname-test --from=cronjob/$cronjobname"
+	if [ "$UTIL_ERR_RC" == 0 ] ; then
+		printf "\n"
+		util_err_callfunc util_retry "$sleepMax" 5 \
+			test_internal_check_kubecron "$cronjobname-test" \
+			| tee "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.kubecronwait"
+		[ "$UTIL_ERR_RC" == 0 ] || testrc=${testrc:-2}
+	else
+		testrc=3
+	fi
 
 	# Always try to print logs of Pods, even in case of errors
-	test_internal_exec_kube \
-		"logs job/$cronjobname-test --all-containers" \
-		|| testrc=2
+	util_err_callfunc test_internal_exec_kube \
+		"logs job/$cronjobname-test --all-containers"
+	[ "$UTIL_ERR_RC" == 0 ]	|| testrc=${testrc:-2}
+
+	testrc="${testrc:-0}"
 
 	if [ "$testrc" -ne "$rc_exp" ] ; then
-		printf "FAILED. RC=%d (exp=%d)\n" "$testrc" "$rc_exp"
+		printf "Test %s FAILED. RC=%d (exp=%d)\n" \
+			"$TESTSET_LAST_CHECK_NR" "$testrc" "$rc_exp"
 		if [ -n "$infomsg" ] ; then
 			printf "Info: %s\n" "$infomsg"
 		fi
@@ -598,16 +632,11 @@ function test_exec_kubecron {
 			"$TESTSET_LAST_CHECK_NR"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 	else
-		local cmd
-		cmd="kubectl --kubeconfig $KUBE_CONFIGFILE --namespace $KUBE_NAMESPACE"
-		cmd+=" delete job/$cronjobname-test"
-		printf "#----- Delete Job\n#----- Command: %s\n" "$cmd" \
-			>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
-		#shellcheck disable=SC2086 # cmd contains multiple params
+		util_err_callfunc \
+			test_internal_exec_kube "delete job/$cronjobname-test"
 		# ignore if deleting job fails.
-		eval $cmd >>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" 2>&1 || true
 
-		printf "OK\n"
+		printf "Test %s OK\n" "$TESTSET_LAST_CHECK_NR"
 		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
 		if [ "$TESTSET_LOG_ALWAYS" == "1" ] ; then
 			printf "========== Output Test %d Begin ==========\n" \
@@ -625,42 +654,68 @@ function test_exec_kubenode {
 	# Parameters:
 	#     1 - name of the node
 	#     2 - DNS name of the VM to run kubectl
-	#         if empty, the current machine will be used (no ssh)
 	#     3 - timeout in sec
-	#     4+ - IP adresses or DNS names to verify connection with
-	test_exec_init || return 1
+	#     4+ - IP addresses or DNS names to verify connection with
 
 	local -r nodename="${1,,}" # lowercase
 	local -r dnsname="$2"
 	local -r timeout="$3"
-	local -r prm_count="$#"
 	shift 3
 
-	if [ "$prm_count" -lt 3 ] ; then
-		printf "%s: Internal Error, less than 3 params\n" "${FUNCNAME[0]}"
-		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-		return 1
-	elif [ -z "$nodename" ] ; then
+	local testrc
+
+	util_err_verify_or_exit
+	test_internal_exec_init
+
+	if [ -z "$nodename" ] ; then
 		printf "Error: nodename empty\n"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 		return 1
 	elif [ -z "$dnsname" ] ; then
-		printf "Error: dnsnamee empty\n"
+		printf "Error: dnsname empty\n"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 		return 1
 	elif [ -z "$timeout" ] ; then
-		printf "Error: timeoute empty\n"
+		printf "Error: timeout empty\n"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 		return 1
 	elif [ -z "$*" ] ; then
-		printf "Error: Parm IP Adress missing\n"
+		printf "Error: Param IP Address missing\n"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 		return 1
 	fi
 
+	#----- Wait for node to become reade
+	#shellcheck disable=SC2087 # intentionally expand on client side
+	cat <<-EOF >"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.kubenode"
+		----- CMD Begin ------
+		kubectl wait node $nodename --for=condition=ready --timeout=${timeout}s
+		----- CMD End ------
+		EOF
+	ssh -n "$dnsname" kubectl wait node "$nodename" \
+		--for=condition=ready --timeout="${timeout}s" \
+		>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.kubenode" 2>&1 &&
+	testrc=0 || testrc=$?
+
+	if [ "$testrc" -ne 0 ] ; then
+		printf "FAILED. Node %s did not become readyin %s\n" \
+			"$nodename" "$timeout"
+		printf "========== Output Test %d Begin ==========\n" \
+			"$TESTSET_LAST_CHECK_NR"
+		cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.kubenode"
+		printf "========== Output Test %d End ==========\n" \
+			"$TESTSET_LAST_CHECK_NR"
+		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
+
+		# stop test here, as node is not ready
+		# and subsequent checks will fail
+		return 0
+	fi
+
+	#----- Test connectivity of a pod on the node
 	local ips=() dnsip=()
 	for f in "$@" ; do
-		util_getIP "$f" "" dnsip &&
+		util_getIP "$f" "" dnsip
 		ips+=( "${dnsip[@]}" )
 	done
 
@@ -673,9 +728,9 @@ function test_exec_kubenode {
 				for f in "${ips[@]}" ; do
 					if [[ "$f" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]] ; then
 						# is an IPv4 address
-						printf "ping -c 1 -4 %s &&" "$f"
+						printf "\tping -c 1 -4 %s &&\n" "$f"
 					else
-						printf "ping -c 1 -6 %s &&" "$f"
+						printf "\tping -c 1 -6 %s &&\n" "$f"
 					fi
 				done
 			)
@@ -695,10 +750,9 @@ function test_exec_kubenode {
 	kubecmd+="   \"apiVersion\": \"v1\","
 	kubecmd+="   \"spec\": { \"nodeName\": \"$nodename\" } }'"
 	kubecmd+=" --stdin"
-	kubecmd+=" --rm"
 	kubecmd+=" --pod-running-timeout=7m"
+	kubecmd+=" --rm"
 
-	local testrc
 	#shellcheck disable=SC2087 # intentionally expand on client side
 	cat \
 		<(echo "----- CMD Begin ------") \
@@ -706,22 +760,103 @@ function test_exec_kubenode {
 		<(echo "----- CMD End ------") \
 		>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
 	# do NOT use ssh -n here !
-	ssh -o StrictHostKeyChecking=no "$dnsname" \
-		kubectl "$kubecmd" \
-	<"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.in" \
-	>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" 2>&1
-
-	testrc=$?
+	#shellcheck disable=SC2029 # intentionally expand on client side
+	ssh "$dnsname" kubectl "$kubecmd" \
+		<"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.in" \
+		>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" 2>&1 &&
+	testrc=0 || testrc=$?
 
 	if [ "$testrc" -ne 0 ] ; then
-		printf "FAILED. RC=%d (exp=%d)\n" "$testrc" "$rc_exp"
-		if [ -n "$msg" ] ; then
-			printf "Info: %s\n" "$3"
-		fi
+		printf "FAILED. RC=%d (exp=0)\n" "$testrc"
 		printf "========== Output Test %d Begin ==========\n" \
 			"$TESTSET_LAST_CHECK_NR"
 		cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
 		printf "========== Output Test %d End ==========\n" \
+			"$TESTSET_LAST_CHECK_NR"
+		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
+	else
+		printf "OK\n"
+		#shellcheck disable=SC2029 # intentionally expand on client side
+		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
+		if [ "$TESTSET_LOG_ALWAYS" == "1" ] ; then
+			printf "========== Output Test %d Begin ==========\n" \
+				"$TESTSET_LAST_CHECK_NR"
+			cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
+			printf "========== Output Test %d End ==========\n" \
+				"$TESTSET_LAST_CHECK_NR"
+		fi
+	fi
+
+	return 0
+}
+
+function test_exec_helm {
+	# test helm chart installed
+	# Parameters:
+	#   1 - release =local instance name of helm chart (unique in Kube namespace)
+	local release="$1"
+	local pods pod testrc
+
+	if [ "$KUBE_ACTION" != "install" ] ; then
+		printf "Error: testhelm only allowed in install phase\n"
+		return 1
+	fi
+
+	util_err_verify_or_exit
+	util_kube_internal_verify_initialised
+	test_internal_exec_init
+
+	# wait for chart install to complete
+	# currently disabled as first example, jenkins,
+	# does this inside the chart tests
+	# helm status \
+	#	--kubeconfig $KUBE_CONFIGFILE \
+	#	--namespace $KUBE_NAMESPACE \
+	#	$release -o json | \
+	# jq  -r '.info.status'
+	# should return "deployed".
+
+	printf "#-----\n#----- Helm Chart: %s, Namespace: %s\n#-----\n" \
+		"$release" "$KUBE_NAMESPACE" \
+		>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
+	if ! helm test \
+		--kubeconfig "$KUBE_CONFIGFILE" \
+		--namespace "$KUBE_NAMESPACE" \
+		"$release" \
+		>>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out" 2>&1
+	then
+		# helm test --logs currently (2022-04) does not work
+		# maybe https://github.com/helm/helm/pull/10603 will solve it.
+		# So we workaround identifying the pods ourselves.
+		# editorconfig-checker-disable
+		pods=$( kubectl get pods \
+			--kubeconfig "$KUBE_CONFIGFILE" \
+			--namespace "$KUBE_NAMESPACE" \
+			--output jsonpath='{.items[?(@.metadata.annotations.helm\.sh/hook=="test-success")].metadata.name}'
+		)
+		#editorconfig-checker-enable
+		{
+			for pod in $pods ; do
+				printf -- "----- Logs of Pod %s -----\n" "$pod"
+				kubectl logs \
+					--kubeconfig "$KUBE_CONFIGFILE" \
+					--namespace "$KUBE_NAMESPACE" \
+					--all-containers \
+					"$pod"
+				printf -- "----- End of Logs of Pod %s -----\n" "$pod"
+				done
+		} >"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.podout"
+
+		printf "FAILED.\n"
+		printf "========== Output Test %d Begin ==========\n" \
+			"$TESTSET_LAST_CHECK_NR"
+		cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
+		printf "========== Output Test %d End ==========\n" \
+			"$TESTSET_LAST_CHECK_NR"
+		printf "========== Pod-Output Test %d Begin ==========\n" \
+			"$TESTSET_LAST_CHECK_NR"
+		cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.podout"
+		printf "========== Pod-Output Test %d End ==========\n" \
 			"$TESTSET_LAST_CHECK_NR"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 	else
@@ -742,10 +877,11 @@ function test_exec_kubenode {
 function test_exec_recvmail {
 	local url="$1"
 	local rc_exp="${2:-0}"
-	shift 2
+	shift && shift || true # dont fail if only one param given.
 
+	util_err_verify_or_exit
 	[ -z "$TEST_SNAIL" ] && return 1
-	test_exec_init "recvmail $rc_exp $url" || return 1
+	test_internal_exec_init "recvmail $rc_exp $url"
 
 	local testrc
 	local MAIL_STD_OPT
@@ -759,8 +895,8 @@ function test_exec_recvmail {
 		eval $TEST_SNAIL $MAIL_STD_OPT $MAIL_OPT "$*" \
 		>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.mailout" \
 		2>&1 \
-		</dev/null
-	testrc=$?
+		</dev/null \
+	&& testrc=0 || testrc=1
 	if [ "$testrc" -ne "$rc_exp" ] ; then
 		printf "FAILED. RC=%d (exp=%d)\n" "$testrc" "$rc_exp"
 		printf "test_exec_recvmail(%s,%s,%s)\n" "$url" "$rc_exp" "$@"
@@ -773,49 +909,8 @@ function test_exec_recvmail {
 		printf "OK\n"
 		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
 	fi
-}
 
-function test_exec_sendmail {
-	local url="$1"
-	local rc_exp="${2:-0}"
-	local from="$3"
-	local to="$4"
-	shift 4
-
-	[ -z "$TEST_SNAIL" ] && return 1
-	test_exec_init "sendmail $rc_exp $url" || return 1
-
-	local MAIL_STD_OPT
-	MAIL_STD_OPT="-n -vv -Sv15-compat -Ssendwait -Snosave"
-	MAIL_STD_OPT+=" -Sexpandaddr=fail,-all,+addr"
-	readonly MAIL_STD_OPT
-	MAIL_OPT="-S 'smtp=$url'"
-	MAIL_OPT="$MAIL_OPT -s 'Subject TestMail $TESTSET_LAST_CHECK_NR'"
-	MAIL_OPT="$MAIL_OPT -r '$from'"
-
-	#shellcheck disable=SC2086 # vars contain multiple params
-	LC_ALL=C MAILRC=/dev/null \
-		eval $TEST_SNAIL $MAIL_STD_OPT $MAIL_OPT "$*" '$to' \
-		>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.mailout" \
-		2>&1 \
-		<<<"Text TestMail $TESTSET_LAST_CHECK_NR"
-	testrc=$?
-	if [ "$testrc" -ne "$rc_exp" ] ; then
-		printf "FAILED. RC=%d (exp=%d)\n" "$rc" "$rc_exp"
-		printf "send_testmail(%s,%s,%s,%s,%s)\n" \
-			"$rc_exp" "$url" "$from" "$to" "$*"
-		printf "CMD: $TEST_SNAIL %s %s %s '%s'\n" \
-			"$MAIL_STD_OPT" "$MAIL_OPT" "$*" "$to"
-		printf "========== Output Test %d Begin ==========\n" \
-			"$TESTSET_LAST_CHECK_NR"
-		cat "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.mailout"
-		printf "========== Output Test %d End ==========\n" \
-			"$TESTSET_LAST_CHECK_NR"
-		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-	else
-		printf "OK\n"
-		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
-	fi
+	return 0
 }
 
 function test_exec_issuccess {
@@ -826,116 +921,87 @@ function test_exec_issuccess {
 	fi
 }
 
-function test_assert {
-	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
-	local testrc
-
-	printf "Executing Assert %d (Manual %s:%s %s) ... " "$TESTSET_LAST_CHECK_NR" \
-		"${BASH_SOURCE[1]}" "${BASH_LINENO[0]}" "${FUNCNAME[1]}"
-
-	if [ "$1" != "0" ] ; then
-		printf "FAILED: %s\n" "$2"
-		testrc=1
-		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-		return $testrc
-	fi
-
-	printf "OK\n"
-	testrc=0
-	TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
-	return $testrc
-}
-
-function test_assert_tools {
-	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
-	local testrc
-
-	printf "Executing Assert %d (Tools %s) ... " "$TESTSET_LAST_CHECK_NR" "$*"
+function test_is_cmdavail {
+	printf "Checking for Tools (%s) ... " "$*"
 
 	for f in "$@" ; do
 		if ! errmsg=$(which "$f" 2>&1) ; then
 			printf "FAILED: Missing %s\n\t%s\n" \
 				"$f" "$errmsg"
-			testrc=1
-			TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-			return $testrc
+			return 1
 		fi
 	done
 
 	printf "OK\n"
-	testrc=0
-	TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
-	return $testrc
+
+	return 0
 }
 
-function test_assert_vars {
-	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
-	local testrc
+function test_expect_vardefined {
+	util_err_verify_or_exit
 
-	printf "Executing Assert %s (Vars %s) ... " "$TESTSET_LAST_CHECK_NR" "$*"
+	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 
 	for f in "$@" ; do
-		if eval "[ -z \"\$$f\" ]" ; then
-			printf "FAILED: Missing %s\n" "$f"
-			testrc=1
+		if eval "[ -z \"\${$f-}\" ]" ; then
+			printf "\tCHECK %s FAILED. Missing var %s\n" \
+				"$TESTSET_LAST_CHECK_NR" "$f"
 			TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-			return $testrc
+			return 0
 		fi
 	done
 
-	printf "OK\n"
-	testrc=0
+	printf "\tCHECK %s OK.\n" "$TESTSET_LAST_CHECK_NR"
 	TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
-	return $testrc
+
+	return 0
 }
 
-function test_assert_files {
-	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
-	local testrc
+function test_expect_files {
+	util_err_verify_or_exit
 
-	printf "Executing Assert %s (Files %s) ... " "$TESTSET_LAST_CHECK_NR" "$*"
+	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 
 	for f in "$@" ; do
 		if [ ! -f "$f" ] ; then
-			printf "FAILED: Missing %s\n" "$f"
-			testrc=1
+			printf "\tCHECK %s FAILED. Missing file %s\n" \
+				"$TESTSET_LAST_CHECK_NR" "$f"
 			TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-			return $testrc
+			return 0
 		fi
 	done
 
-	printf "OK\n"
-	testrc=0
+	printf "\tCHECK %s OK.\n" "$TESTSET_LAST_CHECK_NR"
 	TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
-	return $testrc
+	return 0
 }
 
 function test_expect_value {
+	util_err_verify_or_exit
+
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	# not increasing TESTSET_LAST_TEST_NR
 
 	# param 1: file
 	local testvalue="$1"
 	local testvalexpected="$2"
-	local rc
+	local testerrmsg="${3:-""}"
 
 	if [ "$testvalue" == "$testvalexpected" ] ; then
 		printf "\tCHECK %s OK.\n" "$TESTSET_LAST_CHECK_NR"
 		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
-		return 0
 	else
-		printf "\tCHECK %s FAILED. Value='%s' (exp='%s')\n" \
-			"$TESTSET_LAST_CHECK_NR" "$testvalue" "$testvalexpected"
+		printf "\tCHECK %s FAILED. Value='%s' (exp='%s')%s\n" \
+			"$TESTSET_LAST_CHECK_NR" "$testvalue" "$testvalexpected" "$testerrmsg"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-		return 0
 	fi
 
-	# should not reach this
-	#shellcheck disable=SC2317
-	return 99
+	return 0
 }
 
 function test_expect_file_missing {
+	util_err_verify_or_exit
+
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	# not increasing TESTSET_LAST_TEST_NR
 
@@ -947,31 +1013,27 @@ function test_expect_file_missing {
 		testfile="$TESTSET_DIR/$testfile"
 	fi
 
-	testresult=$(ls -1A "$testfile" 2>/dev/null )
-	rc=$?
+	testresult=$(ls -1A "$testfile" 2>/dev/null ) && rc=0 || rc=$?
 
 	if [ "$rc" == "1" ] || [ "$rc" == "2" ]; then
 		printf "\tCHECK %s OK.\n" "$TESTSET_LAST_CHECK_NR"
 		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
-		return 0
 	elif [ "$rc" == "0" ] ; then
 		printf "\tCHECK %s FAILED. File '%s' exists\n" \
 			"$TESTSET_LAST_CHECK_NR" "$1"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-		return 0
 	else
 		printf "\tCHECK %s FAILED. Cannot get files in '%s'\n" \
 			"$TESTSET_LAST_CHECK_NR" "$1"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-		return 1
 	fi
 
-	# should not reach this
-	#shellcheck disable=SC2317
-	return 99
+	return 0
 }
 
-function test_expect_files {
+function test_expect_filecount {
+	util_err_verify_or_exit
+
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	# not increasing TESTSET_LAST_TEST_NR
 
@@ -987,18 +1049,9 @@ function test_expect_files {
 	fi
 
 	#shellcheck disable=SC2012 # no worries about non-alpha filenames here
-	testresult=$( \
-		set -o pipefail ;
-		ls -1A "$testdir" 2>/dev/null | wc -l | tr -d ' '
-		)
-	rc=$?
+	testresult=$(ls -1A "$testdir" 2>/dev/null | wc -l | tr -d ' ')
 
-	if [ "$rc" != 0 ] ; then
-		printf "\tCHECK %s FAILED. Cannot get files in '%s'\n" \
-			"$TESTSET_LAST_CHECK_NR" "$1"
-		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-		return 1
-	elif [ "$testresult" != "$testexpected" ] ; then
+	if [ "$testresult" != "$testexpected" ] ; then
 		# nr of files differ from expected
 		printf "\tCHECK %s FAILED. nr of files in '%s' is %s (exp=%s)\n" \
 			"$TESTSET_LAST_CHECK_NR" "$1" "$testresult" "$testexpected"
@@ -1008,19 +1061,17 @@ function test_expect_files {
 		# printf "========== Output Test %d End ==========\n" \
 		#    "$TESTSET_LAST_TEST_NR"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-		return 0
 	else
 		printf "\tCHECK %s OK.\n" "$TESTSET_LAST_CHECK_NR"
 		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
-		return 0
 	fi
 
-	# should not reach this
-	#shellcheck disable=SC2317
-	return 99
+	return 0
 }
 
 function test_expect_file_contains {
+	util_err_verify_or_exit
+
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
 	# not increasing TESTSET_LAST_TEST_NR
 
@@ -1035,26 +1086,22 @@ function test_expect_file_contains {
 		testfile="$TESTSET_DIR/$testfile"
 	fi
 
-	testresult=$(grep -F "$testexpected" "$testfile")
-	rc=$?
-
-	if [ "$rc" != 0 ] ; then
+	if ! testresult=$(grep -F "$testexpected" "$testfile")
+	then
 		printf "\tCHECK %s FAILED. %s does not contain '%s'\n" \
 			"$TESTSET_LAST_CHECK_NR" "$1" "$2"
 		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-		return 1
 	else
 		printf "\tCHECK %s OK.\n" "$TESTSET_LAST_CHECK_NR"
 		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
-		return 0
 	fi
 
-	# should not reach this
-	#shellcheck disable=SC2317
-	return 99
+	return 0
 }
 
 function test_expect_linkedfiles {
+	util_err_verify_or_exit
+
 	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1 ))
 	# not increasing TESTSET_LAST_TEST_NR
 
@@ -1071,24 +1118,21 @@ function test_expect_linkedfiles {
 			fnam="$TESTSET_DIR/$fnam"
 		fi
 
-		testresult=$(
-			set -o pipefail ;
+		if ! testresult=$(
 			#shellcheck disable=SC2012 # no worries about non-alpha filenames here
 			ls -1i "$fnam" 2>/dev/null | cut -f 1 -d " "
 			)
-		rc=$?
-
-		if [ "$rc" != 0 ] ; then
+		then
 			printf "\tCHECK %s FAILED. Cannot list file '%s'\n" \
 				"$TESTSET_LAST_CHECK_NR" "$fnam"
 			TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-			return 1
-		elif [ -n "$testexpected" ] && [ "$testresult" != "$testexpected" ] ; then
+			return 0
+		elif [ -n "${testexpected-}" ] && [ "$testresult" != "$testexpected" ] ; then
 			printf "\tCHECK %s FAILED. '%s' and '%s' have different INode\n" \
 				"$TESTSET_LAST_CHECK_NR" "$fnam" "$fnamexpected"
 			TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
-			return 1
-		elif [ -z "$testexpected" ] ; then
+			return 0
+		elif [ -z "${testexpected-}" ] ; then
 			testexpected="$testresult"
 			fnamexpected="$fnam"
 		fi
@@ -1102,7 +1146,7 @@ function test_expect_linkedfiles {
 
 function testset_init {
 	# Initialise a Testset
-	# Tests are distinguishing between Tests anc Checks.
+	# Tests are distinguishing between Tests and Checks.
 	#   - Tests are executing a test, so they are active
 	#   - Checks are verifying the result of last test. Thus they
 	#     can access results of the last test.
@@ -1120,7 +1164,9 @@ function testset_init {
 	#    TESTSET_LOG_ALWAYS      0 (default) or 1 (if --log is supplied).
 	#    TESTSET_NAME            Name of Testset (--testsetname or default)
 	#    TEST_SNAIL              Executable for snail mail program
-	local testsetparam
+	local testsetparm=()
+
+	util_err_verify_or_exit
 
 	printf "TESTS Starting.\n"
 	TESTSET_LAST_CHECK_NR=0
@@ -1162,25 +1208,21 @@ function testset_init {
 			TESTSET_NAME="${1##--testsetname=}"
 			;;
 		* )
-			testsetparam+="$1"
+			testsetparm+=("$1")
 			;;
 		esac
 		shift
 	done
 
-	TESTSET_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$TESTSET_NAME.XXXXXXXXXX") \
-		|| return 1
+	TESTSET_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$TESTSET_NAME.XXXXXXXXXX")
 	printf "\tTESTSET_DIR=%s\n" "$TESTSET_DIR"
 	printf "\tTESTSET_LOG_ALWAYS=%s\n" "$TESTSET_LOG_ALWAYS"
-	printf "\tParms=%s\n" "$testsetparam"
-
-	#shellcheck disable=SC2086
-	set -- $testsetparam
+	printf "\tParms=%s\n" "${testsetparm[*]}"
 
 	return 0
 }
 
-function testset_success {
+function testset_issuccess {
 	if [ "$TESTSET_TESTSOK" -ne "$TESTSET_LAST_CHECK_NR" ] ; then
 		return 1
 	else
