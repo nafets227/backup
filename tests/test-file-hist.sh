@@ -12,8 +12,7 @@ function test_file_hist_srcdest {
 	local dest="$2"
 	shift 2
 
-	[ -n "$source" ] && [ -n "$dest" ]
-	test_assert "$?" "Internal Error in ${FUNCNAME[0]}" || return 1
+	[ -n "$source" ] && [ -n "$dest" ] # exits if false because set -e
 
 	printf "Testing FILE HISTORY Backup from %s to %s\n" \
 		"$source" "$dest"
@@ -21,10 +20,10 @@ function test_file_hist_srcdest {
 	mkdir -p \
 		"$TESTSET_DIR/backup/file-hist/source" \
 		"$TESTSET_DIR/backup/file-hist/dest"
-	test_assert "$?" "Creating directories in ${FUNCNAME[0]}" || return 1
-	test_chown "$TESTSET_DIR/backup/file-hist" || return 1
-	test_chown "$TESTSET_DIR/backup/file-hist/source" || return 1
-	test_chown "$TESTSET_DIR/backup/file-hist/dest" || return 1
+	test_assert "$?" "Creating directories in ${FUNCNAME[0]}"
+	test_chown "$TESTSET_DIR/backup/file-hist"
+	test_chown "$TESTSET_DIR/backup/file-hist/source"
+	test_chown "$TESTSET_DIR/backup/file-hist/dest"
 
 	source+="/file-hist/source"
 	dest+="/file-hist/dest"
@@ -47,8 +46,8 @@ function test_file_hist_srcdest {
 		"$source" \
 		"$dest/thisdirdoesnotexist" \
 		"$@" \
-		)" &&
-	test_expect_files "backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" 0 &&
+		)"
+	test_expect_files "backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" 0
 	rmdir \
 		"$TESTSET_DIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" \
 		"$TESTSET_DIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10" \
@@ -67,8 +66,7 @@ function test_file_hist_srcdest {
 
 	# backup one file
 	cat >"$TESTSET_DIR/backup/file-hist/source/dummyfile" <<<"Dummyfile"
-	test_assert "$?" "Creating dummyfile" || return 1
-	test_chown "$TESTSET_DIR/backup/file-hist/source/dummyfile" || return 1
+	test_chown "$TESTSET_DIR/backup/file-hist/source/dummyfile"
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -80,13 +78,10 @@ function test_file_hist_srcdest {
 
 	# backup additional file in subdirectory
 	mkdir "$TESTSET_DIR/backup/file-hist/source/testsubdir"
-	test_assert "$?" "Creating testsubdir" || return 1
-	test_chown "$TESTSET_DIR/backup/file-hist/source/testsubdir" || return 1
+	test_chown "$TESTSET_DIR/backup/file-hist/source/testsubdir"
 	cat >"$TESTSET_DIR/backup/file-hist/source/testsubdir/dummyfile2" \
 		<<<"Dummyfile2"
-	test_assert "$?" "Creating dummyfile2" || return 1
-	test_chown "$TESTSET_DIR/backup/file-hist/source/testsubdir/dummyfile2" \
-		|| return 1
+	test_chown "$TESTSET_DIR/backup/file-hist/source/testsubdir/dummyfile2"
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -98,7 +93,6 @@ function test_file_hist_srcdest {
 
 	# delete no longer existing file
 	rm "$TESTSET_DIR/backup/file-hist/source/dummyfile"
-	test_assert "$?" "remove Dummyfile" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -110,7 +104,6 @@ function test_file_hist_srcdest {
 
 	# delete no longer existing file in subdir
 	rm "$TESTSET_DIR/backup/file-hist/source/testsubdir/dummyfile2"
-	test_assert "$?" "remove Dummyfile2" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -122,7 +115,6 @@ function test_file_hist_srcdest {
 
 	# delete no longer existing subdir
 	rmdir "$TESTSET_DIR/backup/file-hist/source/testsubdir"
-	test_assert "$?" "remove testsubdir" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
@@ -134,18 +126,17 @@ function test_file_hist_srcdest {
 
 	test_expect_files "backup/file-hist/dest/2020/10/11" 0
 	test_expect_files "backup/file-hist/dest/2020/10/12" 1
-	test_expect_files "backup/file-hist/dest/2020/10/13" 2 && # includes subdir!
+	test_expect_files "backup/file-hist/dest/2020/10/13" 2 # includes subdir!
 	test_expect_files "backup/file-hist/dest/2020/10/13/testsubdir" 1
-	test_expect_files "backup/file-hist/dest/2020/10/14" 1 && # includes subdir!
+	test_expect_files "backup/file-hist/dest/2020/10/14" 1 # includes subdir!
 	test_expect_files "backup/file-hist/dest/2020/10/14/testsubdir" 1
-	test_expect_files "backup/file-hist/dest/2020/10/15" 1 && # includes subdir!
+	test_expect_files "backup/file-hist/dest/2020/10/15" 1 # includes subdir!
 	test_expect_files "backup/file-hist/dest/2020/10/15/testsubdir" 0
 	test_expect_files "backup/file-hist/dest/2020/10/16" 0
 
 	rm -rf \
 		"$TESTSET_DIR/backup/file-hist/source" \
 		"$TESTSET_DIR/backup/file-hist/dest"
-	test_assert "$?" "remove backupdirs" || return 1
 
 	return 0
 }
@@ -157,9 +148,8 @@ function test_file_hist {
 	mkdir -p \
 		"$TESTSET_DIR/backup/file-hist-1" \
 		"$TESTSET_DIR/backup/file-hist-2"
-	test_assert "$?" "Init ${FUNCNAME[0]}" || return 1
-	test_chown "$TESTSET_DIR/backup/file-hist-1" || return 1
-	test_chown "$TESTSET_DIR/backup/file-hist-2" || return 1
+	test_chown "$TESTSET_DIR/backup/file-hist-1"
+	test_chown "$TESTSET_DIR/backup/file-hist-2"
 
 	# backup remote source without secret should fail
 	eval "$(test_exec_backupdocker 1 \
@@ -240,7 +230,6 @@ function test_file_hist {
 		)"
 
 	rmdir "$TESTSET_DIR/backup/file-hist-1" "$TESTSET_DIR/backup/file-hist-2"
-	test_assert "$?" "remove testdirs in ${FUNCNAME[0]}" || return 1
 
 	##### common tests for all variants source,dest in local,remote
 	#shellcheck disable=SC2043
@@ -255,8 +244,7 @@ function test_file_hist {
 				"$source" \
 				"$dest" \
 				"$my_fileopt $TEST_RSYNCOPT" \
-				$secretparam \
-			|| return 1
+				$secretparam
 		done
 	done
 
@@ -292,8 +280,7 @@ function test_file_hist {
 				"$dest" \
 				"$my_fileopt $TEST_RSYNCOPT" \
 				--runondst \
-				$secretparam \
-			|| return 1
+				$secretparam
 		done
 	done
 
@@ -304,9 +291,7 @@ function test_file_hist {
 		"/backup" \
 		"$TEST_RSYNCOPT" \
 		$secretparam \
-		--histkeep \
-	|| return 1
-
+		--histkeep
 
 	return 0
 }

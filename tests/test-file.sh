@@ -12,8 +12,7 @@ function test_file_srcdest {
 	local dest="$2"
 	shift 2
 
-	[ -n "$source" ] && [ -n "$dest" ]
-	test_assert "$?" "Internal Error" || return 1
+	[ -n "$source" ] && [ -n "$dest" ] # exits if false because set -e
 
 	printf "Testing FILE Backup from %s to %s\n" \
 		"$source" "$dest"
@@ -21,10 +20,9 @@ function test_file_srcdest {
 	mkdir -p \
 		"$TESTSET_DIR/backup/file/source" \
 		"$TESTSET_DIR/backup/file/dest"
-	test_assert "$?" "Creating directories" || return 1
-	test_chown "$TESTSET_DIR/backup/file" || return 1
-	test_chown "$TESTSET_DIR/backup/file/source" || return 1
-	test_chown "$TESTSET_DIR/backup/file/dest" || return 1
+	test_chown "$TESTSET_DIR/backup/file"
+	test_chown "$TESTSET_DIR/backup/file/source"
+	test_chown "$TESTSET_DIR/backup/file/dest"
 
 	source+="/file/source"
 	dest+="/file/dest"
@@ -43,8 +41,8 @@ function test_file_srcdest {
 		"$source" \
 		"$dest/thisdirdoesnotexist" \
 		"$@" \
-		)" &&
-	test_expect_files "backup/file/dest/thisdirdoesnotexist" 0 &&
+		)"
+	test_expect_files "backup/file/dest/thisdirdoesnotexist" 0
 	rmdir "$TESTSET_DIR/backup/file/dest/thisdirdoesnotexist"
 
 	# backup empty path
@@ -53,7 +51,7 @@ function test_file_srcdest {
 		"$source" \
 		"$dest" \
 		"$@" \
-		)" &&
+		)"
 	test_expect_files "backup/file/dest" 0
 
 	# rsync parameters with empty path
@@ -64,73 +62,66 @@ function test_file_srcdest {
 		"$@" \
 		-- \
 		--verbose
-		)" &&
+		)"
 	test_expect_files "backup/file/dest" 0
 
 	# backup one file
 	cat >"$TESTSET_DIR/backup/file/source/dummyfile" <<<"Dummyfile"
-	test_assert "$?" "Creating dummyfile" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
 		"$@" \
-		)" &&
+		)"
 	test_expect_files "backup/file/source" 1
 
 	# backup additional file in subdirectory
 	mkdir "$TESTSET_DIR/backup/file/source/testsubdir"
-	test_assert "$?" "Creating testsubdir" || return 1
 	cat >"$TESTSET_DIR/backup/file/source/testsubdir/dummyfile2" <<<"Dummyfile2"
-	test_assert "$?" "Creating dummyfile2" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
 		"$@" \
-		)" &&
-	test_expect_files "backup/file/dest" 2 && # includes subdir!
+		)"
+	test_expect_files "backup/file/dest" 2 # includes subdir!
 	test_expect_files "backup/file/dest/testsubdir" 1
 
 	# delete no longer existing file
 	rm "$TESTSET_DIR/backup/file/source/dummyfile"
-	test_assert "$?" "remove Dummyfile" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
 		"$@" \
-		)" &&
-	test_expect_files "backup/file/dest" 1 && # includes subdir!
+		)"
+	test_expect_files "backup/file/dest" 1 # includes subdir!
 	test_expect_files "backup/file/dest/testsubdir" 1
 
 	# delete no longer existing file in subdir
 	rm "$TESTSET_DIR/backup/file/source/testsubdir/dummyfile2"
-	test_assert "$?" "remove Dummyfile2" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
 		"$@" \
-		)" &&
-	test_expect_files "backup/file/dest" 1 && # includes subdir!
+		)"
+	test_expect_files "backup/file/dest" 1 # includes subdir!
 	test_expect_files "backup/file/dest/testsubdir" 0
 
 	# delete no longer existing subdir
 	rmdir "$TESTSET_DIR/backup/file/source/testsubdir"
-	test_assert "$?" "remove testsubdir" || return 1
 	eval "$(test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
 		"$@" \
-		)" &&
+		)"
 	test_expect_files "backup/file/dest" 0
 
 	rm -rf \
 		"$TESTSET_DIR/backup/file/source" \
 		"$TESTSET_DIR/backup/file/dest"
-	test_assert "$?" "remove backupdirs" || return 1
 
 	return 0
 }
@@ -141,7 +132,6 @@ function test_file {
 
 	##### Specific tests for local/remote
 	mkdir -p "$TESTSET_DIR/backup/file1" "$TESTSET_DIR/backup/file2"
-	test_assert "$?" "create testdirs" || return 1
 
 	# backup remote source without secret should fail
 	#shellcheck disable=SC2086
@@ -222,7 +212,6 @@ function test_file {
 		)"
 
 	rmdir "$TESTSET_DIR/backup/file1" "$TESTSET_DIR/backup/file2"
-	test_assert "$?" "remove testdirs" || return 1
 
 	##### common tests for all variants source,dest in local,remote
 	for source in "/backup" "$my_ip:$TESTSET_DIR/backup" ; do
@@ -240,8 +229,7 @@ function test_file {
 					"$dest" \
 					"$my_fileopt $TEST_RSYNCOPT" \
 					--runonsrc \
-					$secretparam \
-				|| return 1
+					$secretparam
 
 				secretparam+="--runondst "
 			fi
@@ -251,8 +239,7 @@ function test_file {
 				"$source" \
 				"$dest" \
 				"$my_fileopt $TEST_RSYNCOPT" \
-				$secretparam \
-			|| return 1
+				$secretparam
 		done
 	done
 

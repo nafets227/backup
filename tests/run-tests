@@ -14,28 +14,20 @@ function test_init {
 	my_fileopt=""
 
 	if 	[[ "$OSTYPE" =~ darwin* ]] ; then
-		my_ip="$USER@$(ipconfig getifaddr en0 en1)" &&
-		test ! -z "$my_ip"
-		test_assert "$?" "Could not get IP with command ipconfig on MacOS" \
-		|| return 1
+		my_ip="$USER@$(ipconfig getifaddr en0 en1)"
 		my_fileopt="--macos"
 	elif which "ip" >/dev/null ; then
 		my_ip="$USER@$(set -o pipefail
 			ip -4 -j a show dev docker0 primary |
-			jq '.[].addr_info[0].local')" &&
+			jq '.[].addr_info[0].local')"
 		my_ip=${my_ip//\"}
-		test_assert "$?" "Could not get IP with command ip" \
-		|| return 1
 	else
 		my_ip=""
 		test_assert "1" "Could not get IP (not on MacOS and command ip missing)"
-		return 1
 	fi
 
-	my_host="$HOSTNAME" &&
-	test ! -z "$my_host"
-	test_assert "$?" "Could not get hostname" \
-	|| return 1
+	my_host="$HOSTNAME"
+	: "$my_host" # make shellcheck happy
 
 	return 0
 }
@@ -44,16 +36,8 @@ function test_init {
 # Parameters:
 #     1 - test file to chown
 function test_chown {
-	local fname="$1"
-
-	test -n "$fname"
-	test_assert "$?" "Internal Error - fname not given" >&2
-
 	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		chown 41598:41598 "$fname"
-		test_assert "$?" "chown failed: $fname" >&2 || return 1
-	else
-		test_assert "0" "dont chown on MacOS: $fname" >&2 || return 1
+		chown 41598:41598 "$1"
 	fi
 
 	return 0
@@ -64,9 +48,6 @@ function test_chown {
 #     1 - command in custom backup shell
 #     2 - expected RC [default: 0]
 function test_exec_backupdocker {
-	if [ "$#" -lt 1 ] ; then
-		test_assert "1" "got %s params (exp 1+)" >&2 || return 1
-	fi
 	rc_exp="$1"
 	shift
 
@@ -118,10 +99,8 @@ function test_build {
 		# Compile / Build docker
 		test_exec_cmd 0 "" \
 			docker build -t nafets227/backup:test "$BASEDIR/.."
-		test_exec_issuccess || return 1
 		TESTIMG="nafets227/backup:test"
 	else
-		test_exec_cmd 0 "" true
 		TESTIMG=$1
 	fi
 
@@ -156,7 +135,6 @@ function test_email {
 	smtpurl="smtp://${TESTALERTMAIL_USER//@/%40}:$smtppw@$TESTALERTMAIL_URL"
 
 	test_cleanImap "$TESTALERTMAIL_ADR" "$imappw" "$TESTALERTMAIL_IMAP_URL"
-	test_assert "$?" "clean IMAP" || return 1
 
 	# Trigger Error Email with empty command and unset MAIL_SSL
 	export MAIL_TO=$TESTALERTMAIL_ADR
@@ -190,10 +168,10 @@ function test_email {
 	#	"$source" \
 	#	"$dest" \
 	#	"$@" \
-	#	) &&
+	#	)
 	#test_expect_files "backup/file/dest" 0
 	#
-	#sleep 10 &&
+	#sleep 10
 	#
 	#test_exec_recvmail "$mailimapurl" 0 "-S 'imap-use-starttls'"
 	#test_cleanImap "$TESTALERTMAIL_ADR" "$imappw" "$TESTALERTMAIL_IMAP_URL"
@@ -206,26 +184,29 @@ function test_email {
 }
 
 ##### Main ###################################################################
+export LC_ALL=C # override any user-defined locale
+set -Eeuo pipefail ; shopt -s inherit_errexit ; # improved err handling
+
 BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 
 . "$BASEDIR/../util/util_test_functions.sh"
 
 for f in "$BASEDIR"/*.sh ; do
 	#shellcheck disable=SC1090 # shellcheck cannot follow dynamic includes
-	. "$f" || exit 1
+	. "$f"
 done
 
-testset_init || exit 1
+testset_init
 
 test_assert_vars \
 	TESTIMAP_SRC \
 	TESTIMAP_SECRET \
-	TESTIMAP_URL \
-	&&
+	TESTIMAP_URL
+
 test_assert_vars \
 	TESTRCLONE_CONF \
-	TESTRCLONE_NAME \
-	&&
+	TESTRCLONE_NAME
+
 test_assert_vars \
 	TESTALERTMAIL_ADR \
 	TESTALERTMAIL_FROM \
@@ -233,21 +214,18 @@ test_assert_vars \
 	TESTALERTMAIL_USER \
 	TESTALERTMAIL_SECRET \
 	TESTALERTMAIL_IMAP_URL \
-	TESTALERTMAIL_IMAP_SECRET \
-	&&
-# TESTALERTMAIL_HOSTNAME can be intendedly empty so dont check it
+	TESTALERTMAIL_IMAP_SECRET
+	# TESTALERTMAIL_HOSTNAME can be intendedly empty so dont check it
 
 if [ ! -d "$TESTSET_DIR/backup" ] ; then
-	mkdir "$TESTSET_DIR/backup" || exit 1
+	mkdir "$TESTSET_DIR/backup"
 fi
-test_chown "$TESTSET_DIR/backup" &&
-test_chown "$TESTRCLONE_CONF" &&
-test_build "$1" &&
-test_init &&
-true
+test_chown "$TESTSET_DIR/backup"
+test_chown "$TESTRCLONE_CONF"
+test_build "${1-}"
+test_init
 
-#shellcheck disable=SC2181 # using $? here helps to keep the structure
-if [ "$?" == "0" ] ; then
+if testset_issuccess ; then
 	test_runempty
 	test_email
 	unset MAIL_TO MAIL_URL # disable mailing for following tests
@@ -261,5 +239,6 @@ if [ "$?" == "0" ] ; then
 	: "$my_fileopt" # make shellcheck happy, its used in test-file*.sh
 fi
 
-testset_summary
-exit $?
+testset_summary || exit 1
+
+exit 0

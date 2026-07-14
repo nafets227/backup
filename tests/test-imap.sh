@@ -27,14 +27,11 @@ function test_imap {
 
 	local mail_smtpsrv=${TESTIMAP_URL%%:*}
 	cat >"$TESTSET_DIR/backup/imap_wrongpassword.password" <<<"wrongpassword"
-	test_assert "$?" "write imap_wrongpassword.password" || return 1
 
 	cp "$TESTIMAP_SECRET" \
 		"$TESTSET_DIR/backup/imap_password.password"
-	test_assert "$?" "write imap_password.password" || return 1
 
 	test_cleanImap "$TESTIMAP_SRC" "$(cat "$TESTIMAP_SECRET")" "$mail_smtpsrv"
-	test_assert "$?" "clean IMAP" || return 1
 
 	# No password and default does not exist
 	eval "$(test_exec_backupdocker 1 \
@@ -63,15 +60,16 @@ function test_imap {
 		)"
 
 	# IMAP Wrong password - remote backup dest
-	$exec_remote &&
-	eval "$(test_exec_backupdocker 1 \
-		"backup imap" \
-		"$TESTIMAP_SRC" \
-		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
-		"$TESTIMAP_URL" \
-		--srcsecret /backup/imap_wrongpassword.password \
-		--dstsecret /secrets/id_rsa
-		)"
+	if $exec_remote ; then
+		eval "$(test_exec_backupdocker 1 \
+			"backup imap" \
+			"$TESTIMAP_SRC" \
+			"$my_ip:$TESTSET_DIR/backup-rem/imap" \
+			"$TESTIMAP_URL" \
+			--srcsecret /backup/imap_wrongpassword.password \
+			--dstsecret /secrets/id_rsa
+			)"
+	fi
 
 	# IMAP OK with Empty Mailbox
 	eval "$(test_exec_backupdocker  0 \
@@ -80,22 +78,23 @@ function test_imap {
 		/backup/imap \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)" &&
-	test_expect_files "backup/imap/INBOX/new" 0 &&
+		)"
+	test_expect_files "backup/imap/INBOX/new" 0
 	test_expect_files "backup/imap/INBOX/cur" 0
 
 	# IMAP OK with Empty Mailbox - remote backup dest
-	$exec_remote &&
-	eval "$(test_exec_backupdocker 0 \
-		"backup imap" \
-		"$TESTIMAP_SRC" \
-		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
-		"$TESTIMAP_URL" \
-		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
-		)" &&
-	test_expect_files "backup-rem/imap/INBOX/new" 0 &&
-	test_expect_files "backup-rem/imap/INBOX/cur" 0
+	if $exec_remote ; then
+		eval "$(test_exec_backupdocker 0 \
+			"backup imap" \
+			"$TESTIMAP_SRC" \
+			"$my_ip:$TESTSET_DIR/backup-rem/imap" \
+			"$TESTIMAP_URL" \
+			--srcsecret /backup/imap_password.password \
+			--dstsecret /secrets/id_rsa
+			)"
+		test_expect_files "backup-rem/imap/INBOX/new" 0
+		test_expect_files "backup-rem/imap/INBOX/cur" 0
+	fi
 
 	# IMAP KO without password
 	eval "$(test_exec_backupdocker 1 \
@@ -106,18 +105,18 @@ function test_imap {
 		)"
 
 	# IMAP KO without password remote
-	$exec_remote &&
-	eval "$(test_exec_backupdocker 1 \
-		"backup imap" \
-		"$TESTIMAP_SRC" \
-		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
-		"$TESTIMAP_URL" \
-		--dstsecret /secrets/id_rsa
-		)"
+	if $exec_remote ; then
+		eval "$(test_exec_backupdocker 1 \
+			"backup imap" \
+			"$TESTIMAP_SRC" \
+			"$my_ip:$TESTSET_DIR/backup-rem/imap" \
+			"$TESTIMAP_URL" \
+			--dstsecret /secrets/id_rsa
+			)"
+	fi
 
 	# Store Testmail
 	test_putImap "$TESTIMAP_SRC" "$(cat "$TESTIMAP_SECRET")" "$TESTIMAP_URL"
-	test_assert "$?" "store testmail" || return 1
 
 	# IMAP OK with one Mail
 	eval "$(test_exec_backupdocker 0 \
@@ -126,8 +125,8 @@ function test_imap {
 		/backup/imap \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)" &&
-	test_expect_files "backup/imap/INBOX/new" 0 &&
+		)"
+	test_expect_files "backup/imap/INBOX/new" 0
 	test_expect_files "backup/imap/INBOX/cur" 1
 	# @TODO test content of file
 
@@ -138,25 +137,26 @@ function test_imap {
 		/backup/imap/testimapsubdir \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)" &&
-	test_expect_files "backup/imap/testimapsubdir/INBOX/new" 0 &&
+		)"
+	test_expect_files "backup/imap/testimapsubdir/INBOX/new" 0
 	test_expect_files "backup/imap/testimapsubdir/INBOX/cur" 1
 
 	# IMAP OK with one Mail - remote backup dest
-	$exec_remote &&
-	eval "$(test_exec_backupdocker 0 \
-		"backup imap" \
-		"$TESTIMAP_SRC" \
-		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
-		"$TESTIMAP_URL" \
-		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
-		)" &&
-	test_expect_files "backup-rem/imap/INBOX/new" 0 &&
-	test_expect_files "backup-rem/imap/INBOX/cur" 1
+	if $exec_remote ; then
+		eval "$(test_exec_backupdocker 0 \
+			"backup imap" \
+			"$TESTIMAP_SRC" \
+			"$my_ip:$TESTSET_DIR/backup-rem/imap" \
+			"$TESTIMAP_URL" \
+			--srcsecret /backup/imap_password.password \
+			--dstsecret /secrets/id_rsa
+			)"
+		test_expect_files "backup-rem/imap/INBOX/new" 0
+		test_expect_files "backup-rem/imap/INBOX/cur" 1
+	fi
 
 	test_cleanImap "$TESTIMAP_SRC" "$(cat "$TESTIMAP_SECRET")" \
-		"$TESTIMAP_URL" || return 1
+		"$TESTIMAP_URL"
 
 	# IMAP OK with Empty Mailbox
 	eval "$(test_exec_backupdocker 0 \
@@ -165,8 +165,8 @@ function test_imap {
 		/backup/imap \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)" &&
-	test_expect_files "backup/imap/INBOX/new" 0 &&
+		)"
+	test_expect_files "backup/imap/INBOX/new" 0
 	test_expect_files "backup/imap/INBOX/cur" 0
 
 	return 0
