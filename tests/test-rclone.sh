@@ -79,13 +79,20 @@ function test_putRclone () {
 }
 
 function test_expect_rclone_files {
-	testnr=$(( ${testnr-0} + 1))
-	# not increasing testexecnr
-
+	TESTSET_LAST_CHECK_NR=$(( ${TESTSET_LAST_CHECK_NR-0} + 1))
+	# not increasing TESTSET_LAST_TEST_NR
 	local rclone_namepath="$1"
 	local rclone_conf="$2"
 	local testexpected="$3"
 	shift 3
+
+	# switch off tracing as it would produce additional output that
+	# makes some tests fail.
+	# make sure its reset to previous state on return
+	if [ -o xtrace ] ; then
+		set +x
+		trap "set -x" RETURN
+	fi
 
 	test_rclone_execraw "$rclone_conf" \
 		lsf "$rclone_namepath" "$@"
@@ -100,16 +107,16 @@ function test_expect_rclone_files {
 
 	if [ "$rc" != 0 ] ; then
 		printf "\tCHECK %s FAILED. Cannot get files in '%s'\n" \
-			"$testnr" "$rclone_namepath"
-		testsetfailed="$testsetfailed $testnr"
+			"$TESTSET_LAST_CHECK_NR" "$rclone_namepath"
+		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 	elif [ "$testresult" != "$testexpected" ] ; then
 		# nr of files differ from expected
 		printf "\tCHECK %s FAILED. nr of files in '%s' is %s (exp=%s)\n" \
-			"$testnr" "$rclone_namepath" "$testresult" "$testexpected"
-		testsetfailed="$testsetfailed $testnr"
+			"$TESTSET_LAST_CHECK_NR" "$rclone_namepath" "$testresult" "$testexpected"
+		TESTSET_TESTFAILED="$TESTSET_TESTFAILED $TESTSET_LAST_CHECK_NR"
 	else
-		printf "\tCHECK %s OK.\n" "$testnr"
-		testsetok=$(( ${testsetok-0} + 1))
+		printf "\tCHECK %s OK.\n" "$TESTSET_LAST_CHECK_NR"
+		TESTSET_TESTSOK=$(( ${TESTSET_TESTSOK-0} + 1))
 	fi
 
 	return 0
@@ -118,8 +125,7 @@ function test_expect_rclone_files {
 
 ##### Tests for rclone2file ##################################################
 function test_rclone2file {
-	if \
-		! test_assert_files "$TESTRCLONE_CONF"
+	if [ ! -f "$TESTRCLONE_CONF" ]
 	then
 		printf "\tSkipping rclone Tests.\n"
 		return 0
@@ -128,7 +134,7 @@ function test_rclone2file {
 	if [ -n "$my_ip" ] ; then
 		exec_remote=true
 	else
-		test_assert "1" "Skipping IMAP Remote Tests (ip/ipconfig)"
+		test_expect_value "1" 0 "Skipping IMAP Remote Tests (ip/ipconfig)"
 		exec_remote=false
 	fi
 
@@ -148,7 +154,7 @@ function test_rclone2file {
 		--srcsecret /backup/rclone2file.conf \
 		--exclude '/UnusedVault/**' \
 		)"
-	test_expect_files "backup/rclone2file" 0
+	test_expect_filecount "backup/rclone2file" 0
 
 	# Wrong src, no ":"
 	eval "$(test_exec_backupdocker 1 \
@@ -196,7 +202,7 @@ function test_rclone2file {
 		--srcsecret /backup/rclone2file.conf \
 		--exclude '/UnusedVault/**' \
 		)"
-	test_expect_files "backup/rclone2file" 0
+	test_expect_filecount "backup/rclone2file" 0
 
 	# rclone OK with Empty Cloud - remote backup dest
 	if $exec_remote ; then
@@ -208,7 +214,7 @@ function test_rclone2file {
 			--dstsecret /secrets/id_rsa \
 			--exclude '/UnusedVault/**' \
 			)"
-		test_expect_files "backup-rem/rclone2file" 0
+		test_expect_filecount "backup-rem/rclone2file" 0
 	fi
 
 	# Verify modifying conf
@@ -251,8 +257,8 @@ function test_rclone2file {
 		--srcsecret /backup/rclone2file.conf \
 		--exclude '/UnusedVault/**' \
 		)"
-	test_expect_files "backup/rclone2file" 2
-	test_expect_files "backup/rclone2file/testdir" 1
+	test_expect_filecount "backup/rclone2file" 2
+	test_expect_filecount "backup/rclone2file/testdir" 1
 
 	# rclone OK with files - remote backup dest
 	if $exec_remote ; then
@@ -264,8 +270,8 @@ function test_rclone2file {
 			--dstsecret /secrets/id_rsa \
 			--exclude '/UnusedVault/**' \
 			)"
-		test_expect_files "backup-rem/rclone2file" 2
-		test_expect_files "backup-rem/rclone2file/testdir" 1
+		test_expect_filecount "backup-rem/rclone2file" 2
+		test_expect_filecount "backup-rem/rclone2file/testdir" 1
 	fi
 
 	test_cleanRclone "$TESTRCLONE_NAME" "$TESTRCLONE_CONF"
@@ -278,7 +284,7 @@ function test_rclone2file {
 		--srcsecret /backup/rclone2file.conf \
 		--exclude '/UnusedVault/**' \
 		)"
-	test_expect_files "backup/rclone2file" 0
+	test_expect_filecount "backup/rclone2file" 0
 
 	# rclone OK with files deleted - remote backup dest
 	if $exec_remote ; then
@@ -290,7 +296,7 @@ function test_rclone2file {
 			--dstsecret /secrets/id_rsa \
 			--exclude '/UnusedVault/**' \
 			)"
-		test_expect_files "backup-rem/rclone2file" 0
+		test_expect_filecount "backup-rem/rclone2file" 0
 	fi
 
 	return 0
@@ -298,8 +304,7 @@ function test_rclone2file {
 
 ##### Tests for rclone2file history ##########################################
 function test_rclone2file_hist {
-	if \
-		! test_assert_files "$TESTRCLONE_CONF"
+	if [ ! -f "$TESTRCLONE_CONF" ]
 	then
 		printf "\tSkipping rclone Tests.\n"
 		return 0
@@ -393,11 +398,11 @@ function test_rclone2file_hist {
 		)"
 
 	# Finally check:
-	test_expect_files "backup/rclone2file-hist/2022/03/01" 0
-	test_expect_files "backup/rclone2file-hist/2022/03/02" 0
+	test_expect_filecount "backup/rclone2file-hist/2022/03/01" 0
+	test_expect_filecount "backup/rclone2file-hist/2022/03/02" 0
 
-	test_expect_files "backup/rclone2file-hist/2022/03/10" 2
-	test_expect_files "backup/rclone2file-hist/2022/03/11" 2
+	test_expect_filecount "backup/rclone2file-hist/2022/03/10" 2
+	test_expect_filecount "backup/rclone2file-hist/2022/03/11" 2
 	test_expect_linkedfiles \
 		"backup/rclone2file-hist/2022/03/10/test.txt" \
 		"backup/rclone2file-hist/2022/03/11/test.txt"
@@ -417,8 +422,8 @@ function test_rclone2file_hist {
 		"backup/rclone2file-hist/2022/03/11/testdir/testfile.txt" \
 		rclone-hist-1
 
-	test_expect_files "backup/rclone2file-hist/2022/03/20" 2
-	test_expect_files "backup/rclone2file-hist/2022/03/21" 2
+	test_expect_filecount "backup/rclone2file-hist/2022/03/20" 2
+	test_expect_filecount "backup/rclone2file-hist/2022/03/21" 2
 	test_expect_linkedfiles \
 		"backup/rclone2file-hist/2022/03/20/test.txt" \
 		"backup/rclone2file-hist/2022/03/21/test.txt"
@@ -438,15 +443,14 @@ function test_rclone2file_hist {
 		"backup/rclone2file-hist/2022/03/21/testdir/testfile.txt" \
 		rclone-hist-2
 
-	test_expect_files "backup/rclone2file-hist/2022/03/30" 0
+	test_expect_filecount "backup/rclone2file-hist/2022/03/30" 0
 
 	return 0
 }
 
 ##### Tests for file2rclone ##################################################
 function test_file2rclone {
-	if \
-		! test_assert_files "$TESTRCLONE_CONF"
+	if [ ! -f "$TESTRCLONE_CONF" ]
 	then
 		printf "\tSkipping file2rclone Tests.\n"
 		return 0
@@ -551,7 +555,8 @@ function test_file2rclone {
 			$secretparam \
 			--exclude '/UnusedVault/**' \
 			)"
-		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 0
+		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 0 \
+			--exclude '/UnusedVault/**'
 
 		# backup one file
 		cat >"$TESTSET_DIR/backup/file2rclone/dummyfile" <<<"Dummyfile"
@@ -562,10 +567,10 @@ function test_file2rclone {
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparam \
-			"$@" \
 			--exclude '/UnusedVault/**' \
 			)"
-		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 1
+		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 1 \
+			--exclude '/UnusedVault/**'
 
 		# backup additional file in subdirectory
 		mkdir "$TESTSET_DIR/backup/file2rclone/testsubdir"
@@ -577,13 +582,14 @@ function test_file2rclone {
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparam \
-			"$@" \
 			--exclude '/UnusedVault/**' \
 			)"
-		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 2
+		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 2 \
+			--exclude '/UnusedVault/**'
 		# includes subdir!
 		test_expect_rclone_files "${TESTRCLONE_NAME}testsubdir" \
-			"$TESTRCLONE_CONF" 1
+			"$TESTRCLONE_CONF" 1 \
+			--exclude '/UnusedVault/**'
 
 		# delete no longer existing file
 		rm "$TESTSET_DIR/backup/file2rclone/dummyfile"
@@ -594,13 +600,14 @@ function test_file2rclone {
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparam \
-			"$@" \
 			--exclude '/UnusedVault/**' \
 			)"
-		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 1
+		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 1 \
+			--exclude '/UnusedVault/**'
 		# includes subdir!
 		test_expect_rclone_files "${TESTRCLONE_NAME}testsubdir" \
-			"$TESTRCLONE_CONF" 1
+			"$TESTRCLONE_CONF" 1 \
+			--exclude '/UnusedVault/**'
 
 		# delete no longer existing file in subdir
 		rm "$TESTSET_DIR/backup/file2rclone/testsubdir/dummyfile2"
@@ -611,13 +618,14 @@ function test_file2rclone {
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparam \
-			"$@" \
 			--exclude '/UnusedVault/**' \
 			)"
-		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 1
+		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 1 \
+			--exclude '/UnusedVault/**'
 		# includes subdir!
 		test_expect_rclone_files "${TESTRCLONE_NAME}testsubdir" \
-			"$TESTRCLONE_CONF" 0
+			"$TESTRCLONE_CONF" 0 \
+			--exclude '/UnusedVault/**'
 
 		# delete no longer existing subdir
 		rmdir "$TESTSET_DIR/backup/file2rclone/testsubdir"
@@ -628,10 +636,10 @@ function test_file2rclone {
 			"$TESTRCLONE_NAME" \
 			--dstsecret /backup/file2rclone.conf \
 			$secretparam \
-			"$@" \
 			--exclude '/UnusedVault/**' \
 			)"
-		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 0
+		test_expect_rclone_files "$TESTRCLONE_NAME" "$TESTRCLONE_CONF" 0 \
+			--exclude '/UnusedVault/**'
 	done
 
 	return 0

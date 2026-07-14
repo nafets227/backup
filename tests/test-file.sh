@@ -42,7 +42,7 @@ function test_file_srcdest {
 		"$dest/thisdirdoesnotexist" \
 		"$@" \
 		)"
-	test_expect_files "backup/file/dest/thisdirdoesnotexist" 0
+	test_expect_filecount "backup/file/dest/thisdirdoesnotexist" 0
 	rmdir "$TESTSET_DIR/backup/file/dest/thisdirdoesnotexist"
 
 	# backup empty path
@@ -52,7 +52,7 @@ function test_file_srcdest {
 		"$dest" \
 		"$@" \
 		)"
-	test_expect_files "backup/file/dest" 0
+	test_expect_filecount "backup/file/dest" 0
 
 	# rsync parameters with empty path
 	eval "$(test_exec_backupdocker 0 \
@@ -63,7 +63,7 @@ function test_file_srcdest {
 		-- \
 		--verbose
 		)"
-	test_expect_files "backup/file/dest" 0
+	test_expect_filecount "backup/file/dest" 0
 
 	# backup one file
 	cat >"$TESTSET_DIR/backup/file/source/dummyfile" <<<"Dummyfile"
@@ -73,7 +73,7 @@ function test_file_srcdest {
 		"$dest" \
 		"$@" \
 		)"
-	test_expect_files "backup/file/source" 1
+	test_expect_filecount "backup/file/source" 1
 
 	# backup additional file in subdirectory
 	mkdir "$TESTSET_DIR/backup/file/source/testsubdir"
@@ -84,8 +84,8 @@ function test_file_srcdest {
 		"$dest" \
 		"$@" \
 		)"
-	test_expect_files "backup/file/dest" 2 # includes subdir!
-	test_expect_files "backup/file/dest/testsubdir" 1
+	test_expect_filecount "backup/file/dest" 2 # includes subdir!
+	test_expect_filecount "backup/file/dest/testsubdir" 1
 
 	# delete no longer existing file
 	rm "$TESTSET_DIR/backup/file/source/dummyfile"
@@ -95,8 +95,8 @@ function test_file_srcdest {
 		"$dest" \
 		"$@" \
 		)"
-	test_expect_files "backup/file/dest" 1 # includes subdir!
-	test_expect_files "backup/file/dest/testsubdir" 1
+	test_expect_filecount "backup/file/dest" 1 # includes subdir!
+	test_expect_filecount "backup/file/dest/testsubdir" 1
 
 	# delete no longer existing file in subdir
 	rm "$TESTSET_DIR/backup/file/source/testsubdir/dummyfile2"
@@ -106,8 +106,8 @@ function test_file_srcdest {
 		"$dest" \
 		"$@" \
 		)"
-	test_expect_files "backup/file/dest" 1 # includes subdir!
-	test_expect_files "backup/file/dest/testsubdir" 0
+	test_expect_filecount "backup/file/dest" 1 # includes subdir!
+	test_expect_filecount "backup/file/dest/testsubdir" 0
 
 	# delete no longer existing subdir
 	rmdir "$TESTSET_DIR/backup/file/source/testsubdir"
@@ -117,7 +117,7 @@ function test_file_srcdest {
 		"$dest" \
 		"$@" \
 		)"
-	test_expect_files "backup/file/dest" 0
+	test_expect_filecount "backup/file/dest" 0
 
 	rm -rf \
 		"$TESTSET_DIR/backup/file/source" \

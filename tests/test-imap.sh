@@ -9,17 +9,17 @@
 ##### Tests for IMAP #########################################################
 function test_imap {
 	if \
-		! test_assert_tools "curl" "$TEST_SNAIL"
+		! test_is_cmdavail "curl" "$TEST_SNAIL"
 	then
 		printf "\tSkipping IMAP Tests.\n"
 		return 0
-	elif ! test_assert_tools "offlineimap" "jq" ; then
+	elif ! test_is_cmdavail "offlineimap" "jq" ; then
 		printf "\tSkipping IMAP Remote Tests.\n"
 		exec_remote=false
 	elif [ -n "$my_ip" ] ; then
 		exec_remote=true
 	else
-		test_assert "1" "Skipping IMAP Remote Tests (ip/ipconfig)"
+		test_expect_value "1" 0 "Skipping IMAP Remote Tests (ip/ipconfig)"
 		exec_remote=false
 	fi
 
@@ -79,8 +79,8 @@ function test_imap {
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
 		)"
-	test_expect_files "backup/imap/INBOX/new" 0
-	test_expect_files "backup/imap/INBOX/cur" 0
+	test_expect_filecount "backup/imap/INBOX/new" 0
+	test_expect_filecount "backup/imap/INBOX/cur" 0
 
 	# IMAP OK with Empty Mailbox - remote backup dest
 	if $exec_remote ; then
@@ -92,8 +92,8 @@ function test_imap {
 			--srcsecret /backup/imap_password.password \
 			--dstsecret /secrets/id_rsa
 			)"
-		test_expect_files "backup-rem/imap/INBOX/new" 0
-		test_expect_files "backup-rem/imap/INBOX/cur" 0
+		test_expect_filecount "backup-rem/imap/INBOX/new" 0
+		test_expect_filecount "backup-rem/imap/INBOX/cur" 0
 	fi
 
 	# IMAP KO without password
@@ -126,8 +126,8 @@ function test_imap {
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
 		)"
-	test_expect_files "backup/imap/INBOX/new" 0
-	test_expect_files "backup/imap/INBOX/cur" 1
+	test_expect_filecount "backup/imap/INBOX/new" 0
+	test_expect_filecount "backup/imap/INBOX/cur" 1
 	# @TODO test content of file
 
 	# IMAP OK with one Mail in subdirectory
@@ -138,8 +138,8 @@ function test_imap {
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
 		)"
-	test_expect_files "backup/imap/testimapsubdir/INBOX/new" 0
-	test_expect_files "backup/imap/testimapsubdir/INBOX/cur" 1
+	test_expect_filecount "backup/imap/testimapsubdir/INBOX/new" 0
+	test_expect_filecount "backup/imap/testimapsubdir/INBOX/cur" 1
 
 	# IMAP OK with one Mail - remote backup dest
 	if $exec_remote ; then
@@ -151,8 +151,8 @@ function test_imap {
 			--srcsecret /backup/imap_password.password \
 			--dstsecret /secrets/id_rsa
 			)"
-		test_expect_files "backup-rem/imap/INBOX/new" 0
-		test_expect_files "backup-rem/imap/INBOX/cur" 1
+		test_expect_filecount "backup-rem/imap/INBOX/new" 0
+		test_expect_filecount "backup-rem/imap/INBOX/cur" 1
 	fi
 
 	test_cleanImap "$TESTIMAP_SRC" "$(cat "$TESTIMAP_SECRET")" \
@@ -166,8 +166,8 @@ function test_imap {
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
 		)"
-	test_expect_files "backup/imap/INBOX/new" 0
-	test_expect_files "backup/imap/INBOX/cur" 0
+	test_expect_filecount "backup/imap/INBOX/new" 0
+	test_expect_filecount "backup/imap/INBOX/cur" 0
 
 	return 0
 }

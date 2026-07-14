@@ -20,7 +20,7 @@ function test_file_hist_srcdest {
 	mkdir -p \
 		"$TESTSET_DIR/backup/file-hist/source" \
 		"$TESTSET_DIR/backup/file-hist/dest"
-	test_assert "$?" "Creating directories in ${FUNCNAME[0]}"
+	test_expect_value "$?" 0 "Creating directories in ${FUNCNAME[0]}"
 	test_chown "$TESTSET_DIR/backup/file-hist"
 	test_chown "$TESTSET_DIR/backup/file-hist/source"
 	test_chown "$TESTSET_DIR/backup/file-hist/dest"
@@ -47,7 +47,7 @@ function test_file_hist_srcdest {
 		"$dest/thisdirdoesnotexist" \
 		"$@" \
 		)"
-	test_expect_files "backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" 0
+	test_expect_filecount "backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" 0
 	rmdir \
 		"$TESTSET_DIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" \
 		"$TESTSET_DIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10" \
@@ -124,15 +124,15 @@ function test_file_hist_srcdest {
 		"$@" \
 		)"
 
-	test_expect_files "backup/file-hist/dest/2020/10/11" 0
-	test_expect_files "backup/file-hist/dest/2020/10/12" 1
-	test_expect_files "backup/file-hist/dest/2020/10/13" 2 # includes subdir!
-	test_expect_files "backup/file-hist/dest/2020/10/13/testsubdir" 1
-	test_expect_files "backup/file-hist/dest/2020/10/14" 1 # includes subdir!
-	test_expect_files "backup/file-hist/dest/2020/10/14/testsubdir" 1
-	test_expect_files "backup/file-hist/dest/2020/10/15" 1 # includes subdir!
-	test_expect_files "backup/file-hist/dest/2020/10/15/testsubdir" 0
-	test_expect_files "backup/file-hist/dest/2020/10/16" 0
+	test_expect_filecount "backup/file-hist/dest/2020/10/11" 0
+	test_expect_filecount "backup/file-hist/dest/2020/10/12" 1
+	test_expect_filecount "backup/file-hist/dest/2020/10/13" 2 # includes subdir!
+	test_expect_filecount "backup/file-hist/dest/2020/10/13/testsubdir" 1
+	test_expect_filecount "backup/file-hist/dest/2020/10/14" 1 # includes subdir!
+	test_expect_filecount "backup/file-hist/dest/2020/10/14/testsubdir" 1
+	test_expect_filecount "backup/file-hist/dest/2020/10/15" 1 # includes subdir!
+	test_expect_filecount "backup/file-hist/dest/2020/10/15/testsubdir" 0
+	test_expect_filecount "backup/file-hist/dest/2020/10/16" 0
 
 	rm -rf \
 		"$TESTSET_DIR/backup/file-hist/source" \

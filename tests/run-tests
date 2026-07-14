@@ -16,14 +16,18 @@ function test_init {
 	if 	[[ "$OSTYPE" =~ darwin* ]] ; then
 		my_ip="$USER@$(ipconfig getifaddr en0 en1)"
 		my_fileopt="--macos"
+		TEST_RSYNCOPT="--rsync-path=/usr/local/bin/rsync"
 	elif which "ip" >/dev/null ; then
 		my_ip="$USER@$(set -o pipefail
 			ip -4 -j a show dev docker0 primary |
 			jq '.[].addr_info[0].local')"
 		my_ip=${my_ip//\"}
+		TEST_RSYNCOPT=""
 	else
 		my_ip=""
-		test_assert "1" "Could not get IP (not on MacOS and command ip missing)"
+		test_expect_value "1" "0" \
+			"Could not get IP (not on MacOS and command ip missing)"
+		TEST_RSYNCOPT=""
 	fi
 
 	my_host="$HOSTNAME"
@@ -55,24 +59,24 @@ function test_exec_backupdocker {
 		! cat >"$TESTSET_DIR/backup/backup" <<<"$@" ||
 		! chmod +x "$TESTSET_DIR/backup/backup"
 	then
-		printf "test_assert %s \"%s\"\n" "$?" "Write backup script"
+		printf "test_expect_value %s 0 \"%s\"\n" "$?" "Write backup script"
 		return 1
 	fi
 
 	if ! cp ~/.ssh/id_rsa "$TESTSET_DIR/id_rsa"
 	then
-		printf "test_assert %s \"%s\"\n" "$?" "Copy SSH Key"
+		printf "test_expect_value %s 0 \"%s\"\n" "$?" "Copy SSH Key"
 		return 1
 	fi
 	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
 		if ! chown 41598:41598 "$TESTSET_DIR/id_rsa" ; then
-			printf "test_assert %s \"%s\"\n" "$?" "chown SSH Key"
+			printf "test_expect_value %s 0 \"%s\"\n" "$?" "chown SSH Key"
 			return 1
 		else
-			printf "test_assert %s \"%s\"\n" "0" "not chowning SSH Key"
+			printf "test_expect_value %s 0 \"%s\"\n" "0" "not chowning SSH Key"
 		fi
 	else
-		printf "test_assert %s \"%s\"\n" "0" "not chowning SSH Key"
+		printf "test_expect_value %s 0 \"%s\"\n" "0" "not chowning SSH Key"
 	fi
 
 	printf "test_exec_cmd"
@@ -118,7 +122,7 @@ function test_runempty {
 ##### Test: Email alerting ###################################################
 function test_email {
 	if \
-		! test_assert_tools "curl" "$TEST_SNAIL"
+		! test_is_cmdavail "curl" "$TEST_SNAIL"
 	then
 		printf "\tSkipping IMAP Tests.\n"
 		return 0
@@ -169,7 +173,7 @@ function test_email {
 	#	"$dest" \
 	#	"$@" \
 	#	)
-	#test_expect_files "backup/file/dest" 0
+	#test_expect_filecount "backup/file/dest" 0
 	#
 	#sleep 10
 	#
@@ -189,6 +193,7 @@ set -Eeuo pipefail ; shopt -s inherit_errexit ; # improved err handling
 
 BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 
+. "$BASEDIR/../util/util_err_functions.sh"
 . "$BASEDIR/../util/util_test_functions.sh"
 
 for f in "$BASEDIR"/*.sh ; do
@@ -196,18 +201,18 @@ for f in "$BASEDIR"/*.sh ; do
 	. "$f"
 done
 
-testset_init
+testset_init "$@"
 
-test_assert_vars \
+test_expect_vardefined \
 	TESTIMAP_SRC \
 	TESTIMAP_SECRET \
 	TESTIMAP_URL
 
-test_assert_vars \
+test_expect_vardefined \
 	TESTRCLONE_CONF \
 	TESTRCLONE_NAME
 
-test_assert_vars \
+test_expect_vardefined \
 	TESTALERTMAIL_ADR \
 	TESTALERTMAIL_FROM \
 	TESTALERTMAIL_URL \
