@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# Run SuperLinter locally
+#
+# (C) 2026 Stefan Schallenberg
+
+export LC_ALL=C # override any user-defined locale
+set -Eeuo pipefail ; shopt -s inherit_errexit ; # improved err handling
+
+BASEDIR=$(dirname "$(dirname "${BASH_SOURCE[0]}")")
+
+ver=$(sed -n \
+	's#^[[:space:]]*uses: super-linter/super-linter/slim@\(.*\)$#\1#p' \
+	"$BASEDIR/.github/workflows"/*
+)
+
+if 	[[ "$OSTYPE" =~ darwin* ]] ; then
+	docker pull \
+		--platform linux/amd64 \
+		"ghcr.io/super-linter/super-linter:slim-$ver"
+fi
+
+if docker run --rm \
+	-e RUN_LOCAL=true \
+	-e LOG_LEVEL=WARN \
+	--env-file "$BASEDIR/.github/linters/super-linter.env" \
+	-v "$BASEDIR":/tmp/lint \
+	"ghcr.io/super-linter/super-linter:slim-$ver"
+then
+	printf "SuperLinter %s OK\n" "$ver"
+	exit 0
+else
+	printf "SuperLinter %s ERROR\n" "$ver"
+	exit 1
+fi
