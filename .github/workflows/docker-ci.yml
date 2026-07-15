@@ -15,6 +15,9 @@ permissions:
 # in the test step, since they would use the same test Email and OneDrive.
 concurrency: ci
 
+env:
+  VERSION: 0.0.0 # dummy value will be replaced by calculate version step
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -51,6 +54,9 @@ jobs:
         with:
           submodules: true
           persist-credentials: false
+          fetch-depth: 0
+          fetch-tags: true
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -61,11 +67,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Calculate version
+        id: version
+        run: |
+          set -Eeuo pipefail ${{ runner.debug && '-x' || '' }}
+          shopt -s inherit_errexit
+          . scripts/get-version
+          # writes VERSION=1.2.3 to $GITHUB_ENV
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ env.VERSION }}
+
+            # latest only for Release Tags
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
 
       - name: Build Docker image
         uses: docker/build-push-action@v7
@@ -77,6 +96,20 @@ jobs:
           load: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Update Helm chart
+        run: |
+          yq -i \
+            '.version="${{ env.VERSION }}"' \
+            charts/nafets227-backup/Chart.yaml
+          yq -i \
+            '.appVersion="${{ env.VERSION }}"' \
+            charts/nafets227-backup/Chart.yaml
+
+      - name: Package Helm
+        run: |
+          helm dependency update charts/nafets227-backup
+          helm package charts/nafets227-backup --destination dist
 
       - name: setup
         id: setup
@@ -115,3 +148,9 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Push Helm chart
+        run: |
+          helm push \
+            dist/nafets227-backup-${{ env.VERSION }}.tgz \
+            oci://ghcr.io/${{ github.repository_owner }}/charts
