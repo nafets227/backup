@@ -196,10 +196,12 @@ BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 . "$BASEDIR/../util/util_err_functions.sh"
 . "$BASEDIR/../util/util_test_functions.sh"
 
-for f in "$BASEDIR"/*.sh ; do
-	#shellcheck disable=SC1090 # shellcheck cannot follow dynamic includes
-	. "$f"
-done
+. "$BASEDIR/config.sh"
+. "$BASEDIR/test-file-hist.sh"
+. "$BASEDIR/test-file.sh"
+. "$BASEDIR/test-imap-hist.sh"
+. "$BASEDIR/test-imap.sh"
+. "$BASEDIR/test-rclone.sh"
 
 testset_init "$@"
 
@@ -241,7 +243,6 @@ if testset_issuccess ; then
 	test_file_hist
 	test_imap
 	test_imap_hist
-	: "$my_fileopt" # make shellcheck happy, its used in test-file*.sh
 fi
 
 testset_summary || exit 1
