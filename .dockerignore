@@ -1,5 +1,8 @@
-README.md
-CHANGELOG.md
+.git
+.github
+scripts
 tests
 util
-.git
+CHANGELOG.md
+LICENSE
+README.md
