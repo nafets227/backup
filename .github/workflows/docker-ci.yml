@@ -91,7 +91,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_SECRET_ADMIN_TOKEN }}
           MAIL_PW: ${{ secrets.MAIL_PW }}
         run: |
-          [ "$RUNNER_DEBUG" == 1 ] && DEBUGSH="set -x ; " && set -x
+          set -Eeuo pipefail ${{ runner.debug && '-x' || '' }}
+          shopt -s inherit_errexit
 
           cat >tests/rclone.conf <<<"$RCLONE_CONF"
           cat >tests/mail.password <<<"$MAIL_PW"
@@ -101,8 +102,7 @@ jobs:
           sudo bash -c 'cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys'
           sudo bash -c 'touch ~/.hushlogin'
 
-          sudo \
-            bash -c "$DEBUGSH . tests/run-tests"
+          sudo bash ${{ runner.debug && '-x' || '' }} tests/run-tests
 
           gh secret set RCLONE_CONF < tests/rclone.conf
           rm tests/rclone.conf tests/mail.password
