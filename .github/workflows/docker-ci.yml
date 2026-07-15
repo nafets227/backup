@@ -90,8 +90,6 @@ jobs:
           RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
           GH_TOKEN: ${{ secrets.GH_SECRET_ADMIN_TOKEN }}
           MAIL_PW: ${{ secrets.MAIL_PW }}
-          IMGURL: |
-            ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version}}
         run: |
           [ "$RUNNER_DEBUG" == 1 ] && DEBUGSH="set -x ; " && set -x
 
@@ -115,7 +113,7 @@ jobs:
           sudo bash -c 'touch ~/.hushlogin'
 
           sudo \
-            bash -c "$DEBUGSH . tests/run-tests $IMG_URL"
+            bash -c "$DEBUGSH . tests/run-tests"
 
           gh secret set RCLONE_CONF < tests/rclone.conf
           rm tests/rclone.conf tests/mail.password
