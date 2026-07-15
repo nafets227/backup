@@ -1,5 +1,6 @@
 .git
 .github
+charts
 scripts
 tests
 util
