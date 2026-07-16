@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# Render CI Sample values.yaml
+
+export LC_ALL=C # override any user-defined locale
+set -Eeuo pipefail ; shopt -s inherit_errexit nullglob
+
+BASEDIR=$(dirname "$(dirname "${BASH_SOURCE[0]}")")
+
+rm -rf "$BASEDIR/citmp"
+
+for chart in "$BASEDIR/charts"/* ; do
+	chart=$(basename "$chart")
+	helm lint "$BASEDIR/charts/$chart"
+	for values in "$BASEDIR/charts/$chart/ci"/values-*.yaml; do
+		name=$(basename "$values" .yaml)
+		name=${name##values-lint-}
+
+		helm lint "$BASEDIR/charts/$chart" -f "$values"
+		mkdir -p "$BASEDIR/citmp/$chart"
+		helm template \
+			"lint-$chart" \
+			"$BASEDIR/charts/$chart" \
+			-f "$values" \
+			--namespace test \
+			> "$BASEDIR/citmp/$chart/rendered-${name}.yaml"
+		yq -r -N \
+			'select(documentIndex == 0)
+			| .data."backup.plan.sh"
+			| select( . != null)
+			| sub("\n+$"; "")' \
+			<"$BASEDIR/citmp/$chart/rendered-${name}.yaml" \
+			>"$BASEDIR/citmp/$chart/rendered-${name}-sh.sh"
+		chmod +x "$BASEDIR/citmp/$chart/rendered-${name}-sh.sh"
+	done
+done

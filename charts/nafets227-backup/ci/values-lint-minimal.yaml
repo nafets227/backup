@@ -1,0 +1,44 @@
+# CI Minimal values for nafets227-backup.
+# this values.yaml serves as input for CI tests of the chart.
+
+podAnnotations:
+  checkov.io/skip6: |
+    CKV2_K8S_6=Admission for Network not specified in this minimal config
+  checkov.io/skip8: |
+    CKV_K8S_8=Liveness Probe useless in CronJob
+  checkov.io/skip9: |
+    CKV_K8S_9=Readiness Probe useless in CronJob
+  checkov.io/skip10: |
+    CKV_K8S_10=CPU requests not specified in this minimal config
+  checkov.io/skip11: |
+    CKV_K8S_11=CPU limits not specified in this minimal config
+  checkov.io/skip12: |
+    CKV_K8S_12=memory requests not specified in this minimal config
+  checkov.io/skip13: |
+    CKV_K8S_13=Memory limits not specified in this minimal config
+  checkov.io/skip15: |
+    CKV_K8S_15=Pull Policy not specified in this minimal config
+  checkov.io/skip20: |
+    CKV_K8S_20=allowPrivilegeEscalation not specified in this minimal config
+  checkov.io/skip21: |
+    CKV_K8S_21=Default namespace to be used in helm template
+  checkov.io/skip22: |
+    CKV_K8S_22=Running as non root not permitted by current container
+  checkov.io/skip23: |
+    CKV_K8S_23=Running as non root not permitted by current container
+  checkov.io/skip25: |
+    CKV_K8S_25=Minimize the admission of containers with added capability
+  checkov.io/skip28: |
+    CKV_K8S_28=capabilities not specified in this minimal config
+  checkov.io/skip29: |
+    CKV_K8S_29=Security context not specified in this minimal config
+  checkov.io/skip30: |
+    CKV_K8S_30=Security context not specified in this minimal config
+  checkov.io/skip31: |
+    CKV_K8S_31=seccomp profile not specified in this minimal config
+  checkov.io/skip37: |
+    CKV_K8S_37=capabilities not specified in this minimal config
+  checkov.io/skip40: |
+    CKV_K8S_40=Low UID or even root is allowed in our environment
+  checkov.io/skip43: |
+    CKV_K8S_43=Digest not needed, version tag is sufficient

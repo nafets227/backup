@@ -28,6 +28,26 @@ jobs:
           submodules: true
           persist-credentials: false
 
+      - name: Calculate version
+        id: version
+        run: |
+          set -Eeuo pipefail ${{ runner.debug && '-x' || '' }}
+          shopt -s inherit_errexit
+          . scripts/get-version
+          # writes VERSION=1.2.3 to $GITHUB_ENV
+
+      - name: Update Helm chart
+        run: |
+          yq -i \
+            '.version="${{ env.VERSION }}"' \
+            charts/nafets227-backup/Chart.yaml
+          yq -i \
+            '.appVersion="${{ env.VERSION }}"' \
+            charts/nafets227-backup/Chart.yaml
+
+      - name: Lint helm and render examples/tests
+        run: scripts/helm-lint-render
+
       - name: Load super-linter configuration
         # Use grep inverse matching to exclude eventual comments in the .env
         # file because the GitHub Actions command to set environment variables
