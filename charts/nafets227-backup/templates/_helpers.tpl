@@ -7,8 +7,9 @@ Expand the name of the chart.
 
 {{/*
 Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
+We truncate at 63 chars because some Kubernetes name fields are limited to
+this (by the DNS naming spec). If release name contains chart name it will be
+used as a full name.
 */}}
 {{- define "nafets227-backup.fullname" -}}
 {{- if .Values.fullnameOverride }}
@@ -27,7 +28,11 @@ If release name contains chart name it will be used as a full name.
 Create chart name and version as used by the chart label.
 */}}
 {{- define "nafets227-backup.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-%s" .Chart.Name .Chart.Version
+    | replace "+" "_"
+    | trunc 63
+    | trimSuffix "-"
+}}
 {{- end }}
 
 {{/*
@@ -35,28 +40,10 @@ Common labels
 */}}
 {{- define "nafets227-backup.labels" -}}
 helm.sh/chart: {{ include "nafets227-backup.chart" . }}
-{{ include "nafets227-backup.selectorLabels" . }}
+app.kubernetes.io/name: {{ include "nafets227-backup.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
-Selector labels
-*/}}
-{{- define "nafets227-backup.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "nafets227-backup.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "nafets227-backup.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "nafets227-backup.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
 {{- end }}

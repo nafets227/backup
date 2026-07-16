@@ -4,3 +4,4 @@ quiet: true
 skip-path:
   - /offlineimap3
   - /util
+  - /charts
