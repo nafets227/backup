@@ -154,3 +154,19 @@ jobs:
           helm push \
             dist/nafets227-backup-${{ env.VERSION }}.tgz \
             oci://ghcr.io/${{ github.repository_owner }}/charts
+
+      - name: Cleanup old Docker images
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP_DAYS: 30
+        run: |
+          scripts/cleanup-ghcr backup
+
+      - name: Cleanup old Helm charts
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP_DAYS: 30
+        run: |
+          scripts/cleanup-ghcr charts/nafets227-backup
