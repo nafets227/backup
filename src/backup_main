@@ -621,17 +621,22 @@ if false ; then
 	backup dummytype dummysource dummydest dummyopt1 dummyopt2
 fi
 
-printf "executing custom command %s\n" "$*"
-"$@" || NAFETS227BACKUP_GRC=3
+if [ "$DRY_RUN" != 1 ] ; then
+	NAFETS227BACKUP_DRYRUN_MSG=""
+	printf "executing custom command %s\n" "$*"
+	"$@" || NAFETS227BACKUP_GRC=3
 
-backup_notify || NAFETS227BACKUP_GRC=4
+	backup_notify || NAFETS227BACKUP_GRC=4
+else
+	NAFETS227BACKUP_DRYRUN_MSG="Dry Run: "
+fi
 
 if [ "$NAFETS227BACKUP_GRC" == "0" ] ; then
-	printf "Success: all Backup Tasks have been completed successfully.\n%s\n" \
-		"$NAFETS227BACKUP_GMSG"
+	printf "%sSuccess: all Backup Tasks have been completed successfully.\n%s\n" \
+		"$NAFETS227BACKUP_DRYRUN_MSG" "$NAFETS227BACKUP_GMSG"
 	exit 0
 else
-	printf "Error %d: " "$NAFETS227BACKUP_GRC"
+	printf "%sError %d: " "$NAFETS227BACKUP_DRYRUN_MSG" "$NAFETS227BACKUP_GRC"
 	printf "not all Backup Tasks have been completed successfully.\n%s\n" \
 		"$NAFETS227BACKUP_GMSG"
 	exit 1

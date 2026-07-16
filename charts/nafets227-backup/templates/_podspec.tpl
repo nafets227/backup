@@ -24,6 +24,9 @@ containers:
     securityContext:
     {{- toYamlPretty . | nindent 6 }}
     {{- end }}
+    env:
+      - name: DRY_RUN
+        value: {{ .dryRun | quote }}
     {{- with .Values.resources }}
     resources:
     {{- toYamlPretty . | nindent 6 }}

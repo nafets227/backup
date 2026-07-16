@@ -45,4 +45,11 @@ spec:
           {{- with .Values.nafets227Backup.schedule.activeDeadlineSeconds }}
           activeDeadlineSeconds: {{ . }}
           {{- end }}
-          {{- include "nafets227-backup.podSpec" . | nindent 10 }}
+          {{- include "nafets227-backup.podSpec"
+            (dict
+              "Values" .Values
+              "Chart" .Chart
+              "Release" .Release
+              "dryRun" "0"
+            )
+            | nindent 10 }}
