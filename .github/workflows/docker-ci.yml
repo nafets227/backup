@@ -29,7 +29,7 @@ jobs:
         # Use grep inverse matching to exclude eventual comments in the .env
         # file because the GitHub Actions command to set environment variables
         # doesn't support comments.
-        #editorconfig-checker-disable-next-line
+        # editorconfig-checker-disable-next-line
         # Ref: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-an-environment-variable
         run: grep -v '^#' .github/linters/super-linter.env >> "$GITHUB_ENV"
 
@@ -37,7 +37,6 @@ jobs:
         uses: super-linter/super-linter/slim@v8.7.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          USE_FIND_ALGORITHM: true
 
   docker-build-ci:
     runs-on: ubuntu-latest

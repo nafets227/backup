@@ -1,0 +1,11 @@
+
+title = "gitleaks config for nafets227/backup"
+
+[extend]
+# useDefault will extend the base configuration
+# with the default gitleaks config:
+useDefault = true
+
+[allowlist]
+description = "Allow secrets in test rclone.conf"
+paths = [ '''.*/tests/rclone.conf''' ]
