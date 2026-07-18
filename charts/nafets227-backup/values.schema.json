@@ -1,0 +1,189 @@
+{
+	"$schema": "https://json-schema.org/draft-07/schema#",
+	"title": "nafets227-backup values",
+	"type": "object",
+	"additionalProperties": true,
+	"properties": {
+		"image": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"repository": {
+					"type": "string"
+				},
+				"tag": {
+					"type": "string"
+				},
+				"pullPolicy": {
+					"type": "string",
+					"enum": [
+						"Always",
+						"IfNotPresent",
+						"Never"
+					]
+				}
+			}
+		},
+		"imagePullSecrets": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": true
+			}
+		},
+		"nameOverride": {
+			"type": "string"
+		},
+		"fullnameOverride": {
+			"type": "string"
+		},
+		"podAnnotations": {
+			"type": "object",
+			"additionalProperties": true
+		},
+		"podLabels": {
+			"type": "object",
+			"additionalProperties": true
+		},
+		"podSecurityContext": {
+			"type": "object",
+			"additionalProperties": true
+		},
+		"securityContext": {
+			"type": "object",
+			"additionalProperties": true
+		},
+		"resources": {
+			"type": "object",
+			"additionalProperties": true
+		},
+		"volumes": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": true
+			}
+		},
+		"volumeMounts": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": true
+			}
+		},
+		"nodeSelector": {
+			"type": "object",
+			"additionalProperties": true
+		},
+		"tolerations": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": true
+			}
+		},
+		"affinity": {
+			"type": "object",
+			"additionalProperties": true
+		},
+		"nafets227Backup": {
+			"type": "object",
+			"additionalProperties": true,
+			"properties": {
+				"schedule": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"cron": {
+							"type": "string"
+						},
+						"timeZone": {
+							"type": "string"
+						},
+						"activeDeadlineSeconds": {
+							"type": "integer"
+						}
+					}
+				},
+				"backup": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": true,
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"type": {
+								"type": "string"
+							},
+							"enabled": {
+								"type": "boolean"
+							},
+							"source": {
+								"type": "object",
+								"additionalProperties": true
+							},
+							"destination": {
+								"type": "object",
+								"additionalProperties": true
+							},
+							"options": {
+								"type": "object",
+								"additionalProperties": true
+							}
+						}
+					}
+				},
+				"mailAlert": {
+					"type": "object",
+					"additionalProperties": true,
+					"properties": {
+						"enabled": {
+							"type": "boolean"
+						},
+						"from": {
+							"type": "string"
+						},
+						"to": {
+							"type": "string"
+						},
+						"smtp": {
+							"type": "object",
+							"additionalProperties": true,
+							"properties": {
+								"host": {
+									"type": "string"
+								},
+								"port": {
+									"type": "integer"
+								},
+								"encryption": {
+									"type": "string"
+								},
+								"hostname": {
+									"type": "string"
+								},
+								"auth": {
+									"type": "object",
+									"additionalProperties": true,
+									"properties": {
+										"existingSecret": {
+											"type": "string"
+										},
+										"usernameKey": {
+											"type": "string"
+										},
+										"passwordKey": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
