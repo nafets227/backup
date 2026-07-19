@@ -231,8 +231,33 @@ function backup_notify {
 		printf "Set MAIL_FROM if using Alerting indicated by MAIL_TO\n"
 		return 1
 	elif [ -z "$MAIL_URL" ] ; then
-		printf "Set MAIL_URL if using Alerting indicated by MAIL_TO\n"
-		return 1
+		printf "Constructing MAIL_URL from %s\n" \
+			"MAIL_PW, MAIL_USER, MAIL_SERVER and MAIL_PORT"
+		if [ ! -f "$MAIL_PW" ] ; then
+			printf "%s: Error file %s not found.\n" \
+				"${FUNCNAME[0]}" "$MAIL_PW" >&2
+			return 1
+		elif [ -z "$MAIL_USER" ] ; then
+			printf "%s: Error %s not set.\n" \
+				"${FUNCNAME[0]}" "MAIL_USER" >&2
+			return 1
+		elif [ -z "$MAIL_SERVER" ] ; then
+			printf "%s: Error %s not set.\n" \
+				"${FUNCNAME[0]}" "MAIL_SERVER" >&2
+			return 1
+		elif [ -z "$MAIL_PORT" ] ; then
+			printf "%s: Error %s not set.\n" \
+				"${FUNCNAME[0]}" "MAIL_PORT" >&2
+			return 1
+		fi
+		MAIL_URL="smtp://"
+		MAIL_URL+="$(
+			jq -sRr 'gsub("[\\n\\t]"; "") | @uri' <<<"$MAIL_USER"
+			)"
+		MAIL_URL+=":$(
+			jq -sRr 'gsub("[\\n\\t]"; "") | @uri' <"$MAIL_PW"
+			)"
+		MAIL_URL+="@$MAIL_SERVER:$MAIL_PORT"
 	fi
 
 	local MAIL_SSL_OPT

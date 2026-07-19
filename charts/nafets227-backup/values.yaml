@@ -5,6 +5,19 @@ nafets227Backup:
     cron: "0 0 * * *" # midnight every day
     # timeZone: "Europe/Berlin"
     activeDeadlineSeconds: 82800 # 23 hours
+  mailAlert:
+    enabled: false
+    # from: "nafets227backup <backup@example.com>"
+    # to: "admin@example.com"
+    # smtp:
+    #   host: "smtp.example.com"
+    #   port: 587
+    #   encryption: starttls # none | ssl | starttls
+    #   hostname: "mailsend.example.com" # defaults to $hostname
+    #   auth:
+    #     existingSecret: ""
+    #     usernameKey: username
+    #     passwordKey: password
 
 # This sets the container image
 # more information can be found here:
