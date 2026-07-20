@@ -19,7 +19,7 @@ containers:
     imagePullPolicy: {{ .Values.image.pullPolicy }}
     args:
       - "."
-      - "/backup-script-onedrive"
+      - "/etc/nafets227-backup/backup.plan.sh"
     {{- with .Values.securityContext }}
     securityContext:
     {{- toYamlPretty . | nindent 6 }}
@@ -61,6 +61,9 @@ containers:
     {{- toYamlPretty . | nindent 6 }}
     {{- end }}
     volumeMounts:
+      - name: backupplan
+        mountPath: /etc/nafets227-backup/backup.plan.sh
+        subPath: backup.plan.sh
       - name: tmp
         mountPath: /tmp
     {{- with .Values.volumeMounts }}
@@ -77,6 +80,9 @@ containers:
     {{- end }}
     {{- end }}
 volumes:
+  - name: backupplan
+    configMap:
+      name: {{ include "nafets227-backup.fullname" . }}-backupplan
   - name: tmp
     emptyDir: {}
 {{- with .Values.volumes }}

@@ -47,3 +47,42 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
+
+{{/*
+Render source or destination for type file
+Example Input:
+    host: 192.168.1.1
+    username: backupüuser
+    path: srcdir
+*/}}
+{{- define "nafets227-backup.rsynclocation" }}
+    {{- with .username -}}{{- . -}}@{{- end -}}
+    {{- with .host -}}{{- . -}}:{{- end -}}
+    {{ .path }}
+{{- end }}
+
+{{/*
+Render global CLI options for a backup job.
+*/}}
+{{- define "nafets227-backup.globalcliopts" }}
+{{- $opts := .options | default dict }}
+{{- with $opts.execution }}
+{{- if eq . "runOnDestination" }}
+--runondst
+{{- else if eq . "runOnSource" }}
+--runonsrc
+{{- else if eq . "local" }}
+--local
+{{- else }}
+{{- fail (printf "unsupported execution mode %q" .) }}
+{{- end }}
+{{- end }}
+{{- with $opts.history }}
+{{- if .enabled }}
+--hist
+{{- end }}
+{{- if and .enabled .reuseIncomplete }}
+--histkeep
+{{- end }}
+{{- end }}
+{{- end }}

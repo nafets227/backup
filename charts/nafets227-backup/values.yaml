@@ -5,6 +5,69 @@ nafets227Backup:
     cron: "0 0 * * *" # midnight every day
     # timeZone: "Europe/Berlin"
     activeDeadlineSeconds: 82800 # 23 hours
+  # One or more backup jobs
+  backup: []
+    # - name: home-directory
+    #   type: file
+    #   enabled: true
+    #   source:
+    #     # user host,username,sshKeyFile if data is remote
+    #     host: backupserver
+    #     username: sshuser
+    #     sshKeyFile /secrets/sshkeyfile
+    #     path: /home
+    #   destination:
+    #     path: /backup/home
+    #   options:
+    #     execution: runOnDestination   # runOnSource | runOnDestination | local
+    #     history:
+    #       enabled: true
+    #       reuseIncomplete: true
+    #     rsync:
+    #       - --exclude=/dummydir
+
+    # - name: mailbox
+    #   type: imap
+    #   source:
+    #     email: user@example.com
+    #     host: imap.example.com
+    #     port: 993
+    #     encryption: ssl # | starttls | none
+    #     passwordFile: /secrets/imap-password
+    #   destination:
+    #     path: backupserver:/mailbackup
+    #   options:
+    #     history:
+    #       enabled: false
+
+    # - name: onedrive
+    #   type: rclone2file
+    #   source:
+    #     remote: rcloneRemoteName
+    #     path: /
+    #     configFile: /config/rclone.conf
+    #   destination:
+    #     path: /backup/onedrive
+    #   options:
+    #     history:
+    #       enabled: false
+    #     rclone:
+    #       - --links
+
+    # - name: documents-to-cloud
+    #   type: file2rclone
+    #   source:
+    #     path: /srv/documents
+    #   destination:
+    #     remote: rcloneRemoteName
+    #     path: /documents
+    #     configFile: /config/rclone.conf
+    #   options:
+    #     history:
+    #       enabled: false
+    #     rclone:
+    #       - --links
+
   mailAlert:
     enabled: false
     # from: "nafets227backup <backup@example.com>"
