@@ -1,6 +1,21 @@
 # nafets227/backup CHANGELOG
 
+## 1.0.0 (2026-07-22) GA with Helm chart
+
+- add Helm chart support including schema, templates, and generated
+  chart assets
+- improve CI, linting and release automation
+- add local super-linting support and various CI quality improvements
+- alpine 3.24.1
+- rclone 1.74.4
+- offlineimap 8.0.3 (now that upstream provides versions, we use them
+  instead of Git commits)
+
+The previous direct interface to the Docker image is still supported but
+deprecated and may be changed in a future minor release.
+
 ## 0.10.0 (2026-07-22) DO NOT USE
+
 This release is only for testing our updated publishing algorithm, do not use!
 
 ## 0.9.4 (2026-02-01)
