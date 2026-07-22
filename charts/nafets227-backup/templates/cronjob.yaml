@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "nafets227-backup.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "nafets227-backup.labels" . | nindent 4 }}
+  {{- with .Values.podAnnotations }}
+  annotations:
+    {{- toYamlPretty . | nindent 4 }}
+  {{- end }}
+spec:
+  schedule: {{ .Values.nafets227Backup.schedule.cron | quote }}
+  {{- if .Values.nafets227Backup.schedule.timeZone }}
+  timeZone: {{ .Values.nafets227Backup.schedule.timeZone | quote }}
+  {{- end }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYamlPretty . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "nafets227-backup.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYamlPretty . | nindent 8 }}
+        {{- end }}
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYamlPretty . | nindent 12 }}
+          {{- end }}
+          labels:
+            {{- include "nafets227-backup.labels" . | nindent 12 }}
+            {{- with .Values.podLabels }}
+            {{- toYamlPretty . | nindent 12 }}
+            {{- end }}
+        spec:
+          {{- with .Values.nafets227Backup.schedule.activeDeadlineSeconds }}
+          activeDeadlineSeconds: {{ . }}
+          {{- end }}
+          {{- include "nafets227-backup.podSpec"
+            (dict
+              "Values" .Values
+              "Chart" .Chart
+              "Release" .Release
+              "dryRun" "0"
+            )
+            | nindent 10 }}

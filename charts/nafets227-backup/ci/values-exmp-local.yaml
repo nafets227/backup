@@ -1,0 +1,157 @@
+# this is a real-world example from out site
+# with some data anonymized
+nafets227Backup:
+  backup:
+    - destination:
+        path: /backup/cred
+      enabled: true
+      name: cred backup
+      options:
+        execution: runOnDestination
+        history:
+          enabled: true
+          reuseIncomplete: true
+        rsync:
+          - -vv
+      source:
+        path: /backupsrc/cred
+      type: file
+    - destination:
+        path: /backup/data
+      enabled: false
+      name: data backup
+      options:
+        execution: runOnDestination
+        history:
+          enabled: true
+          reuseIncomplete: true
+        rsync:
+          - -vv
+          - --exclude=redacted1/
+          - --exclude=db/db-data-*
+      source:
+        path: /backupsrc/data/
+      type: file
+    - destination:
+        configFile: /backup-conf/rclone.conf
+        path: /backup.ci/cred
+        remote: onedrivename
+      enabled: true
+      name: cred to onedrive
+      options:
+        rclone:
+          - --links
+          - --low-level-retries 2
+      source:
+        path: /backupsrc/cred
+      type: file2rclone
+    - destination:
+        configFile: /backup-conf/rclone.conf
+        path: /backup.ci/data
+        remote: onedrivename
+      enabled: false
+      name: data to onedrive
+      options:
+        rclone:
+          - --links \\
+          - --low-level-retries 2 \\
+      source:
+        path: /backupsrc/data
+      type: file2rclone
+  mailAlert:
+    enabled: true
+    from: redacted3 dummy <sender@examples.com>
+    smtp:
+      auth:
+        existingSecret: backupmail
+        passwordKey: password
+        usernameKey: username
+      encryption: starttls
+      host: example.com
+      hostname: example-container.example.com
+      port: 587
+    to: recipient@example.com
+  schedule:
+    activeDeadlineSeconds: 82800
+    cron: 15 3 * * *
+    timeZone: Europe/Berlin
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  capabilities:
+    add:
+      - DAC_READ_SEARCH
+      - DAC_OVERRIDE
+      - FOWNER
+      - CHOWN
+    drop:
+      - NET_RAW
+      - ALL
+  runAsNonRoot: false
+  runAsUser: 0
+tolerations:
+  - effect: NoSchedule
+    key: example.com/redacted
+    operator: Exists
+volumeMounts:
+  - mountPath: /backup-conf
+    name: backup-conf
+  - mountPath: /backup
+    name: backup
+  - mountPath: /backupsrc/data
+    name: backup-src-data
+    readOnly: true
+  - mountPath: /backupsrc/cred
+    name: backup-src-cred
+    readOnly: true
+volumes:
+  - name: backup-conf
+    persistentVolumeClaim:
+      claimName: backup-local-conf.backup
+  - name: backup
+    persistentVolumeClaim:
+      claimName: backup.backup
+  - name: backup-src-data
+    persistentVolumeClaim:
+      claimName: backup-src-data.backup
+      readOnly: true
+  - name: backup-src-cred
+    persistentVolumeClaim:
+      claimName: backup-src-cred.backup
+      readOnly: true
+
+# This is to let checkov verify the rendered result without false positives
+podAnnotations:
+  checkov.io/skip6: |
+    CKV2_K8S_6=Admission for Network not specified in this minimal config
+  checkov.io/skip8: |
+    CKV_K8S_8=Liveness Probe useless in CronJob
+  checkov.io/skip9: |
+    CKV_K8S_9=Readiness Probe useless in CronJob
+  checkov.io/skip10: |
+    CKV_K8S_10=CPU requests not specified in this minimal config
+  checkov.io/skip11: |
+    CKV_K8S_11=CPU limits not specified in this minimal config
+  checkov.io/skip12: |
+    CKV_K8S_12=memory requests not specified in this minimal config
+  checkov.io/skip13: |
+    CKV_K8S_13=Memory limits not specified in this minimal config
+  checkov.io/skip15: |
+    CKV_K8S_15=Pull Policy not specified in this minimal config
+  checkov.io/skip21: |
+    CKV_K8S_21=Default namespace to be used in helm template
+  checkov.io/skip23: |
+    CKV_K8S_23=Running as non root not permitted by current container
+  checkov.io/skip25: |
+    CKV_K8S_25=Minimize the admission of containers with added capability
+  checkov.io/skip29: |
+    CKV_K8S_29=Security context not specified in this minimal config
+  checkov.io/skip31: |
+    CKV_K8S_31=seccomp profile not specified in this minimal config
+  checkov.io/skip35: |
+    CKV_K8S_35=secret as environment needed for backward-compatibility
+  checkov.io/skip40: |
+    CKV_K8S_40=Low UID or even root is allowed in our environment
+  checkov.io/skip43: |
+    CKV_K8S_43=Digest not needed, version tag is sufficient

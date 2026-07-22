@@ -1,0 +1,6 @@
+You may want to trigger a backup job using
+
+kubectl -n {{ .Release.Namespace }} create job from=cronjob/{{
+	include "nafets227-backup.fullname" . }}
+
+Carefully watch the output of that job to see if everything works as expected.

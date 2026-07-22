@@ -1,0 +1,88 @@
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "nafets227-backup.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to
+this (by the DNS naming spec). If release name contains chart name it will be
+used as a full name.
+*/}}
+{{- define "nafets227-backup.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "nafets227-backup.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version
+    | replace "+" "_"
+    | trunc 63
+    | trimSuffix "-"
+}}
+{{- end }}
+
+{{/*
+Common labels
+*/}}
+{{- define "nafets227-backup.labels" -}}
+helm.sh/chart: {{ include "nafets227-backup.chart" . }}
+app.kubernetes.io/name: {{ include "nafets227-backup.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Render source or destination for type file
+Example Input:
+    host: 192.168.1.1
+    username: backupüuser
+    path: srcdir
+*/}}
+{{- define "nafets227-backup.rsynclocation" }}
+    {{- with .username -}}{{- . -}}@{{- end -}}
+    {{- with .host -}}{{- . -}}:{{- end -}}
+    {{ .path }}
+{{- end }}
+
+{{/*
+Render global CLI options for a backup job.
+*/}}
+{{- define "nafets227-backup.globalcliopts" }}
+{{- $opts := .options | default dict }}
+{{- with $opts.execution }}
+{{- if eq . "runOnDestination" }}
+--runondst
+{{- else if eq . "runOnSource" }}
+--runonsrc
+{{- else if eq . "local" }}
+--local
+{{- else }}
+{{- fail (printf "unsupported execution mode %q" .) }}
+{{- end }}
+{{- end }}
+{{- with $opts.history }}
+{{- if .enabled }}
+--hist
+{{- end }}
+{{- if and .enabled .reuseIncomplete }}
+--histkeep
+{{- end }}
+{{- end }}
+{{- end }}

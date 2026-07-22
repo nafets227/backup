@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+#
+# Determine semantic version from Git.
+#
+# Tags:
+#   v1.2.3            -> 1.2.3
+#
+# Main:
+#   1.2.4-dev.17
+#
+# Other branch:
+#   1.2.4-br-branchname.5
+#
+
+export LC_ALL=C # override any user-defined locale
+set -Eeuo pipefail ; shopt -s inherit_errexit
+
+# Get latest release tag
+LATEST_TAG=$(
+	git describe \
+		--tags \
+		--match 'v[0-9]*.[0-9]*.[0-9]*' \
+		--abbrev=0 \
+		2>/dev/null || true
+)
+
+if [[ -z "$LATEST_TAG" ]]; then
+	LATEST_TAG="v0.0.0"
+fi
+
+LATEST_VERSION="${LATEST_TAG#v}"
+
+IFS='.' read -r MAJOR MINOR PATCH <<<"$LATEST_VERSION"
+
+# Calculate next development version
+NEXT_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+
+if [[ "${GITHUB_REF:-}" =~ ^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+	# Release build
+	VERSION="${BASH_REMATCH[1]}"
+else
+	# Development build
+	BRANCH="${GITHUB_REF_NAME:-$(git branch --show-current)}"
+
+	# Count commits since last release
+	if git rev-parse "$LATEST_TAG" >/dev/null 2>&1; then
+		COMMITS=$(git rev-list "${LATEST_TAG}..HEAD" --count)
+	else
+		COMMITS=$(git rev-list HEAD --count)
+	fi
+
+	case "$BRANCH" in
+		main|master)
+			VERSION="${NEXT_VERSION}-dev.${COMMITS}"
+			;;
+
+		*)
+			CLEAN_BRANCH=$(
+				printf '%s' "$BRANCH" |
+					tr '/_' '-' |
+					tr '[:upper:]' '[:lower:]' |
+					sed 's/[^a-z0-9.-]/-/g'
+			)
+
+			VERSION="${NEXT_VERSION}-br-${CLEAN_BRANCH}.${COMMITS}"
+			;;
+	esac
+fi
+
+if [[ -n "$(git status --porcelain)" ]]; then
+	# Mark local modifications
+	VERSION="${VERSION}.dirty"
+fi
+
+printf 'Version: %s\n' "$VERSION"
+
+if [[ -n "${GITHUB_ENV:-}" ]]; then
+	printf 'VERSION=%s\n' "$VERSION" >>"$GITHUB_ENV"
+fi

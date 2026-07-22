@@ -24,10 +24,10 @@ spaces_around_brackets = false
 # Max line length (not supported by all editors)
 max_line_length = 80
 
-[{tests/rclone.conf,tests/mail.password}]
+[{tests/rclone.conf,tests/mail.password,citmp/**}]
 max_line_length = unset
 
-[*.{yaml,yml}]
+[*.{yaml,yml,tpl}]
 indent_style = space
 indent_size = 2
 

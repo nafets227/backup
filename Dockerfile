@@ -18,6 +18,7 @@ RUN \
 		bash \
 		curl \
 		ca-certificates \
+		jq \
 		krb5 \
 		mysql-client \
 		openssh-client \

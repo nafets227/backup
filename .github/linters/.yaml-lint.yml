@@ -1,0 +1,26 @@
+---
+extends: default
+
+rules:
+  comments:
+    min-spaces-from-content: 1
+
+  line-length: disable # already checked by editorconfig
+
+  document-start:
+    ignore: |
+      **/charts/*/values.yaml
+      **/charts/*/ci/*.yaml
+      **/charts/*/Chart.yaml
+      **/citmp/
+
+  comments-indentation:
+    ignore: |
+      **/charts/*/values.yaml
+
+  empty-lines:
+    ignore: |
+      **/citmp/
+
+ignore:
+  - "**/charts/*/templates/**"

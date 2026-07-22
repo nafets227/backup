@@ -1,0 +1,8 @@
+apiVersion: v2
+name: nafets227-backup
+description: Container based implementation of backup.
+type: application
+version: 0.0.0 # will be replaced by CI
+appVersion: "0.0.0" # will be replaced by CI
+# editorconfig-checker-disable-next-line # no way to make it shorter
+icon: https://raw.githubusercontent.com/nafets227/backup/master/docs/images/nafets227-backup-256.png

@@ -1,0 +1,107 @@
+# this is a real-world example from out site
+# with some data anonymized
+nafets227Backup:
+  backup:
+    - destination:
+        path: /backup/OneDrive/onedrivename
+      enabled: true
+      name: OneDrive reduced
+      options:
+        history:
+          enabled: true
+          reuseIncomplete: true
+        rclone:
+          - --checkers=4
+          - --exclude=/Persönlicher*Tresor/**
+          - --exclude=/crypt/**
+          - --exclude=/directory1/**
+          - --exclude=/directory2/**
+          - --delete-excluded
+      source:
+        configFile: /backup-conf/rclone.conf
+        path: /
+        remote: onedrivename
+      type: rclone2file
+    - destination:
+        path: /backup/OneDrive/onedrivename
+      enabled: false
+      name: OneDrive
+      options:
+        history:
+          enabled: true
+          reuseIncomplete: true
+        rclone:
+          - --checkers=4
+          - --exclude=/crypt/**
+          - --exclude=/Persönlicher*Tresor/**
+          - --delete-excluded
+      source:
+        configFile: /backup-conf/rclone.conf
+        path: /
+        remote: onedrivename
+      type: rclone2file
+  mailAlert:
+    enabled: true
+    from: redacted3 dummy <sender@examples.com>
+    smtp:
+      auth:
+        existingSecret: backupmail
+        passwordKey: password
+        usernameKey: username
+      encryption: starttls
+      host: example.com
+      hostname: example-container.example.com
+      port: 587
+    to: recipient@example.com
+  schedule:
+    activeDeadlineSeconds: 82800
+    cron: 20 3 * * *
+    timeZone: Europe/Berlin
+securityContext:
+  seccompProfile:
+    type: RuntimeDefault
+tolerations:
+  - effect: NoSchedule
+    key: example.com/redacted
+    operator: Exists
+volumeMounts:
+  - mountPath: /backup-conf
+    name: backup-conf
+  - mountPath: /backup
+    name: backup
+volumes:
+  - name: backup-conf
+    persistentVolumeClaim:
+      claimName: backup-onedrive-conf.backup
+  - name: backup
+    persistentVolumeClaim:
+      claimName: backup.backup
+
+# This is to let checkov verify the rendered result without false positives
+podAnnotations:
+  checkov.io/skip6: |
+    CKV2_K8S_6=Admission for Network not specified in this minimal config
+  checkov.io/skip8: |
+    CKV_K8S_8=Liveness Probe useless in CronJob
+  checkov.io/skip9: |
+    CKV_K8S_9=Readiness Probe useless in CronJob
+  checkov.io/skip10: |
+    CKV_K8S_10=CPU requests not specified in this minimal config
+  checkov.io/skip11: |
+    CKV_K8S_11=CPU limits not specified in this minimal config
+  checkov.io/skip12: |
+    CKV_K8S_12=memory requests not specified in this minimal config
+  checkov.io/skip13: |
+    CKV_K8S_13=Memory limits not specified in this minimal config
+  checkov.io/skip15: |
+    CKV_K8S_15=Pull Policy not specified in this minimal config
+  checkov.io/skip21: |
+    CKV_K8S_21=Default namespace to be used in helm template
+  checkov.io/skip29: |
+    CKV_K8S_29=Security context not specified in this minimal config
+  checkov.io/skip31: |
+    CKV_K8S_31=seccomp profile not specified in this minimal config
+  checkov.io/skip35: |
+    CKV_K8S_35=secret as environment needed for backward-compatibility
+  checkov.io/skip43: |
+    CKV_K8S_43=Digest not needed, version tag is sufficient

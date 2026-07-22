@@ -1,0 +1,96 @@
+# this is a real-world example from out site
+# with some data anonymized
+nafets227Backup:
+  backup:
+    - destination:
+        path: /backup/imap/mail@example.com
+      enabled: true
+      name: mail@example.com
+      options:
+        history:
+          enabled: true
+          reuseIncomplete: true
+      source:
+        email: mail@example.com
+        encryption: starttls
+        host: example.com
+        passwordFile: /secrets/example.com.password
+        port: 143
+      type: imap
+    - destination:
+        path: /backup/imap/mail2@example.com
+      enabled: false
+      name: mail2@example.com
+      options:
+        history:
+          enabled: true
+          reuseIncomplete: true
+      source:
+        email: mail2@example.com
+        encryption: starttls
+        host: example.com
+        passwordFile: /secrets/mail2_example.com.password
+        port: 143
+      type: imap
+  mailAlert:
+    enabled: true
+    from: redacted3 dummy <sender@examples.com>
+    smtp:
+      auth:
+        existingSecret: backupmail
+        passwordKey: password
+        usernameKey: username
+      encryption: starttls
+      host: example.com
+      hostname: example-container.example.com
+      port: 587
+    to: recipient@example.com
+  schedule:
+    activeDeadlineSeconds: 21600
+    cron: 10 */3 * * *
+    timeZone: Europe/Berlin
+tolerations:
+  - effect: NoSchedule
+    key: example.com/redacted
+    operator: Exists
+volumeMounts:
+  - mountPath: /secrets
+    name: backup-secret
+  - mountPath: /backup
+    name: backup
+volumes:
+  - name: backup-secret
+    secret:
+      secretName: backup
+  - name: backup
+    persistentVolumeClaim:
+      claimName: backup.backup
+
+# This is to let checkov verify the rendered result without false positives
+podAnnotations:
+  checkov.io/skip6: |
+    CKV2_K8S_6=Admission for Network not specified in this minimal config
+  checkov.io/skip8: |
+    CKV_K8S_8=Liveness Probe useless in CronJob
+  checkov.io/skip9: |
+    CKV_K8S_9=Readiness Probe useless in CronJob
+  checkov.io/skip10: |
+    CKV_K8S_10=CPU requests not specified in this minimal config
+  checkov.io/skip11: |
+    CKV_K8S_11=CPU limits not specified in this minimal config
+  checkov.io/skip12: |
+    CKV_K8S_12=memory requests not specified in this minimal config
+  checkov.io/skip13: |
+    CKV_K8S_13=Memory limits not specified in this minimal config
+  checkov.io/skip15: |
+    CKV_K8S_15=Pull Policy not specified in this minimal config
+  checkov.io/skip21: |
+    CKV_K8S_21=Default namespace to be used in helm template
+  checkov.io/skip29: |
+    CKV_K8S_29=Security context not specified in this minimal config
+  checkov.io/skip31: |
+    CKV_K8S_31=seccomp profile not specified in this minimal config
+  checkov.io/skip35: |
+    CKV_K8S_35=secret as environment needed for backward-compatibility
+  checkov.io/skip43: |
+    CKV_K8S_43=Digest not needed, version tag is sufficient
