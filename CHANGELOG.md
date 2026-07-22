@@ -1,5 +1,8 @@
 # nafets227/backup CHANGELOG
 
+## 0.10.0 (2026-07-22) DO NOT USE
+This release is only for testing our updated publishing algorithm, do not use!
+
 ## 0.9.4 (2026-02-01)
 
 - rclone 1.73.0
