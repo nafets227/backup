@@ -8,7 +8,7 @@
 #checkov:skip=CKV_DOCKER_2: HEALTHCHECK should be in kubernetes
 # hadolint global ignore=DL3018
 
-FROM rclone/rclone:1.74.4 AS rclone
+FROM rclone/rclone:1.75.0 AS rclone
 
 FROM alpine:3.24.1
 
