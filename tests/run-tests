@@ -16,7 +16,7 @@ function test_init {
 	if 	[[ "$OSTYPE" =~ darwin* ]] ; then
 		my_ip="$USER@$(ipconfig getifaddr en0 en1)"
 		my_fileopt="--macos"
-		TEST_RSYNCOPT="--rsync-path=/usr/local/bin/rsync"
+		TEST_RSYNCOPT="--rsync-path=/opt/homebrew/bin/rsync"
 	elif which "ip" >/dev/null ; then
 		my_ip="$USER@$(set -o pipefail
 			ip -4 -j a show dev docker0 primary |
