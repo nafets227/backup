@@ -193,6 +193,7 @@ set -Eeuo pipefail ; shopt -s inherit_errexit ; # improved err handling
 
 BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 
+#shellcheck source-path=SCRIPTDIR/../util
 . "$BASEDIR/../util/util_err_functions.sh"
 . "$BASEDIR/../util/util_test_functions.sh"
 
