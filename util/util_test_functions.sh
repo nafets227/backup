@@ -324,26 +324,30 @@ function test_exec_ssh {
 	# Parameters:
 	#     1 - machine name to ssh to
 	#     2 - expected RC [default: 0]
+	#     [optional] --stdin forward stdin to ssh.
+	#         by default it is set if no param is given, unset otherwise
 	#     3ff - command to test
+	local sshopt testrc
 	local sshtarget="$1"
 	shift
 	local rc_exp=${1:-0}
 	shift || true
+	if [ "${1-}" == "--stdin" ] ; then
+		shift
+		sshopt=""
+	elif [ "$#" == 0 ] ; then
+		sshopt=""
+	else
+		sshopt="-n"
+	fi
 
 	util_err_verify_or_exit
 	test_internal_exec_init
-
-	local sshopt testrc
 
 	printf "#-----\n#----- SSH Machine: %s, Command: %s\n#-----\n" \
 		"$sshtarget" "$*" \
 		>"$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.out"
 
-	if [ "$#" == 0 ] ; then
-		sshopt=""
-	else
-		sshopt="-n"
-	fi
 	# We do NOT set -euo pipefail [-x] here because we dont know
 	# if commands executed remotely come as params or are injected
 	# via stdin. On top, we dont know if it may change the output
@@ -604,9 +608,11 @@ function test_exec_kubecron {
 		"create job $cronjobname-test --from=cronjob/$cronjobname"
 	if [ "$UTIL_ERR_RC" == 0 ] ; then
 		printf "\n"
+		# do NOT use | tee here, as it would move util_err_callfunc into a
+		# subshellKeep and UTIL_ERR_RC would be hidden.
 		util_err_callfunc util_retry "$sleepMax" 5 \
-			test_internal_check_kubecron "$cronjobname-test" \
-			| tee "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.kubecronwait"
+			util_err_notrap test_internal_check_kubecron "$cronjobname-test" \
+			> >(tee "$TESTSET_DIR/$TESTSET_LAST_CHECK_NR.kubecronwait") 2>&1
 		[ "$UTIL_ERR_RC" == 0 ] || testrc=${testrc:-2}
 	else
 		testrc=3
@@ -1164,8 +1170,7 @@ function testset_init {
 	#    TESTSET_LOG_ALWAYS      0 (default) or 1 (if --log is supplied).
 	#    TESTSET_NAME            Name of Testset (--testsetname or default)
 	#    TEST_SNAIL              Executable for snail mail program
-	local testsetparm=()
-
+	#    TESTSET_PARM            Array of Parameters for Testset
 	util_err_verify_or_exit
 
 	printf "TESTS Starting.\n"
@@ -1175,6 +1180,7 @@ function testset_init {
 	TESTSET_TESTFAILED=""
 	TESTSET_LOG_ALWAYS=0
 	TESTSET_NAME="TestSet"
+	TESTSET_PARM=()
 	TEST_SNAIL=""
 
 	if [[ "$OSTYPE" =~ darwin* ]] ; then
@@ -1184,8 +1190,8 @@ function testset_init {
 			return 1
 		fi
 		printf "Activating MacOS workaround.\n"
-		# TEST_RSYNCOPT="--rsync-path=/usr/local/bin/rsync"
-		TEST_SNAIL=/usr/local/bin/s-nail
+		# TEST_RSYNCOPT="--rsync-path=/opt/homebrew/bin/rsync"
+		TEST_SNAIL=/opt/homebrew/bin/s-nail
 	elif
 		[ "$(awk -F= '/^NAME/{print $2}' /etc/os-release)" == "\"Ubuntu\"" ]
 	then
@@ -1208,7 +1214,7 @@ function testset_init {
 			TESTSET_NAME="${1##--testsetname=}"
 			;;
 		* )
-			testsetparm+=("$1")
+			TESTSET_PARM+=("$1")
 			;;
 		esac
 		shift
@@ -1217,7 +1223,7 @@ function testset_init {
 	TESTSET_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$TESTSET_NAME.XXXXXXXXXX")
 	printf "\tTESTSET_DIR=%s\n" "$TESTSET_DIR"
 	printf "\tTESTSET_LOG_ALWAYS=%s\n" "$TESTSET_LOG_ALWAYS"
-	printf "\tParms=%s\n" "${testsetparm[*]}"
+	printf "\tParms=%s\n" "${TESTSET_PARM[*]}"
 
 	return 0
 }
