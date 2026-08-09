@@ -207,7 +207,7 @@ If you want to develop and test on macOS, you need:
 
 - `brew install offlineimap jq bash rsync rclone`
 - activated local SSH server
-- trust your own SSH key (e.g. ~/.ssh/id_rsa.pub must be in authorized_keys)
+- trust your own SSH key (e.g. ~/.ssh/id_ed25519.pub must be in authorized_keys)
 - tested with Docker Desktop for Mac
 
 To run tests in test subdirectory you need to have some test data available.

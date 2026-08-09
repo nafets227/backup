@@ -18,13 +18,13 @@ function test_rclone_execraw {
 	cp "$rclone_conf" "$TESTSET_DIR/backup/rcloneraw.conf"
 	test_chown "$TESTSET_DIR/backup/rcloneraw.conf"
 
-	cp ~/.ssh/id_rsa "$TESTSET_DIR/id_rsa"
-	test_chown "$TESTSET_DIR/id_rsa"
+	cp ~/.ssh/id_ed25519 "$TESTSET_DIR/id_ed25519"
+	test_chown "$TESTSET_DIR/id_ed25519"
 
 	test_exec_cmd 0 "Backup Command $*" \
 		docker run -i \
 			-v "$TESTSET_DIR/backup:/backup" \
-			-v "$TESTSET_DIR/id_rsa:/secrets/id_rsa:ro" \
+			-v "$TESTSET_DIR/id_ed25519:/secrets/id_ed25519:ro" \
 			-e DEBUG=1 \
 			--entrypoint /usr/lib/nafets227.backup/rclone \
 			"$TESTIMG" \
@@ -204,7 +204,7 @@ function test_rclone2file {
 			"$TESTRCLONE_NAME" \
 			"$my_ip:$TESTSET_DIR/backup-rem/rclone2file" \
 			--srcsecret /backup/rclone2file.conf \
-			--dstsecret /secrets/id_rsa \
+			--dstsecret /secrets/id_ed25519 \
 			--exclude '/UnusedVault/**'
 		test_expect_filecount "backup-rem/rclone2file" 0
 	fi
@@ -230,7 +230,7 @@ function test_rclone2file {
 			"$TESTRCLONE_NAME" \
 			"$my_ip:$TESTSET_DIR/backup-rem/rclone2file" \
 			--srcsecret /backup/rclone-update.conf \
-			--dstsecret /secrets/id_rsa
+			--dstsecret /secrets/id_ed25519
 		test_exec_cmd "" "" \
 			fgrep '[rclone-unittest-dummy]' "$TESTSET_DIR/backup/rclone-update.conf"
 	fi
@@ -256,7 +256,7 @@ function test_rclone2file {
 			"$TESTRCLONE_NAME" \
 			"$my_ip:$TESTSET_DIR/backup-rem/rclone2file" \
 			--srcsecret /backup/rclone2file.conf \
-			--dstsecret /secrets/id_rsa \
+			--dstsecret /secrets/id_ed25519 \
 			--exclude '/UnusedVault/**'
 		test_expect_filecount "backup-rem/rclone2file" 2
 		test_expect_filecount "backup-rem/rclone2file/testdir" 1
@@ -280,7 +280,7 @@ function test_rclone2file {
 			"$TESTRCLONE_NAME" \
 			"$my_ip:$TESTSET_DIR/backup-rem/rclone2file" \
 			--srcsecret /backup/rclone2file.conf \
-			--dstsecret /secrets/id_rsa \
+			--dstsecret /secrets/id_ed25519 \
 			--exclude '/UnusedVault/**'
 		test_expect_filecount "backup-rem/rclone2file" 0
 	fi
@@ -490,7 +490,7 @@ function test_file2rclone {
 	do
 		secretparam=""
 		if [[ "$source" == *":"* ]] ; then
-			secretparam+="--srcsecret /secrets/id_rsa "
+			secretparam+="--srcsecret /secrets/id_ed25519 "
 		fi
 
 		test_cleanRclone "$TESTRCLONE_NAME" "$TESTRCLONE_CONF"

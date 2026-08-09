@@ -48,7 +48,7 @@ function test_imap {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_wrongpassword.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 
 	# IMAP OK with Empty Mailbox
 	test_exec_backupdocker  0 \
@@ -67,7 +67,7 @@ function test_imap {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 	test_expect_filecount "backup-rem/imap/INBOX/new" 0
 	test_expect_filecount "backup-rem/imap/INBOX/cur" 0
 
@@ -84,7 +84,7 @@ function test_imap {
 		"$TESTIMAP_SRC" \
 		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
 		"$TESTIMAP_URL" \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 
 	# Store Testmail
 	test_putImap "$TESTIMAP_SRC" "$(cat "$TESTIMAP_SECRET")" "$TESTIMAP_URL"
@@ -117,7 +117,7 @@ function test_imap {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 	test_expect_filecount "backup-rem/imap/INBOX/new" 0
 	test_expect_filecount "backup-rem/imap/INBOX/cur" 1
 

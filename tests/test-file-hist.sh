@@ -178,7 +178,7 @@ function test_file_hist {
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
 		"$my_host:$TESTSET_DIR/backup/file-hist-2" \
-		--srcsecret /secrets/id_rsa \
+		--srcsecret /secrets/id_ed25519 \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
 
@@ -189,7 +189,7 @@ function test_file_hist {
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
 		"$my_host:$TESTSET_DIR/backup/file-hist-2" \
-		--srcsecret /secrets/id_rsa \
+		--srcsecret /secrets/id_ed25519 \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
 
@@ -200,7 +200,7 @@ function test_file_hist {
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
 		"$my_host:$TESTSET_DIR/backup/file-hist-2" \
-		--dstsecret /secrets/id_rsa \
+		--dstsecret /secrets/id_ed25519 \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
 	# backup remote source,dest without runon should fail
@@ -210,8 +210,8 @@ function test_file_hist {
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
 		"$my_host:$TESTSET_DIR/backup/file-hist-2" \
-		--srcsecret /secrets/id_rsa \
-		--dstsecret /secrets/id_rsa \
+		--srcsecret /secrets/id_ed25519 \
+		--dstsecret /secrets/id_ed25519 \
 		"$TEST_RSYNCOPT"
 
 	rmdir "$TESTSET_DIR/backup/file-hist-1" "$TESTSET_DIR/backup/file-hist-2"
@@ -222,7 +222,7 @@ function test_file_hist {
 		for source in "/backup" "$my_ip:$TESTSET_DIR/backup" ; do
 			secretparam=""
 			[[ "$source" == *":"* ]] &&
-				secretparam+="--srcsecret /secrets/id_rsa "
+				secretparam+="--srcsecret /secrets/id_ed25519 "
 
 			#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word
 			test_file_hist_srcdest \
@@ -246,12 +246,12 @@ function test_file_hist {
 				"$dest" \
 				"$TEST_RSYNCOPT" \
 				--runonsrc \
-				--dstsecret /secrets/id_rsa
+				--dstsecret /secrets/id_ed25519
 		done
 		for source in  "$my_ip:$TESTSET_DIR/backup" ; do
 			if [[ $source == *":"* ]] ; then
-				secretparam="--srcsecret /secrets/id_rsa "
-				secretparam+="--dstsecret /secrets/id_rsa "
+				secretparam="--srcsecret /secrets/id_ed25519 "
+				secretparam+="--dstsecret /secrets/id_ed25519 "
 			fi
 
 			# Backup to remote in history mod should fail if running on src

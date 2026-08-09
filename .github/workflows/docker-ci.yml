@@ -151,8 +151,8 @@ jobs:
           cat >tests/mail.password <<<"$MAIL_PW"
           unset RCLONE_CONF MAIL_PW
 
-          sudo bash -c 'ssh-keygen -N "" -f ~/.ssh/id_rsa'
-          sudo bash -c 'cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys'
+          sudo bash -c 'ssh-keygen -N "" -f ~/.ssh/id_ed25519'
+          sudo bash -c 'cat ~/.ssh/id_ed25519.pub >>~/.ssh/authorized_keys'
           sudo bash -c 'touch ~/.hushlogin'
 
           sudo bash ${{ runner.debug && '-x' || '' }} tests/run-tests

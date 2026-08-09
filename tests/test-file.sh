@@ -159,7 +159,7 @@ function test_file {
 		"backup file $my_fileopt" \
 		"$my_ip:$TESTSET_DIR/backup/file1" \
 		"$my_host:$TESTSET_DIR/backup/file2" \
-		--srcsecret /secrets/id_rsa \
+		--srcsecret /secrets/id_ed25519 \
 		--runonsrc \
 		$TEST_RSYNCOPT
 
@@ -170,7 +170,7 @@ function test_file {
 		"backup file $my_fileopt" \
 		"$my_ip:$TESTSET_DIR/backup/file1" \
 		"$my_host:$TESTSET_DIR/backup/file2" \
-		--srcsecret /secrets/id_rsa \
+		--srcsecret /secrets/id_ed25519 \
 		--runonsrc \
 		$TEST_RSYNCOPT
 
@@ -181,7 +181,7 @@ function test_file {
 		"backup file $my_fileopt" \
 		"$my_ip:$TESTSET_DIR/backup/file1" \
 		"$my_host:$TESTSET_DIR/backup/file2" \
-		--dstsecret /secrets/id_rsa \
+		--dstsecret /secrets/id_ed25519 \
 		--runonsrc \
 		$TEST_RSYNCOPT
 	# backup remote source,dest without runon should fail
@@ -191,8 +191,8 @@ function test_file {
 		"backup file $my_fileopt" \
 		"$my_ip:$TESTSET_DIR/backup/file1" \
 		"$my_host:$TESTSET_DIR/backup/file2" \
-		--srcsecret /secrets/id_rsa \
-		--dstsecret /secrets/id_rsa \
+		--srcsecret /secrets/id_ed25519 \
+		--dstsecret /secrets/id_ed25519 \
 		$TEST_RSYNCOPT
 
 	rmdir "$TESTSET_DIR/backup/file1" "$TESTSET_DIR/backup/file2"
@@ -202,9 +202,9 @@ function test_file {
 		for dest in "/backup" "$my_ip:$TESTSET_DIR/backup" ; do
 			secretparam=""
 			[[ "$source" == *":"* ]] &&
-				secretparam+="--srcsecret /secrets/id_rsa "
+				secretparam+="--srcsecret /secrets/id_ed25519 "
 			[[ "$dest" == *":"* ]] &&
-				secretparam+="--dstsecret /secrets/id_rsa "
+				secretparam+="--dstsecret /secrets/id_ed25519 "
 
 			if [[ "$source" == *":"* ]] && [[ "$dest" == *":"* ]] ; then
 				#shellcheck disable=SC2086 # secretparam intentionally may contain >1 word

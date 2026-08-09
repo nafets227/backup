@@ -63,13 +63,13 @@ function test_exec_backupdocker {
 		return 1
 	fi
 
-	if ! cp ~/.ssh/id_rsa "$TESTSET_DIR/id_rsa"
+	if ! cp ~/.ssh/id_ed25519 "$TESTSET_DIR/id_ed25519"
 	then
 		test_expect_value "$?" 0 "Copy SSH Key"
 		return 1
 	fi
 	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
-		if ! chown 41598:41598 "$TESTSET_DIR/id_rsa" ; then
+		if ! chown 41598:41598 "$TESTSET_DIR/id_ed25519" ; then
 			test_expect_value "$?" 0 "chown SSH Key"
 			return 1
 		else
@@ -83,7 +83,7 @@ function test_exec_backupdocker {
 	test_exec_cmd "$rc_exp" "Backup Command $*" \
 		docker run \
 			-v "$TESTSET_DIR/backup:/backup" \
-			-v "$TESTSET_DIR/id_rsa:/secrets/id_rsa:ro" \
+			-v "$TESTSET_DIR/id_ed25519:/secrets/id_ed25519:ro" \
 			-e DEBUG=1 \
 			-e MAIL_TO \
 			-e MAIL_FROM \

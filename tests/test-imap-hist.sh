@@ -38,7 +38,7 @@ function test_imap_hist {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 	test_expect_filecount "backup-rem/imap-hist/2020/06/15/INBOX/new" 0
 	test_expect_filecount "backup-rem/imap-hist/2020/06/15/INBOX/cur" 0
 
@@ -66,7 +66,7 @@ function test_imap_hist {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 	test_expect_filecount "backup-rem/imap-hist/2020/06/15/INBOX/new" 0
 	test_expect_filecount "backup-rem/imap-hist/2020/06/15/INBOX/cur" 1
 
@@ -94,7 +94,7 @@ function test_imap_hist {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 	test_expect_filecount "backup-rem/imap-hist/2020/06/16/INBOX/new" 0
 	test_expect_filecount "backup-rem/imap-hist/2020/06/16/INBOX/cur" 1
 	test_expect_linkedfiles \
@@ -126,7 +126,7 @@ function test_imap_hist {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 	test_expect_filecount "backup-rem/imap-hist/2020/07/15/INBOX/new" 0
 	test_expect_filecount "backup-rem/imap-hist/2020/07/15/INBOX/cur" 1
 	test_expect_linkedfiles \
@@ -160,7 +160,7 @@ function test_imap_hist {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 	test_expect_filecount "backup-rem/imap-hist/2021/01/15/INBOX/new" 0
 	test_expect_filecount "backup-rem/imap-hist/2021/01/15/INBOX/cur" 1
 	test_expect_linkedfiles \
@@ -193,7 +193,7 @@ function test_imap_hist {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 	test_expect_filecount "backup-rem/imap-hist/2021/01/16/INBOX/new" 0
 	test_expect_filecount "backup-rem/imap-hist/2021/01/16/INBOX/cur" 0
 
@@ -217,7 +217,7 @@ function test_imap_hist {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 	test_expect_filecount "backup-rem/imap-hist/2021/01" 2
 
 	# IMAP OK with Empty Mail and default date=today
@@ -241,7 +241,7 @@ function test_imap_hist {
 		"$my_ip:$TESTSET_DIR/backup-rem/imap-hist" \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password \
-		--dstsecret /secrets/id_rsa
+		--dstsecret /secrets/id_ed25519
 	test_expect_filecount "backup-rem/imap-hist/$datedir/INBOX/new" 0
 	test_expect_filecount "backup-rem/imap-hist/$datedir/INBOX/cur" 0
 
