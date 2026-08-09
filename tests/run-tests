@@ -233,6 +233,7 @@ if testset_issuccess ; then
 				unset MAIL_TO MAIL_URL # disable mailing for following tests
 				. "$BASEDIR/test-rclone.sh"
 				test_rclone2file
+				test_rclone2file_readonly
 				test_rclone2file_hist
 				test_file2rclone
 				;;
