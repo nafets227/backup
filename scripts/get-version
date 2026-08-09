@@ -77,3 +77,7 @@ printf 'Version: %s\n' "$VERSION"
 if [[ -n "${GITHUB_ENV:-}" ]]; then
 	printf 'VERSION=%s\n' "$VERSION" >>"$GITHUB_ENV"
 fi
+
+if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+	printf 'version=%s\n' "$VERSION" >>"$GITHUB_OUTPUT"
+fi

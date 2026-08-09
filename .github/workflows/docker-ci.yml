@@ -11,14 +11,13 @@ on:
 permissions:
   contents: read
 
-# avoid to run multiple jobs in parallel that would interfere with each other
-# in the test step, since they would use the same test Email and OneDrive.
-concurrency: ci
-
 env:
   VERSION: 0.0.0 # dummy value will be replaced by calculate version step
 
 jobs:
+  # Lint and build intentionally run in parallel. A failed lint may waste
+  # some build time, but a successful build does not have to wait for lint.
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +26,6 @@ jobs:
         with:
           submodules: true
           persist-credentials: false
-
       - name: Calculate version
         id: version
         run: |
@@ -35,7 +33,7 @@ jobs:
           shopt -s inherit_errexit
           . scripts/get-version
           # writes VERSION=1.2.3 to $GITHUB_ENV
-
+          # writes version=1.2.3 to $GITHUB_OUTPUT
       - name: Update Helm chart
         run: |
           yq -i \
@@ -44,30 +42,28 @@ jobs:
           yq -i \
             '.appVersion="${{ env.VERSION }}"' \
             charts/nafets227-backup/Chart.yaml
-
       - name: Lint helm and render examples/tests
         run: scripts/helm-lint-render
-
       - name: Load super-linter configuration
         # Use grep inverse matching to exclude eventual comments in the .env
         # file because the GitHub Actions command to set environment variables
-        # doesn't support comments.
+        # doesn't support comments. Ref:
         # editorconfig-checker-disable-next-line
-        # Ref: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-an-environment-variable
+        # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-an-environment-variable
         run: grep -v '^#' .github/linters/super-linter.env >> "$GITHUB_ENV"
-
       - name: SuperLint
         uses: super-linter/super-linter/slim@v8.7.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  docker-build-ci:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
-      statuses: write
-
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      image: >-
+        ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -76,17 +72,8 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
           fetch-tags: true
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
-
-      - name: Log into registry ghcr.io
-        uses: docker/login-action@v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Calculate version
         id: version
         run: |
@@ -94,7 +81,7 @@ jobs:
           shopt -s inherit_errexit
           . scripts/get-version
           # writes VERSION=1.2.3 to $GITHUB_ENV
-
+          # writes version=1.2.3 to $GITHUB_OUTPUT
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v6
@@ -102,21 +89,23 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=${{ env.VERSION }}
-
             # latest only for Release Tags
             type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
-
       - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
           cache-from: type=gha
           cache-to: type=gha
-          push: false
-          load: true
+          outputs: type=docker,dest=dist/nafets227-backup.image.tar
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: dist/nafets227-backup.image.tar
+          retention-days: 1
       - name: Update Helm chart
         run: |
           yq -i \
@@ -125,57 +114,214 @@ jobs:
           yq -i \
             '.appVersion="${{ env.VERSION }}"' \
             charts/nafets227-backup/Chart.yaml
-
       - name: Package Helm
         run: |
           helm dependency update charts/nafets227-backup
           helm package charts/nafets227-backup --destination dist
+      - name: Upload Helm chart
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-chart
+          path: dist/*.tgz
+          retention-days: 1
 
-      - name: setup
-        id: setup
+  test-base-imap:
+    needs: build
+    runs-on: ubuntu-latest
+    # Avoid running multiple test steps in parallel that would interfere with
+    # each other since they use the same test Email and OneDrive.
+    concurrency:
+      group: ci-test-base-imap
+      queue: max
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - name: Setup
         run: |
           sudo apt-get update
-          sudo apt install s-nail rclone offlineimap
-
-      - name: test
-        id: test
+          sudo apt install s-nail offlineimap
+      - name: Download Docker image
+        uses: actions/download-artifact@v5
+        with:
+          name: docker-image
+          path: /tmp
+      - name: Load Docker image
+        run: docker load --input /tmp/nafets227-backup.image.tar
+      - name: Test
         env:
-          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
           GH_TOKEN: ${{ secrets.GH_SECRET_ADMIN_TOKEN }}
           MAIL_PW: ${{ secrets.MAIL_PW }}
+          IMAGE: ${{ needs.build.outputs.image }}
         run: |
           set -Eeuo pipefail ${{ runner.debug && '-x' || '' }}
           shopt -s inherit_errexit
 
-          cat >tests/rclone.conf <<<"$RCLONE_CONF"
           cat >tests/mail.password <<<"$MAIL_PW"
-          unset RCLONE_CONF MAIL_PW
+          unset MAIL_PW
 
           sudo bash -c 'ssh-keygen -N "" -f ~/.ssh/id_ed25519'
           sudo bash -c 'cat ~/.ssh/id_ed25519.pub >>~/.ssh/authorized_keys'
           sudo bash -c 'touch ~/.hushlogin'
 
-          sudo bash ${{ runner.debug && '-x' || '' }} tests/run-tests all
+          sudo bash ${{ runner.debug && '-x' || '' }} \
+            tests/run-tests all '!rclone' '!file' "$IMAGE"
+
+          rm tests/mail.password
+
+  # jscpd:ignore-start
+  test-rclone:
+    needs: build
+    runs-on: ubuntu-latest
+    # Avoid running multiple test steps in parallel that would interfere with
+    # each other since they use the same test Email and OneDrive.
+    concurrency:
+      group: ci-test-rclone
+      queue: max
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - name: Setup
+        run: |
+          sudo apt-get update
+          sudo apt install rclone
+      - name: Download Docker image
+        uses: actions/download-artifact@v5
+        with:
+          name: docker-image
+          path: /tmp
+      - name: Load Docker image
+        run: docker load --input /tmp/nafets227-backup.image.tar
+      - name: Test
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+          GH_TOKEN: ${{ secrets.GH_SECRET_ADMIN_TOKEN }}
+          IMAGE: ${{ needs.build.outputs.image }}
+        run: |
+          set -Eeuo pipefail ${{ runner.debug && '-x' || '' }}
+          shopt -s inherit_errexit
+
+          cat >tests/rclone.conf <<<"$RCLONE_CONF"
+          unset RCLONE_CONF
+
+          sudo bash -c 'ssh-keygen -N "" -f ~/.ssh/id_ed25519'
+          sudo bash -c 'cat ~/.ssh/id_ed25519.pub >>~/.ssh/authorized_keys'
+          sudo bash -c 'touch ~/.hushlogin'
+
+          sudo bash ${{ runner.debug && '-x' || '' }} \
+            tests/run-tests rclone "$IMAGE"
 
           gh secret set RCLONE_CONF < tests/rclone.conf
-          rm tests/rclone.conf tests/mail.password
+          rm tests/rclone.conf
 
-      - name: Push Docker image
-        uses: docker/build-push-action@v7
+  test-file:
+    needs: build
+    runs-on: ubuntu-latest
+    # Avoid running multiple test steps in parallel that would interfere with
+    # each other since they use the same test Email and OneDrive.
+    concurrency:
+      group: ci-test-file
+      queue: max
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
         with:
-          context: .
-          cache-from: type=gha
-          cache-to: type=gha
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          submodules: true
+          persist-credentials: false
+      - name: Download Docker image
+        uses: actions/download-artifact@v5
+        with:
+          name: docker-image
+          path: /tmp
+      - name: Load Docker image
+        run: docker load --input /tmp/nafets227-backup.image.tar
+      - name: Test
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+          IMAGE: ${{ needs.build.outputs.image }}
+        run: |
+          set -Eeuo pipefail ${{ runner.debug && '-x' || '' }}
+          shopt -s inherit_errexit
 
+          sudo bash -c 'ssh-keygen -N "" -f ~/.ssh/id_ed25519'
+          sudo bash -c 'cat ~/.ssh/id_ed25519.pub >>~/.ssh/authorized_keys'
+          sudo bash -c 'touch ~/.hushlogin'
+
+          sudo bash ${{ runner.debug && '-x' || '' }} \
+            tests/run-tests file "$IMAGE"
+    # jscpd:ignore-end
+
+  push:
+    needs:
+      - lint
+      - build
+      - test-base-imap
+      - test-rclone
+      - test-file
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      # jscpd:ignore-start
+      - name: Download Docker image
+        uses: actions/download-artifact@v5
+        with:
+          name: docker-image
+          path: /tmp
+      - name: Load Docker image
+        run: docker load --input /tmp/nafets227-backup.image.tar
+      - name: Download Helm chart
+        uses: actions/download-artifact@v5
+        with:
+          name: helm-chart
+          path: dist
+      # jscpd:ignore-end
+      - name: Log into registry ghcr.io
+        uses: docker/login-action@v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push Docker image
+        env:
+          REFTYPE: ${{ github.ref_type }}
+        run: |
+          docker push "ghcr.io/${{ github.repository }}:${VERSION}"
+
+          if [[ "$REFTYPE" == "tag" ]]; then
+            docker push "ghcr.io/${{ github.repository }}:latest"
+          fi
       - name: Push Helm chart
         run: |
           helm push \
-            dist/nafets227-backup-${{ env.VERSION }}.tgz \
-            oci://ghcr.io/${{ github.repository_owner }}/charts
+            "dist/nafets227-backup-${VERSION}.tgz" \
+            "oci://ghcr.io/${{ github.repository_owner }}/charts"
 
+  cleanup:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Cleanup old Docker images
         if: github.event_name != 'pull_request'
         env:
@@ -183,7 +329,6 @@ jobs:
           KEEP_DAYS: 30
         run: |
           scripts/cleanup-ghcr backup
-
       - name: Cleanup old Helm charts
         if: github.event_name != 'pull_request'
         env:

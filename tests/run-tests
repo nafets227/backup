@@ -208,7 +208,6 @@ printf "Executing tests %s with image %s\n" \
 
 test_expect_value "$(( ${#tests[@]} > 0 ? 1 : 0 ))" 1 \
 	"Nr of tests to be executed"
-test_is_cmdavail curl offlineimap jq "$TEST_SNAIL"
 
 if testset_issuccess ; then
 	if [ ! -d "$TESTSET_DIR/backup" ] ; then
