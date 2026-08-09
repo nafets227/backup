@@ -28,95 +28,86 @@ function test_file_srcdest {
 	dest+="/file/dest"
 
 	# backup from non-existing source should fail
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file" \
 		"$source/thisdirdoesnotexist" \
 		"/$dest" \
-		"$@" \
-		)"
+		"$@"
 
 	# backup to non-existing dest should work !
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest/thisdirdoesnotexist" \
-		"$@" \
-		)"
+		"$@"
 	test_expect_filecount "backup/file/dest/thisdirdoesnotexist" 0
 	rmdir "$TESTSET_DIR/backup/file/dest/thisdirdoesnotexist"
 
 	# backup empty path
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 	test_expect_filecount "backup/file/dest" 0
 
 	# rsync parameters with empty path
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
 		"$@" \
 		-- \
 		--verbose
-		)"
 	test_expect_filecount "backup/file/dest" 0
 
 	# backup one file
 	cat >"$TESTSET_DIR/backup/file/source/dummyfile" <<<"Dummyfile"
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 	test_expect_filecount "backup/file/source" 1
 
 	# backup additional file in subdirectory
 	mkdir "$TESTSET_DIR/backup/file/source/testsubdir"
 	cat >"$TESTSET_DIR/backup/file/source/testsubdir/dummyfile2" <<<"Dummyfile2"
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 	test_expect_filecount "backup/file/dest" 2 # includes subdir!
 	test_expect_filecount "backup/file/dest/testsubdir" 1
 
 	# delete no longer existing file
 	rm "$TESTSET_DIR/backup/file/source/dummyfile"
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 	test_expect_filecount "backup/file/dest" 1 # includes subdir!
 	test_expect_filecount "backup/file/dest/testsubdir" 1
 
 	# delete no longer existing file in subdir
 	rm "$TESTSET_DIR/backup/file/source/testsubdir/dummyfile2"
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 	test_expect_filecount "backup/file/dest" 1 # includes subdir!
 	test_expect_filecount "backup/file/dest/testsubdir" 0
 
 	# delete no longer existing subdir
 	rmdir "$TESTSET_DIR/backup/file/source/testsubdir"
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 	test_expect_filecount "backup/file/dest" 0
 
 	rm -rf \
@@ -136,80 +127,73 @@ function test_file {
 	# backup remote source without secret should fail
 	#shellcheck disable=SC2086
 	# TEST_RSYNCOPE intentionally may contain 0,1 or more words
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		"$my_ip:$TESTSET_DIR/backup/file1" \
 		/backup/file2 \
 		$TEST_RSYNCOPT
-		)"
 
 	# backup remote dest without secret should fail
 	#shellcheck disable=SC2086
 	# TEST_RSYNCOPE intentionally may contain 0,1 or more words
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		/backup/file1 \
 		"$my_ip:$TESTSET_DIR/backup/file2" \
 		$TEST_RSYNCOPT
-		)"
 
 	# backup remote source,dest without secret should fail
 	#shellcheck disable=SC2086
 	# TEST_RSYNCOPE intentionally may contain 0,1 or more words
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		"$my_ip:$TESTSET_DIR/backup/file1" \
 		"$my_host:$TESTSET_DIR/backup/file2" \
 		$TEST_RSYNCOPT
-		)"
 
 	# backup remote source,dest with only source secret should work
 	# since remote and source are on same machine
 	#shellcheck disable=SC2086
 	# TEST_RSYNCOPE intentionally may contain 0,1 or more words
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		"$my_ip:$TESTSET_DIR/backup/file1" \
 		"$my_host:$TESTSET_DIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
-		)"
 
 	# backup remote source,dest with only source secret should fail
 	#shellcheck disable=SC2086
 	# TEST_RSYNCOPE intentionally may contain 0,1 or more words
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		"$my_ip:$TESTSET_DIR/backup/file1" \
 		"$my_host:$TESTSET_DIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
-		)"
 
 	# backup remote source,dest with only dest secret should fail
 	#shellcheck disable=SC2086
 	# TEST_RSYNCOPE intentionally may contain 0,1 or more words
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		"$my_ip:$TESTSET_DIR/backup/file1" \
 		"$my_host:$TESTSET_DIR/backup/file2" \
 		--dstsecret /secrets/id_rsa \
 		--runonsrc \
 		$TEST_RSYNCOPT
-		)"
 	# backup remote source,dest without runon should fail
 	#shellcheck disable=SC2086
 	# TEST_RSYNCOPE intentionally may contain 0,1 or more words
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		"$my_ip:$TESTSET_DIR/backup/file1" \
 		"$my_host:$TESTSET_DIR/backup/file2" \
 		--srcsecret /secrets/id_rsa \
 		--dstsecret /secrets/id_rsa \
 		$TEST_RSYNCOPT
-		)"
 
 	rmdir "$TESTSET_DIR/backup/file1" "$TESTSET_DIR/backup/file2"
 

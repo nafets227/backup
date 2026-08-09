@@ -32,7 +32,7 @@ function test_imap_hist {
 	test_cleanImap "$TESTIMAP_SRC" "$(cat "$TESTIMAP_SECRET")" "$mail_smtpsrv"
 
 	# IMAP OK with Empty Mailbox 2020-06-15
-	eval "$(test_exec_backupdocker  0 \
+	test_exec_backupdocker  0 \
 		"backup imap" \
 		--hist \
 		--histdate "2020-06-15" \
@@ -40,13 +40,12 @@ function test_imap_hist {
 		/backup/imap-hist \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)"
 	test_expect_filecount "backup/imap-hist/2020/06/15/INBOX/new" 0
 	test_expect_filecount "backup/imap-hist/2020/06/15/INBOX/cur" 0
 
 	# IMAP OK with Empty Mailbox 2020-06-15 - remote backup dest
 	if $exec_remote ; then
-		eval "$(test_exec_backupdocker 0 \
+		test_exec_backupdocker 0 \
 			"backup imap" \
 			--hist \
 			--histdate "2020-06-15" \
@@ -55,7 +54,6 @@ function test_imap_hist {
 			"$TESTIMAP_URL" \
 			--srcsecret /backup/imap_password.password \
 			--dstsecret /secrets/id_rsa
-			)"
 		test_expect_filecount "backup-rem/imap-hist/2020/06/15/INBOX/new" 0
 		test_expect_filecount "backup-rem/imap-hist/2020/06/15/INBOX/cur" 0
 	fi
@@ -64,7 +62,7 @@ function test_imap_hist {
 	test_putImap "$TESTIMAP_SRC" "$(cat "$TESTIMAP_SECRET")" "$TESTIMAP_URL"
 
 	# IMAP OK with 1 Mail overwrite 2020-06-15
-	eval "$(test_exec_backupdocker  0 \
+	test_exec_backupdocker  0 \
 		"backup imap" \
 		--hist \
 		--histdate "2020-06-15" \
@@ -72,13 +70,12 @@ function test_imap_hist {
 		/backup/imap-hist \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)"
 	test_expect_filecount "backup/imap-hist/2020/06/15/INBOX/new" 0
 	test_expect_filecount "backup/imap-hist/2020/06/15/INBOX/cur" 1
 
 	# IMAP OK with 1 Mail overwrite 2020-06-15 - remote backup dest
 	if $exec_remote ; then
-		eval "$(test_exec_backupdocker 0 \
+		test_exec_backupdocker 0 \
 			"backup imap" \
 			--hist \
 			--histdate "2020-06-15" \
@@ -87,13 +84,12 @@ function test_imap_hist {
 			"$TESTIMAP_URL" \
 			--srcsecret /backup/imap_password.password \
 			--dstsecret /secrets/id_rsa
-			)"
 		test_expect_filecount "backup-rem/imap-hist/2020/06/15/INBOX/new" 0
 		test_expect_filecount "backup-rem/imap-hist/2020/06/15/INBOX/cur" 1
 	fi
 
 	# IMAP OK with 1 Mail 2020-06-16
-	eval "$(test_exec_backupdocker  0 \
+	test_exec_backupdocker  0 \
 		"backup imap" \
 		--hist \
 		--histdate "2020-06-16" \
@@ -101,7 +97,6 @@ function test_imap_hist {
 		/backup/imap-hist \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)"
 	test_expect_filecount "backup/imap-hist/2020/06/16/INBOX/new" 0
 	test_expect_filecount "backup/imap-hist/2020/06/16/INBOX/cur" 1
 	test_expect_linkedfiles \
@@ -110,7 +105,7 @@ function test_imap_hist {
 
 	# IMAP OK with 1 Mail 2020-06-16 - remote backup dest
 	if $exec_remote ; then
-		eval "$(test_exec_backupdocker 0 \
+		test_exec_backupdocker 0 \
 			"backup imap" \
 			--hist \
 			--histdate "2020-06-16" \
@@ -119,7 +114,6 @@ function test_imap_hist {
 			"$TESTIMAP_URL" \
 			--srcsecret /backup/imap_password.password \
 			--dstsecret /secrets/id_rsa
-			)"
 		test_expect_filecount "backup-rem/imap-hist/2020/06/16/INBOX/new" 0
 		test_expect_filecount "backup-rem/imap-hist/2020/06/16/INBOX/cur" 1
 		test_expect_linkedfiles \
@@ -128,7 +122,7 @@ function test_imap_hist {
 	fi
 
 	# IMAP OK with 1 Mail 2020-07-15
-	eval "$(test_exec_backupdocker  0 \
+	test_exec_backupdocker  0 \
 		"backup imap" \
 		--hist \
 		--histdate "2020-07-15" \
@@ -136,7 +130,6 @@ function test_imap_hist {
 		/backup/imap-hist \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)"
 	test_expect_filecount "backup/imap-hist/2020/07/15/INBOX/new" 0
 	test_expect_filecount "backup/imap-hist/2020/07/15/INBOX/cur" 1
 	test_expect_linkedfiles \
@@ -146,7 +139,7 @@ function test_imap_hist {
 
 	# IMAP OK with 1 Mail 2020-07-15 - remote backup dest
 	if $exec_remote ; then
-		eval "$(test_exec_backupdocker 0 \
+		test_exec_backupdocker 0 \
 			"backup imap" \
 			--hist \
 			--histdate "2020-07-15" \
@@ -155,7 +148,6 @@ function test_imap_hist {
 			"$TESTIMAP_URL" \
 			--srcsecret /backup/imap_password.password \
 			--dstsecret /secrets/id_rsa
-			)"
 		test_expect_filecount "backup-rem/imap-hist/2020/07/15/INBOX/new" 0
 		test_expect_filecount "backup-rem/imap-hist/2020/07/15/INBOX/cur" 1
 		test_expect_linkedfiles \
@@ -165,7 +157,7 @@ function test_imap_hist {
 	fi
 
 	# IMAP OK with one Mail 2021-01-15
-	eval "$(test_exec_backupdocker  0 \
+	test_exec_backupdocker  0 \
 		"backup imap" \
 		--hist \
 		--histdate "2021-01-15" \
@@ -173,7 +165,6 @@ function test_imap_hist {
 		/backup/imap-hist \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)"
 	test_expect_filecount "backup/imap-hist/2021/01/15/INBOX/new" 0
 	test_expect_filecount "backup/imap-hist/2021/01/15/INBOX/cur" 1
 	test_expect_linkedfiles \
@@ -184,7 +175,7 @@ function test_imap_hist {
 
 	# IMAP OK with one Mail 2021-01-15 - remote backup dest
 	if $exec_remote ; then
-		eval "$(test_exec_backupdocker 0 \
+		test_exec_backupdocker 0 \
 			"backup imap" \
 			--hist \
 			--histdate "2021-01-15" \
@@ -193,7 +184,6 @@ function test_imap_hist {
 			"$TESTIMAP_URL" \
 			--srcsecret /backup/imap_password.password \
 			--dstsecret /secrets/id_rsa
-			)"
 		test_expect_filecount "backup-rem/imap-hist/2021/01/15/INBOX/new" 0
 		test_expect_filecount "backup-rem/imap-hist/2021/01/15/INBOX/cur" 1
 		test_expect_linkedfiles \
@@ -207,7 +197,7 @@ function test_imap_hist {
 	test_cleanImap "$TESTIMAP_SRC" "$(cat "$TESTIMAP_SECRET")" "$mail_smtpsrv"
 
 	# IMAP OK with Empty Mailbox 2021-01-16
-	eval "$(test_exec_backupdocker  0 \
+	test_exec_backupdocker  0 \
 		"backup imap" \
 		--hist \
 		--histdate "2021-01-16" \
@@ -215,13 +205,12 @@ function test_imap_hist {
 		/backup/imap-hist \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)"
 	test_expect_filecount "backup/imap-hist/2021/01/16/INBOX/new" 0
 	test_expect_filecount "backup/imap-hist/2021/01/16/INBOX/cur" 0
 
 	# IMAP OK with Empty Mailbox 2021-01-16 - remote backup dest
 	if $exec_remote ; then
-		eval "$(test_exec_backupdocker 0 \
+		test_exec_backupdocker 0 \
 			"backup imap" \
 			--hist \
 			--histdate "2021-01-16" \
@@ -230,13 +219,12 @@ function test_imap_hist {
 			"$TESTIMAP_URL" \
 			--srcsecret /backup/imap_password.password \
 			--dstsecret /secrets/id_rsa
-			)"
 		test_expect_filecount "backup-rem/imap-hist/2021/01/16/INBOX/new" 0
 		test_expect_filecount "backup-rem/imap-hist/2021/01/16/INBOX/cur" 0
 	fi
 
 	# IMAP KO with date before last backup 2021-01-07
-	eval "$(test_exec_backupdocker  1 \
+	test_exec_backupdocker  1 \
 		"backup imap" \
 		--hist \
 		--histdate "2021-01-07" \
@@ -244,12 +232,11 @@ function test_imap_hist {
 		/backup/imap-hist \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)"
 	test_expect_filecount "backup/imap-hist/2021/01" 2
 
 	# IMAP KO with date before last backup 2021-01-07 - remote backup dest
 	if $exec_remote ; then
-		eval "$(test_exec_backupdocker 1 \
+		test_exec_backupdocker 1 \
 			"backup imap" \
 			--hist \
 			--histdate "2021-01-07" \
@@ -258,27 +245,25 @@ function test_imap_hist {
 			"$TESTIMAP_URL" \
 			--srcsecret /backup/imap_password.password \
 			--dstsecret /secrets/id_rsa
-			)"
 		test_expect_filecount "backup-rem/imap-hist/2021/01" 2
 	fi
 
 	# IMAP OK with Empty Mail and default date=today
 	datedir="$(date +%Y/%m/%d)"
-	eval "$(test_exec_backupdocker  0 \
+	test_exec_backupdocker  0 \
 		"backup imap" \
 		--hist \
 		"$TESTIMAP_SRC" \
 		/backup/imap-hist \
 		"$TESTIMAP_URL" \
 		--srcsecret /backup/imap_password.password
-		)"
 	test_expect_filecount "backup/imap-hist/$datedir/INBOX/new" 0
 	test_expect_filecount "backup/imap-hist/$datedir/INBOX/cur" 0
 
 	# IMAP OK with Empty Mail and default date=today - remote backup dest
 	datedir="$(date +%Y/%m/%d)"
 	if $exec_remote ; then
-		eval "$(test_exec_backupdocker 0 \
+		test_exec_backupdocker 0 \
 			"backup imap" \
 			--hist \
 			"$TESTIMAP_SRC" \
@@ -286,7 +271,6 @@ function test_imap_hist {
 			"$TESTIMAP_URL" \
 			--srcsecret /backup/imap_password.password \
 			--dstsecret /secrets/id_rsa
-			)"
 		test_expect_filecount "backup-rem/imap-hist/$datedir/INBOX/new" 0
 		test_expect_filecount "backup-rem/imap-hist/$datedir/INBOX/cur" 0
 	fi

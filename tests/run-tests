@@ -65,23 +65,22 @@ function test_exec_backupdocker {
 
 	if ! cp ~/.ssh/id_rsa "$TESTSET_DIR/id_rsa"
 	then
-		printf "test_expect_value %s 0 \"%s\"\n" "$?" "Copy SSH Key"
+		test_expect_value "$?" 0 "Copy SSH Key"
 		return 1
 	fi
 	if 	! [[ "$OSTYPE" =~ darwin* ]] ; then
 		if ! chown 41598:41598 "$TESTSET_DIR/id_rsa" ; then
-			printf "test_expect_value %s 0 \"%s\"\n" "$?" "chown SSH Key"
+			test_expect_value "$?" 0 "chown SSH Key"
 			return 1
 		else
-			printf "test_expect_value %s 0 \"%s\"\n" "0" "not chowning SSH Key"
+			test_expect_value 0 0 "not chowning SSH Key"
 		fi
 	else
-		printf "test_expect_value %s 0 \"%s\"\n" "0" "not chowning SSH Key"
+		test_expect_value 0 0 "not chowning SSH Key"
 	fi
 
-	printf "test_exec_cmd"
-	printf  " \"%s\"" \
-		"$rc_exp" "Backup Command $*" \
+	TEST_CALLDEPTH=1 \
+	test_exec_cmd "$rc_exp" "Backup Command $*" \
 		docker run \
 			-v "$TESTSET_DIR/backup:/backup" \
 			-v "$TESTSET_DIR/id_rsa:/secrets/id_rsa:ro" \
@@ -145,7 +144,7 @@ function test_email {
 	export MAIL_URL="$TESTALERTMAIL_URL"
 	unset MAIL_SSL
 	export MAIL_FROM="$TESTALERTMAIL_FROM"
-	eval "$(test_exec_backupdocker 0 "")"
+	test_exec_backupdocker 0 ""
 
 	sleep 10 # let mail be processed
 
@@ -159,7 +158,7 @@ function test_email {
 	export MAIL_URL="$smtpurl"
 	export MAIL_SSL=1
 	export MAIL_FROM="$TESTALERTMAIL_FROM"
-	eval "$(test_exec_backupdocker 0 "")"
+	test_exec_backupdocker 0 ""
 
 	sleep 10 # let mail be processed
 
@@ -167,12 +166,11 @@ function test_email {
 	test_cleanImap "$TESTALERTMAIL_ADR" "$imappw" "$TESTALERTMAIL_IMAP_URL"
 
 	# @TODO execute test succeeding and verify EMail sent
-	#eval $(test_exec_backupdocker 0 \
+	#test_exec_backupdocker 0 \
 	#	"backup file" \
 	#	"$source" \
 	#	"$dest" \
-	#	"$@" \
-	#	)
+	#	"$@"
 	#test_expect_filecount "backup/file/dest" 0
 	#
 	#sleep 10

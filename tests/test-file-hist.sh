@@ -29,24 +29,22 @@ function test_file_hist_srcdest {
 	dest+="/file-hist/dest"
 
 	# backup from non-existing source should fail
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file" \
 		--hist \
 		--histdate "2020-10-01" \
 		"$source/thisdirdoesnotexist" \
 		"/$dest" \
-		"$@" \
-		)"
+		"$@"
 
 	# backup to non-existing dest should work !
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
 		--histdate "2020-10-10" \
 		"$source" \
 		"$dest/thisdirdoesnotexist" \
-		"$@" \
-		)"
+		"$@"
 	test_expect_filecount "backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" 0
 	rmdir \
 		"$TESTSET_DIR/backup/file-hist/dest/thisdirdoesnotexist/2020/10/10" \
@@ -55,26 +53,24 @@ function test_file_hist_srcdest {
 		"$TESTSET_DIR/backup/file-hist/dest/thisdirdoesnotexist"
 
 	# backup empty path
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
 		--histdate "2020-10-11" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 
 	# backup one file
 	cat >"$TESTSET_DIR/backup/file-hist/source/dummyfile" <<<"Dummyfile"
 	test_chown "$TESTSET_DIR/backup/file-hist/source/dummyfile"
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
 		--histdate "2020-10-12" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 
 	# backup additional file in subdirectory
 	mkdir "$TESTSET_DIR/backup/file-hist/source/testsubdir"
@@ -82,47 +78,43 @@ function test_file_hist_srcdest {
 	cat >"$TESTSET_DIR/backup/file-hist/source/testsubdir/dummyfile2" \
 		<<<"Dummyfile2"
 	test_chown "$TESTSET_DIR/backup/file-hist/source/testsubdir/dummyfile2"
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
 		--histdate "2020-10-13" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 
 	# delete no longer existing file
 	rm "$TESTSET_DIR/backup/file-hist/source/dummyfile"
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
 		--histdate "2020-10-14" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 
 	# delete no longer existing file in subdir
 	rm "$TESTSET_DIR/backup/file-hist/source/testsubdir/dummyfile2"
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
 		--histdate "2020-10-15" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 
 	# delete no longer existing subdir
 	rmdir "$TESTSET_DIR/backup/file-hist/source/testsubdir"
-	eval "$(test_exec_backupdocker 0 \
+	test_exec_backupdocker 0 \
 		"backup file" \
 		--hist \
 		--histdate "2020-10-16" \
 		"$source" \
 		"$dest" \
-		"$@" \
-		)"
+		"$@"
 
 	test_expect_filecount "backup/file-hist/dest/2020/10/11" 0
 	test_expect_filecount "backup/file-hist/dest/2020/10/12" 1
@@ -152,38 +144,35 @@ function test_file_hist {
 	test_chown "$TESTSET_DIR/backup/file-hist-2"
 
 	# backup remote source without secret should fail
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
 		/backup/file2 \
 		"$TEST_RSYNCOPT"
-		)"
 
 	# backup remote dest without secret should fail
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		/backup/file1 \
 		"$my_ip:$TESTSET_DIR/backup/file-hist-2" \
 		"$TEST_RSYNCOPT"
-		)"
 
 	# backup remote source,dest without secret should fail
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
 		"$my_ip:$TESTSET_DIR/backup/file-hist-1" \
 		"$my_host:$TESTSET_DIR/backup/file-hist-2" \
 		"$TEST_RSYNCOPT"
-		)"
 
 	# backup remote source,dest with only source secret should work
 	# since remote and source are on same machine
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
@@ -192,10 +181,9 @@ function test_file_hist {
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
-		)"
 
 	# backup remote source,dest with only source secret should fail
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
@@ -204,10 +192,9 @@ function test_file_hist {
 		--srcsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
-		)"
 
 	# backup remote source,dest with only dest secret should fail
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
@@ -216,9 +203,8 @@ function test_file_hist {
 		--dstsecret /secrets/id_rsa \
 		--runonsrc \
 		"$TEST_RSYNCOPT"
-		)"
 	# backup remote source,dest without runon should fail
-	eval "$(test_exec_backupdocker 1 \
+	test_exec_backupdocker 1 \
 		"backup file $my_fileopt" \
 		--hist \
 		--histdate "2020-09-01" \
@@ -227,7 +213,6 @@ function test_file_hist {
 		--srcsecret /secrets/id_rsa \
 		--dstsecret /secrets/id_rsa \
 		"$TEST_RSYNCOPT"
-		)"
 
 	rmdir "$TESTSET_DIR/backup/file-hist-1" "$TESTSET_DIR/backup/file-hist-2"
 
@@ -253,7 +238,7 @@ function test_file_hist {
 		#shellcheck disable=SC2043
 		for source in "/backup" ; do
 			# Backup to remote in history mod should fail
-			eval "$(test_exec_backupdocker 1 \
+			test_exec_backupdocker 1 \
 				"backup file $my_fileopt" \
 				--hist \
 				--histdate "2020-10-01" \
@@ -261,8 +246,7 @@ function test_file_hist {
 				"$dest" \
 				"$TEST_RSYNCOPT" \
 				--runonsrc \
-				--dstsecret /secrets/id_rsa \
-				)"
+				--dstsecret /secrets/id_rsa
 		done
 		for source in  "$my_ip:$TESTSET_DIR/backup" ; do
 			if [[ $source == *":"* ]] ; then
