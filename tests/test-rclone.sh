@@ -134,7 +134,7 @@ function test_rclone2file {
 	if [ -n "$my_ip" ] ; then
 		exec_remote=true
 	else
-		test_expect_value "1" 0 "Skipping IMAP Remote Tests (ip/ipconfig)"
+		test_expect_value "1" 0 "Skipping rclone Remote Tests (ip/ipconfig)"
 		exec_remote=false
 	fi
 
