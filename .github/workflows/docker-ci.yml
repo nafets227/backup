@@ -155,7 +155,7 @@ jobs:
           sudo bash -c 'cat ~/.ssh/id_ed25519.pub >>~/.ssh/authorized_keys'
           sudo bash -c 'touch ~/.hushlogin'
 
-          sudo bash ${{ runner.debug && '-x' || '' }} tests/run-tests
+          sudo bash ${{ runner.debug && '-x' || '' }} tests/run-tests all
 
           gh secret set RCLONE_CONF < tests/rclone.conf
           rm tests/rclone.conf tests/mail.password

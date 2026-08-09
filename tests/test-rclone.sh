@@ -612,3 +612,7 @@ function test_file2rclone {
 
 ##### Main ###################################################################
 # do nothing
+test_expect_vardefined \
+	TESTRCLONE_CONF \
+	TESTRCLONE_NAME
+test_chown "$TESTRCLONE_CONF"

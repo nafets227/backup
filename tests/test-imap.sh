@@ -140,3 +140,7 @@ function test_imap {
 ##### Main ###################################################################
 # do nothing
 : "${my_ip:=""}"
+test_expect_vardefined \
+	TESTIMAP_SRC \
+	TESTIMAP_SECRET \
+	TESTIMAP_URL

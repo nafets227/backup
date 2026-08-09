@@ -95,21 +95,6 @@ function test_exec_backupdocker {
 	return 0
 }
 
-##### Test Build #############################################################
-function test_build {
-
-	if [ -z "$1" ] ; then
-		# Compile / Build docker
-		test_exec_cmd 0 "" \
-			docker build -t nafets227/backup:test "$BASEDIR/.."
-		TESTIMG="nafets227/backup:test"
-	else
-		TESTIMG=$1
-	fi
-
-	return 0
-}
-
 ##### Test: no custom script #################################################
 function test_runempty {
 	test_exec_cmd 1 "" \
@@ -121,6 +106,16 @@ function test_runempty {
 ##### Test: Email alerting ###################################################
 function test_email {
 	local imappw imapurl smtppw smtpurl
+
+	test_expect_vardefined \
+		TESTALERTMAIL_ADR \
+		TESTALERTMAIL_FROM \
+		TESTALERTMAIL_URL \
+		TESTALERTMAIL_USER \
+		TESTALERTMAIL_SECRET \
+		TESTALERTMAIL_IMAP_URL \
+		TESTALERTMAIL_IMAP_SECRET
+		# TESTALERTMAIL_HOSTNAME can be intendedly empty so dont check it
 
 	imappw="$(cat "$TESTALERTMAIL_IMAP_SECRET")"
 	imapurl="imap://${TESTALERTMAIL_ADR//@/%40}"
@@ -187,35 +182,32 @@ BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 #shellcheck source-path=SCRIPTDIR/../util
 . "$BASEDIR/../util/util_err_functions.sh"
 . "$BASEDIR/../util/util_test_functions.sh"
-
 . "$BASEDIR/config.sh"
-. "$BASEDIR/test-file-hist.sh"
-. "$BASEDIR/test-file.sh"
-. "$BASEDIR/test-imap-hist.sh"
-. "$BASEDIR/test-imap.sh"
-. "$BASEDIR/test-rclone.sh"
 
 testset_init "$@"
 
-test_expect_vardefined \
-	TESTIMAP_SRC \
-	TESTIMAP_SECRET \
-	TESTIMAP_URL
+tests=() TESTIMG=""
+for p in "${TESTSET_PARM[@]}" ; do
+	case "$p" in
+		all)
+			tests=( base rclone file imap )
+			;;
+		base|rclone|file|imap)
+			tests+=( "$p" )
+			;;
+		!base|!rclone|!file|!imap)
+			tests=( "${tests[@]/"${p:1}"}" )
+			;;
+		*)
+			TESTIMG="$p"
+	esac
+done
 
-test_expect_vardefined \
-	TESTRCLONE_CONF \
-	TESTRCLONE_NAME
+printf "Executing tests %s with image %s\n" \
+	"${tests[*]}" "${TESTIMG:-<temporary image>}"
 
-test_expect_vardefined \
-	TESTALERTMAIL_ADR \
-	TESTALERTMAIL_FROM \
-	TESTALERTMAIL_URL \
-	TESTALERTMAIL_USER \
-	TESTALERTMAIL_SECRET \
-	TESTALERTMAIL_IMAP_URL \
-	TESTALERTMAIL_IMAP_SECRET
-	# TESTALERTMAIL_HOSTNAME can be intendedly empty so dont check it
-
+test_expect_value "$(( ${#tests[@]} > 0 ? 1 : 0 ))" 1 \
+	"Nr of tests to be executed"
 test_is_cmdavail curl offlineimap jq "$TEST_SNAIL"
 
 if testset_issuccess ; then
@@ -223,22 +215,46 @@ if testset_issuccess ; then
 		mkdir "$TESTSET_DIR/backup"
 	fi
 	test_chown "$TESTSET_DIR/backup"
-	test_chown "$TESTRCLONE_CONF"
-	test_build "${1-}"
+	if [ -z "$TESTIMG" ] ; then
+		TESTIMG="nafets227/backup:test"
+		test_exec_cmd 0 "Build temporary image" \
+			docker build -t "$TESTIMG" "$BASEDIR/.."
+	fi
 	test_init
 fi
 
 if testset_issuccess ; then
-	test_runempty
-	test_email
-	unset MAIL_TO MAIL_URL # disable mailing for following tests
-	test_rclone2file
-	test_rclone2file_hist
-	test_file2rclone
-	test_file
-	test_file_hist
-	test_imap
-	test_imap_hist
+	for t in "${tests[@]}" ; do
+		case "$t" in
+			base)
+				test_runempty
+				test_email
+				;;
+			rclone)
+				unset MAIL_TO MAIL_URL # disable mailing for following tests
+				. "$BASEDIR/test-rclone.sh"
+				test_rclone2file
+				test_rclone2file_hist
+				test_file2rclone
+				;;
+			file)
+				unset MAIL_TO MAIL_URL # disable mailing for following tests
+				. "$BASEDIR/test-file-hist.sh"
+				. "$BASEDIR/test-file.sh"
+				test_file
+				test_file_hist
+				;;
+			imap)
+				unset MAIL_TO MAIL_URL # disable mailing for following tests
+				. "$BASEDIR/test-imap-hist.sh"
+				. "$BASEDIR/test-imap.sh"
+				test_imap
+				test_imap_hist
+				;;
+			*)
+				test_expect_value 1 0 "Unknown test \"$t\""
+		esac
+	done
 fi
 
 testset_summary || exit 1

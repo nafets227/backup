@@ -242,7 +242,7 @@ any data on it!
   - TESTALERTMAIL_HOSTNAME
   - TESTALERTMAIL_IMAPxxx
 
-start with running tests/run-tests to verify your environment
+start with running `tests/run-tests all` to verify your environment
 
 ### GitHub Actions setup
 
