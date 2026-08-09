@@ -120,13 +120,6 @@ function test_runempty {
 
 ##### Test: Email alerting ###################################################
 function test_email {
-	if \
-		! test_is_cmdavail "curl" "$TEST_SNAIL"
-	then
-		printf "\tSkipping IMAP Tests.\n"
-		return 0
-	fi
-
 	local imappw imapurl smtppw smtpurl
 
 	imappw="$(cat "$TESTALERTMAIL_IMAP_SECRET")"
@@ -223,13 +216,17 @@ test_expect_vardefined \
 	TESTALERTMAIL_IMAP_SECRET
 	# TESTALERTMAIL_HOSTNAME can be intendedly empty so dont check it
 
-if [ ! -d "$TESTSET_DIR/backup" ] ; then
-	mkdir "$TESTSET_DIR/backup"
+test_is_cmdavail curl offlineimap jq "$TEST_SNAIL"
+
+if testset_issuccess ; then
+	if [ ! -d "$TESTSET_DIR/backup" ] ; then
+		mkdir "$TESTSET_DIR/backup"
+	fi
+	test_chown "$TESTSET_DIR/backup"
+	test_chown "$TESTRCLONE_CONF"
+	test_build "${1-}"
+	test_init
 fi
-test_chown "$TESTSET_DIR/backup"
-test_chown "$TESTRCLONE_CONF"
-test_build "${1-}"
-test_init
 
 if testset_issuccess ; then
 	test_runempty

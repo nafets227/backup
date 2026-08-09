@@ -8,21 +8,6 @@
 
 ##### Tests for IMAP #########################################################
 function test_imap {
-	if \
-		! test_is_cmdavail "curl" "$TEST_SNAIL"
-	then
-		printf "\tSkipping IMAP Tests.\n"
-		return 0
-	elif ! test_is_cmdavail "offlineimap" "jq" ; then
-		printf "\tSkipping IMAP Remote Tests.\n"
-		exec_remote=false
-	elif [ -n "$my_ip" ] ; then
-		exec_remote=true
-	else
-		test_expect_value "1" 0 "Skipping IMAP Remote Tests (ip/ipconfig)"
-		exec_remote=false
-	fi
-
 	printf "Testing IMAP using Mail Address \"%s\"\n" "$TESTIMAP_SRC"
 
 	local mail_smtpsrv=${TESTIMAP_URL%%:*}
@@ -57,15 +42,13 @@ function test_imap {
 		--srcsecret /backup/imap_wrongpassword.password
 
 	# IMAP Wrong password - remote backup dest
-	if $exec_remote ; then
-		test_exec_backupdocker 1 \
-			"backup imap" \
-			"$TESTIMAP_SRC" \
-			"$my_ip:$TESTSET_DIR/backup-rem/imap" \
-			"$TESTIMAP_URL" \
-			--srcsecret /backup/imap_wrongpassword.password \
-			--dstsecret /secrets/id_rsa
-	fi
+	test_exec_backupdocker 1 \
+		"backup imap" \
+		"$TESTIMAP_SRC" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
+		"$TESTIMAP_URL" \
+		--srcsecret /backup/imap_wrongpassword.password \
+		--dstsecret /secrets/id_rsa
 
 	# IMAP OK with Empty Mailbox
 	test_exec_backupdocker  0 \
@@ -78,17 +61,15 @@ function test_imap {
 	test_expect_filecount "backup/imap/INBOX/cur" 0
 
 	# IMAP OK with Empty Mailbox - remote backup dest
-	if $exec_remote ; then
-		test_exec_backupdocker 0 \
-			"backup imap" \
-			"$TESTIMAP_SRC" \
-			"$my_ip:$TESTSET_DIR/backup-rem/imap" \
-			"$TESTIMAP_URL" \
-			--srcsecret /backup/imap_password.password \
-			--dstsecret /secrets/id_rsa
-		test_expect_filecount "backup-rem/imap/INBOX/new" 0
-		test_expect_filecount "backup-rem/imap/INBOX/cur" 0
-	fi
+	test_exec_backupdocker 0 \
+		"backup imap" \
+		"$TESTIMAP_SRC" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
+		"$TESTIMAP_URL" \
+		--srcsecret /backup/imap_password.password \
+		--dstsecret /secrets/id_rsa
+	test_expect_filecount "backup-rem/imap/INBOX/new" 0
+	test_expect_filecount "backup-rem/imap/INBOX/cur" 0
 
 	# IMAP KO without password
 	test_exec_backupdocker 1 \
@@ -98,14 +79,12 @@ function test_imap {
 		"$TESTIMAP_URL"
 
 	# IMAP KO without password remote
-	if $exec_remote ; then
-		test_exec_backupdocker 1 \
-			"backup imap" \
-			"$TESTIMAP_SRC" \
-			"$my_ip:$TESTSET_DIR/backup-rem/imap" \
-			"$TESTIMAP_URL" \
-			--dstsecret /secrets/id_rsa
-	fi
+	test_exec_backupdocker 1 \
+		"backup imap" \
+		"$TESTIMAP_SRC" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
+		"$TESTIMAP_URL" \
+		--dstsecret /secrets/id_rsa
 
 	# Store Testmail
 	test_putImap "$TESTIMAP_SRC" "$(cat "$TESTIMAP_SECRET")" "$TESTIMAP_URL"
@@ -132,17 +111,15 @@ function test_imap {
 	test_expect_filecount "backup/imap/testimapsubdir/INBOX/cur" 1
 
 	# IMAP OK with one Mail - remote backup dest
-	if $exec_remote ; then
-		test_exec_backupdocker 0 \
-			"backup imap" \
-			"$TESTIMAP_SRC" \
-			"$my_ip:$TESTSET_DIR/backup-rem/imap" \
-			"$TESTIMAP_URL" \
-			--srcsecret /backup/imap_password.password \
-			--dstsecret /secrets/id_rsa
-		test_expect_filecount "backup-rem/imap/INBOX/new" 0
-		test_expect_filecount "backup-rem/imap/INBOX/cur" 1
-	fi
+	test_exec_backupdocker 0 \
+		"backup imap" \
+		"$TESTIMAP_SRC" \
+		"$my_ip:$TESTSET_DIR/backup-rem/imap" \
+		"$TESTIMAP_URL" \
+		--srcsecret /backup/imap_password.password \
+		--dstsecret /secrets/id_rsa
+	test_expect_filecount "backup-rem/imap/INBOX/new" 0
+	test_expect_filecount "backup-rem/imap/INBOX/cur" 1
 
 	test_cleanImap "$TESTIMAP_SRC" "$(cat "$TESTIMAP_SECRET")" \
 		"$TESTIMAP_URL"
@@ -162,3 +139,4 @@ function test_imap {
 
 ##### Main ###################################################################
 # do nothing
+: "${my_ip:=""}"
