@@ -251,6 +251,10 @@ if testset_issuccess ; then
 				test_imap
 				test_imap_hist
 				;;
+			'')
+				# ignore empty elements that may result by the deletion of
+				# excluded tests from the array.
+				;;
 			*)
 				test_expect_value 1 0 "Unknown test \"$t\""
 		esac
