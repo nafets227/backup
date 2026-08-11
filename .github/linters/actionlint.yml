@@ -1,0 +1,7 @@
+---
+paths:
+  .github/workflows/docker-ci.yml:
+    ignore:
+      # Workaround outdated check in actionlint that does not recognize the
+      # new field
+      - 'unexpected key "queue" for "concurrency" section.+'
