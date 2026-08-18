@@ -146,7 +146,7 @@ jobs:
           sudo apt-get update
           sudo apt install s-nail offlineimap
       - name: Download Docker image
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: docker-image
           path: /tmp
@@ -195,7 +195,7 @@ jobs:
           sudo apt-get update
           sudo apt install rclone
       - name: Download Docker image
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: docker-image
           path: /tmp
@@ -240,7 +240,7 @@ jobs:
           submodules: true
           persist-credentials: false
       - name: Download Docker image
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: docker-image
           path: /tmp
@@ -278,14 +278,14 @@ jobs:
     steps:
       # jscpd:ignore-start
       - name: Download Docker image
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: docker-image
           path: /tmp
       - name: Load Docker image
         run: docker load --input /tmp/nafets227-backup.image.tar
       - name: Download Helm chart
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: helm-chart
           path: dist
