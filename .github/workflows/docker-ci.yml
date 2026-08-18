@@ -101,7 +101,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
       - name: Upload Docker image
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docker-image
           path: dist/nafets227-backup.image.tar
@@ -119,7 +119,7 @@ jobs:
           helm dependency update charts/nafets227-backup
           helm package charts/nafets227-backup --destination dist
       - name: Upload Helm chart
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: helm-chart
           path: dist/*.tgz
