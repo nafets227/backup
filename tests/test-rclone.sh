@@ -288,6 +288,97 @@ function test_rclone2file {
 	return 0
 }
 
+##### Tests for rclone2file readonly ##########################################
+function test_rclone2file_readonly {
+	if [ ! -f "$TESTRCLONE_CONF" ]
+	then
+		printf "\tSkipping rclone readonly Tests.\n"
+		return 0
+	fi
+
+	if [ -n "$my_ip" ] ; then
+		exec_remote=true
+	else
+		test_expect_value "1" 0 "Skipping rclone Remote Tests (ip/ipconfig)"
+		exec_remote=false
+	fi
+
+	printf "Testing rclone2file readonly using \"%s\" / \"%s\" in %s\n" \
+		"$TESTRCLONE_NAME" "$TESTRCLONE_RO_NAME" "$TESTRCLONE_CONF"
+
+	cp "$TESTRCLONE_CONF" "$TESTSET_DIR/backup/rclone2file_readonly.conf"
+	test_chown "$TESTSET_DIR/backup/rclone2file_readonly.conf"
+
+	test_cleanRclone "$TESTRCLONE_NAME" "$TESTRCLONE_CONF"
+
+	# rclone OK with Empty Cloud (compatibility "rclone")
+	test_exec_backupdocker  0 \
+		"backup rclone" \
+		"$TESTRCLONE_RO_NAME" \
+		/backup/rclone2file_readonly \
+		--srcsecret /backup/rclone2file_readonly.conf \
+		--exclude '/UnusedVault/**'
+	test_expect_filecount "backup/rclone2file" 0
+
+	# rclone OK with Empty Cloud - remote backup dest
+	test_exec_backupdocker 0 \
+		"backup rclone2file" \
+		"$TESTRCLONE_NAME" \
+		"$my_ip:$TESTSET_DIR/backup-rem/rclone2file_readonly" \
+		--srcsecret /backup/rclone2file_readonly.conf \
+		--dstsecret /secrets/id_ed25519 \
+		--exclude '/UnusedVault/**'
+	test_expect_filecount "backup-rem/rclone2file_readonly" 0
+
+	# Store Testfiles
+	test_putRclone "${TESTRCLONE_NAME}test.txt" "$TESTRCLONE_CONF"
+	test_putRclone "${TESTRCLONE_NAME}testdir/testfile.txt" "$TESTRCLONE_CONF"
+
+	# rclone OK with files
+	test_exec_backupdocker 0 \
+		"backup rclone2file" \
+		"$TESTRCLONE_NAME" \
+		/backup/rclone2file_readonly \
+		--srcsecret /backup/rclone2file_readonly.conf \
+		--exclude '/UnusedVault/**'
+	test_expect_filecount "backup/rclone2file_readonly" 2
+	test_expect_filecount "backup/rclone2file_readonly/testdir" 1
+
+	# rclone OK with files - remote backup dest
+	test_exec_backupdocker 0 \
+		"backup rclone2file" \
+		"$TESTRCLONE_NAME" \
+		"$my_ip:$TESTSET_DIR/backup-rem/rclone2file_readonly" \
+		--srcsecret /backup/rclone2file_readonly.conf \
+		--dstsecret /secrets/id_ed25519 \
+		--exclude '/UnusedVault/**'
+	test_expect_filecount "backup-rem/rclone2file_readonly" 2
+	test_expect_filecount "backup-rem/rclone2file_readonly/testdir" 1
+
+	test_cleanRclone "$TESTRCLONE_NAME" "$TESTRCLONE_CONF"
+
+	# rclone OK with files deleted
+	test_exec_backupdocker 0 \
+		"backup rclone2file" \
+		"$TESTRCLONE_NAME" \
+		/backup/rclone2file_readonly \
+		--srcsecret /backup/rclone2file_readonly.conf \
+		--exclude '/UnusedVault/**'
+	test_expect_filecount "backup/rclone2file" 0
+
+	# rclone OK with files deleted - remote backup dest
+	test_exec_backupdocker 0 \
+		"backup rclone2file" \
+		"$TESTRCLONE_NAME" \
+		"$my_ip:$TESTSET_DIR/backup-rem/rclone2file_readonly" \
+		--srcsecret /backup/rclone2file_readonly.conf \
+		--dstsecret /secrets/id_ed25519 \
+		--exclude '/UnusedVault/**'
+	test_expect_filecount "backup-rem/rclone2file_readonly" 0
+
+	return 0
+}
+
 ##### Tests for rclone2file history ##########################################
 function test_rclone2file_hist {
 	if [ ! -f "$TESTRCLONE_CONF" ]
@@ -614,5 +705,6 @@ function test_file2rclone {
 # do nothing
 test_expect_vardefined \
 	TESTRCLONE_CONF \
-	TESTRCLONE_NAME
+	TESTRCLONE_NAME \
+	TESTRCLONE_RO_NAME
 test_chown "$TESTRCLONE_CONF"

@@ -12,6 +12,7 @@
 # rclone test configuration
 : "${TESTRCLONE_CONF:=tests/rclone.conf}"
 : "${TESTRCLONE_NAME:=nafets227_nafets_de:/}"
+: "${TESTRCLONE_RO_NAME:=nafets227_nafets_de_ro:/}"
 
 # Alert mail configuration
 : "${TESTALERTMAIL_FROM:=nafets227/backup CI <no-reply@nafets.de>}"
@@ -28,6 +29,7 @@ export \
 	TESTIMAP_URL \
 	TESTRCLONE_CONF \
 	TESTRCLONE_NAME \
+	TESTRCLONE_RO_NAME \
 	TESTALERTMAIL_FROM \
 	TESTALERTMAIL_ADR \
 	TESTALERTMAIL_URL \

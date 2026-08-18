@@ -160,6 +160,41 @@ Backups data from various Clouds, leveraging [rclone](https://rclone.org/).
   Optionally prefixed by Server name followed by a colon.
 - Source Secret - rclone.conf file to be used
 
+### Read Only setup
+
+Using readonly access is supported, just configure the rclone.conf file
+provided as Source Secret accordingly. When using interactive config with
+`rclone config` make sure to enter advanced config:
+
+```text
+Edit advanced config?
+y) Yes
+n) No (default)
+y/n> y
+```
+
+and then select the readonly option:
+
+<!-- editorconfig-checker-disable -->
+
+```text
+Option access_scopes.
+Set scopes to be requested by rclone.
+Choose or manually enter a custom space separated list with all scopes, that rclone should request.
+Choose a number from below, or type in your own value of type SpaceSepList.
+Press Enter for the default (Files.Read Files.ReadWrite Files.Read.All Files.ReadWrite.All Sites.Read.All offline_access).
+ 1 / Read and write access to all resources
+   \ (Files.Read Files.ReadWrite Files.Read.All Files.ReadWrite.All Sites.Read.All offline_access)
+ 2 / Read only access to all resources
+   \ (Files.Read Files.Read.All Sites.Read.All offline_access)
+   / Read and write access to all resources, without the ability to browse SharePoint sites.
+ 3 | Same as if disable_site_permission was set to true
+   \ (Files.Read Files.ReadWrite Files.Read.All Files.ReadWrite.All offline_access)
+access_scopes> 2
+```
+
+<!-- editorconfig-checker-enable -->
+
 ## file2rclone
 
 Backups data from local to various Clouds, leveraging
@@ -186,9 +221,11 @@ rebasing on the first backup that introduced the files to be based on other data
 and then rebase each of the existing backups up to the latest.
 a sample command could be:
 
-    rsync -v -aHX --delete --progress
-    --link-dest=../../../../../user_home/2021/11/20
-    --link-dest=../20 20/ 20.rsync-rebase.tmp
+```shell
+rsync -v -aHX --delete --progress \
+  --link-dest=../../../../../user_home/2021/11/20 \
+  --link-dest=../20 20/ 20.rsync-rebase.tmp
+```
 
 ## Future Plans
 
