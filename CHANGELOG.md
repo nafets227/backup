@@ -1,5 +1,11 @@
 # nafets227/backup CHANGELOG
 
+## 1.0.1 (2026-08-18) readonly OneDrive
+
+- Document how rclone2file can be used with readonly access to OneDrive.
+  Add Tests for it.
+- Many CI and test improvements. See commit log for details
+
 ## 1.0.0 (2026-07-22) GA with Helm chart
 
 - add Helm chart support including schema, templates, and generated
