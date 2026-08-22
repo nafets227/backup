@@ -14,7 +14,7 @@ for chart in "$BASEDIR/charts"/* ; do
 	helm lint "$BASEDIR/charts/$chart"
 	for values in "$BASEDIR/charts/$chart/ci"/values-*.yaml; do
 		name=$(basename "$values" .yaml)
-		name=${name##values-lint-}
+		name=${name##values-}
 
 		helm lint "$BASEDIR/charts/$chart" -f "$values"
 		mkdir -p "$BASEDIR/citmp/$chart"
