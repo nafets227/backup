@@ -12,28 +12,29 @@
 #   1.2.4-br-branchname.5
 #
 
+function getLatestGitVersion {
+	local LATEST_TAG
+
+	# Get latest release tag
+	LATEST_TAG=$(
+		git describe \
+			--tags \
+			--match 'v[0-9]*.[0-9]*.[0-9]*' \
+			--abbrev=0 \
+			2>/dev/null || true
+	)
+
+	if [[ -z "$LATEST_TAG" ]]; then
+		LATEST_TAG="v0.0.0"
+	fi
+
+	printf "%s\n" "${LATEST_TAG#v}"
+
+	return 0
+}
+
 export LC_ALL=C # override any user-defined locale
 set -Eeuo pipefail ; shopt -s inherit_errexit
-
-# Get latest release tag
-LATEST_TAG=$(
-	git describe \
-		--tags \
-		--match 'v[0-9]*.[0-9]*.[0-9]*' \
-		--abbrev=0 \
-		2>/dev/null || true
-)
-
-if [[ -z "$LATEST_TAG" ]]; then
-	LATEST_TAG="v0.0.0"
-fi
-
-LATEST_VERSION="${LATEST_TAG#v}"
-
-IFS='.' read -r MAJOR MINOR PATCH <<<"$LATEST_VERSION"
-
-# Calculate next development version
-NEXT_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
 
 if [[ "${GITHUB_REF:-}" =~ ^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
 	# Release build
@@ -42,9 +43,13 @@ else
 	# Development build
 	BRANCH="${GITHUB_REF_NAME:-$(git branch --show-current)}"
 
+	LATEST_VERSION="$(getLatestGitVersion)"
+	IFS='.' read -r MAJOR MINOR PATCH <<<"$LATEST_VERSION"
+	NEXT_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+
 	# Count commits since last release
-	if git rev-parse "$LATEST_TAG" >/dev/null 2>&1; then
-		COMMITS=$(git rev-list "${LATEST_TAG}..HEAD" --count)
+	if git rev-parse "v$LATEST_VERSION" >/dev/null 2>&1; then
+		COMMITS=$(git rev-list "v${LATEST_VERSION}..HEAD" --count)
 	else
 		COMMITS=$(git rev-list HEAD --count)
 	fi
