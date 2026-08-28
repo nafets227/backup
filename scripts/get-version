@@ -1,15 +1,27 @@
 #!/usr/bin/env bash
 #
-# Determine semantic version from Git.
+# Determine semantic version from Git and OCI registries.
 #
 # Tags:
 #   v1.2.3            -> 1.2.3
 #
-# Main:
-#   1.2.4-dev.17
+# Schedule:
+#   1.2.4
+#   highest version in git or OCI with patch incremented
 #
-# Other branch:
-#   1.2.4-br-branchname.5
+# branches main/master:
+#   1.2.4-dev.17
+#   highest version in git with patch incremented
+#   suffixed by "-dev."
+#   plus the number of commits since last tag.
+#
+# Other branches:
+#   1.2.4-br-feature1.<sequential number>[.dirty]
+#   highest version in git with patch incremented
+#   suffixed by "-br-<branchname>."
+#   plus a sequential number incremented each build
+#   ".dirty" is appended if there are uncommit changes
+#   "Dirty" versions are NOT immutable as all other versions.
 #
 
 function getLatestGitVersion {
@@ -29,6 +41,69 @@ function getLatestGitVersion {
 	fi
 
 	printf "%s\n" "${LATEST_TAG#v}"
+	printf "Found Version %s in Git\n" "${LATEST_TAG#v}" >&2
+
+	return 0
+}
+
+function getGitBranchClean {
+	local branch branchClean
+
+	branch="${GITHUB_REF_NAME:-$(git branch --show-current)}"
+	branchClean=$(
+		printf '%s' "$branch" |
+			tr '[:upper:]' '[:lower:]' |
+			sed 's/[^a-z0-9.-]/-/g'
+	)
+
+	printf "%s\n" "$branchClean"
+	printf "Found normalized Branch %s in Git\n" "$branchClean" >&2
+
+	return 0
+}
+
+function getLatestGhcrVersion {
+	local package="$1"
+	local filter_regex="${2:-"."}"
+
+	local package_escaped baseurl owner version pkgstatus
+
+	if [ -n "$GITHUB_REPOSITORY_OWNER" ] ; then
+		owner="$GITHUB_REPOSITORY_OWNER"
+	elif \
+		remoteurl="$(git config --local --get remote.origin.url)" &&
+		[[ "$remoteurl" =~ ^https://github.com/([0-9A-za-z]+)/.*$ ]]
+	then
+		owner="${BASH_REMATCH[1]}"
+	else
+		printf "Could not determine Owner in %s or %s.\n" \
+			"GITHUB_REPOSITORY_OWNER" "git remote.origin.url"
+		return 1
+	fi
+
+	package_escaped="${package//\//%2F}"
+	baseurl="/users/${owner}/packages/container/${package_escaped}"
+
+	pkgstatus=$( gh api "$baseurl" 2>/dev/null) && true
+	pkgstatus=$( jq -r '.status' <<< "$pkgstatus")
+
+	if [ "$pkgstatus" == "404" ] ; then
+		# package does not (yet) exist
+		version="0.0.0"
+	else
+		version=$(
+			gh api --paginate "$baseurl/versions" |
+			jq -r --arg filter "$filter_regex" '
+				.[].metadata.container.tags[]
+				| select(. | test($filter))
+				' |
+			sort --version-sort |
+			tail -1
+		)
+	fi
+
+	printf "%s\n" "$version"
+	printf "Found Version %s in OCI %s\n" "$version" "$package" >&2
 
 	return 0
 }
@@ -36,13 +111,76 @@ function getLatestGitVersion {
 export LC_ALL=C # override any user-defined locale
 set -Eeuo pipefail ; shopt -s inherit_errexit
 
-if [[ "${GITHUB_REF:-}" =~ ^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-	# Release build
-	VERSION="${BASH_REMATCH[1]}"
-else
-	# Development build
-	BRANCH="${GITHUB_REF_NAME:-$(git branch --show-current)}"
+# set GITHUB variables to empty string if they are undefined, i.e. when
+# running locally
+: "${GITHUB_EVENT_NAME:=}" "${GITHUB_REPOSITORY_OWNER:=}"
 
+if \
+	[ "$GITHUB_EVENT_NAME" == "push" ] &&
+	[[ "${GITHUB_REF:-}" =~ ^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]
+then
+	# Release build
+	# use Version as defined in the tag from GITHUB_REF
+	VERSION="${BASH_REMATCH[1]}"
+	LATEST_TAG="v$VERSION"
+	printf "Using Version from Git Tag on push\n"
+elif [ "$GITHUB_EVENT_NAME" == "schedule" ] ; then
+	# regular build on main/master branch
+	# used to update dependencies focussing on rolling releases like arch linux
+	# version is latest version from OCI repositories with the patch incremented
+	tagCandidates=( "0.0.1" )
+
+	for f in "$@" ; do
+		LATEST_VERSION="$(
+			getLatestGhcrVersion \
+			"$f" \
+			"^[0-9]+\\.[0-9]+\\.[0-9]+$"
+			)"
+		IFS='.' read -r MAJOR MINOR PATCH <<<"$LATEST_VERSION"
+
+		tagCandidates+=( "${MAJOR}.${MINOR}.$((PATCH + 1))" )
+	done
+
+	VERSION=$(
+		printf "%s\n" "${tagCandidates[@]}" \
+		| sort --version-sort  \
+		| tail -1
+	)
+
+	LATEST_TAG="v$(getLatestGitVersion)"
+
+	if [ "${LATEST_TAG#v}" \> "$VERSION" ] ; then
+		printf "%s on Git Tag %s greater than OCI Version %s\n" \
+			"Cowardly refusing to operate" "(v)${LATEST_TAG#v}" "$VERSION"
+		exit 1
+	else
+		# MAJOR and MINOR should be identical
+		IFS='.' read -r VMAJOR VMINOR VPATCH <<<"$VERSION"
+		IFS='.' read -r TMAJOR TMINOR TPATCH <<<"${LATEST_TAG#v}"
+		if [ "$VMAJOR" != "$TMAJOR" ] || [ "$VMINOR" != "$TMINOR" ] ; then
+			printf "%s on Git Tag %s %s OCI Version %s\n" \
+				"Cowardly refusing to operate" \
+				"(v)${LATEST_TAG#v}" \
+				"with Major/Minor different to" \
+				"$VERSION"
+			exit 1
+		fi
+		: "$VPATCH" "$TPATCH" # make shellcheck happy on unused vars
+	fi
+
+	printf "Using Version Ghcr, Tag from git on schedule\n"
+elif \
+	[ "$GITHUB_EVENT_NAME" == "push" ] &&
+	{
+		[ "$GITHUB_REF_NAME" == "main" ] ||
+		[ "$GITHUB_REF_NAME" == "master" ] ;
+	}
+then
+	# Pre-Release build on main/master branch
+	# set version to latest git-tag plus 1 fixed "-dev" followed by the number
+	# of commits since this tag. E.G.
+	#    1.2.4-dev.1.  if latest tag is 1.2.3 and one commit since then
+	#    2.3.5-dev.15. if latest tag is 2.3.4 and 15 commits since then
 	LATEST_VERSION="$(getLatestGitVersion)"
 	IFS='.' read -r MAJOR MINOR PATCH <<<"$LATEST_VERSION"
 	NEXT_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
@@ -54,35 +192,68 @@ else
 		COMMITS=$(git rev-list HEAD --count)
 	fi
 
-	case "$BRANCH" in
-		main|master)
-			VERSION="${NEXT_VERSION}-dev.${COMMITS}"
-			;;
+	VERSION="${NEXT_VERSION}-dev.${COMMITS}"
+	LATEST_TAG=""
+	printf "Using Version from Git on Push main/master\n"
+else
+	# Pre-Release build on any branch other than main/master
+	# may also be a local build outside github action
+	# version is latest git tag + 1 followed by "br-<branch>" and and an
+	# incremented number with each build, starting with 1. Example:
+	#    1.2.4-br-branchname.1
+	#        if latest tag is 1.2.3 and no version exists yet for this version
+	#        and branch
+	#    2.3.5-br-branchname.15
+	#        if latest tag is 2.3.4 and 2.3.5-br-branchname.14 already exists
+	#    2.3.5-br-branchname.15.dirty
+	#        if latest tag is 2.3.4 and 2.3.5-br-branchname.14 already exists
+	#        and the source has been modified since last commit
+	LATEST_VERSION="$(getLatestGitVersion)"
+	IFS='.' read -r MAJOR MINOR PATCH <<<"$LATEST_VERSION"
+	NEXT_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
 
-		*)
-			CLEAN_BRANCH=$(
-				printf '%s' "$BRANCH" |
-					tr '/_' '-' |
-					tr '[:upper:]' '[:lower:]' |
-					sed 's/[^a-z0-9.-]/-/g'
+	CLEAN_BRANCH=$(getGitBranchClean)
+
+	tagCandidates=( "$NEXT_VERSION-br-$CLEAN_BRANCH.1" )
+
+	for f in "$@" ; do
+		LATEST_SUBTAG="$(
+			getLatestGhcrVersion \
+			"$f" \
+			"^$NEXT_VERSION-br-$CLEAN_BRANCH\\.[0-9]+$"
+			)"
+		IFS='.-' \
+		read -r MAJOR MINOR PATCH BR BRANCHNAME SUBVER <<<"$LATEST_SUBTAG"
+
+		tagCandidates+=(
+			"$MAJOR.$MINOR.$PATCH-$BR-$BRANCHNAME.$((SUBVER + 1))"
 			)
+	done
 
-			VERSION="${NEXT_VERSION}-br-${CLEAN_BRANCH}.${COMMITS}"
-			;;
-	esac
+	VERSION=$(
+		printf "%s\n" "${tagCandidates[@]}" \
+		| sort --version-sort  \
+		| tail -1
+	)
+
+	if [[ -n "$(git status --porcelain)" ]]; then
+		# Mark local modifications
+		VERSION="${VERSION}.dirty"
+	fi
+
+	LATEST_TAG=""
+	printf "Using Version from Git+OCI on any Non-default branch\n"
 fi
 
-if [[ -n "$(git status --porcelain)" ]]; then
-	# Mark local modifications
-	VERSION="${VERSION}.dirty"
-fi
 
-printf 'Version: %s\n' "$VERSION"
+printf 'Version: %s\nLatest Tag: %s\n' "$VERSION" "$LATEST_TAG"
 
 if [[ -n "${GITHUB_ENV:-}" ]]; then
 	printf 'VERSION=%s\n' "$VERSION" >>"$GITHUB_ENV"
+	printf 'LATEST_TAG=%s\n' "$LATEST_TAG" >>"$GITHUB_ENV"
 fi
 
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
 	printf 'version=%s\n' "$VERSION" >>"$GITHUB_OUTPUT"
+	printf 'latestTag=%s\n' "$LATEST_TAG" >>"$GITHUB_OUTPUT"
 fi
