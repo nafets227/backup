@@ -13,6 +13,9 @@ permissions:
 
 env:
   VERSION: 0.0.0 # dummy value will be replaced by calculate version step
+  ISLATEST: ${{ github.ref_type == 'tag' || github.event_name == 'schedule' }}
+  IMGNAME: ${{ github.event.repository.name }}
+  CHARTNAME: ${{ github.repository_owner }}-${{ github.event.repository.name }}
 
 jobs:
   # Lint and build intentionally run in parallel. A failed lint may waste
@@ -38,10 +41,10 @@ jobs:
         run: |
           yq -i \
             '.version="${{ env.VERSION }}"' \
-            charts/nafets227-backup/Chart.yaml
+            "charts/$CHARTNAME/Chart.yaml"
           yq -i \
             '.appVersion="${{ env.VERSION }}"' \
-            charts/nafets227-backup/Chart.yaml
+            "charts/$CHARTNAME/Chart.yaml"
       - name: Lint helm and render examples/tests
         run: scripts/helm-lint-render
       - name: Load super-linter configuration
@@ -62,13 +65,14 @@ jobs:
       contents: read
     outputs:
       version: ${{ steps.version.outputs.version }}
+      #editorconfig-checker-disable
       image: >-
-        ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+        ghcr.io/${{ github.repository_owner }}/${{ env.IMGNAME }}:${{ steps.version.outputs.version }}
+      #editorconfig-checker-enable
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          submodules: true
           persist-credentials: false
           fetch-depth: 0
           fetch-tags: true
@@ -86,43 +90,50 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/${{ github.repository_owner }}/${{ env.IMGNAME }}
           tags: |
             type=raw,value=${{ env.VERSION }}
             # latest only for Release Tags
-            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
+            type=raw,value=latest,enable=${{ env.ISLATEST }}
       - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
           cache-from: type=gha
           cache-to: type=gha
-          outputs: type=docker,dest=dist/nafets227-backup.image.tar
+          outputs: type=docker,dest=dist/${{ env.IMGNAME }}.image.tar
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+
       - name: Upload Docker image
         uses: actions/upload-artifact@v7
         with:
-          name: docker-image
-          path: dist/nafets227-backup.image.tar
+          name: ${{ env.IMGNAME }}.image.tar
+          path: dist/${{ env.IMGNAME }}.image.tar
           retention-days: 1
       - name: Update Helm chart
+        if: env.CHARTNAME != ''
         run: |
+          # jscpd:ignore-start intentionally copied from job lint
           yq -i \
             '.version="${{ env.VERSION }}"' \
-            charts/nafets227-backup/Chart.yaml
+            "charts/$CHARTNAME/Chart.yaml"
           yq -i \
             '.appVersion="${{ env.VERSION }}"' \
-            charts/nafets227-backup/Chart.yaml
+            "charts/$CHARTNAME/Chart.yaml"
+          # jscpd:ignore-end
       - name: Package Helm
+        if: env.CHARTNAME != ''
         run: |
           helm dependency update charts/nafets227-backup
-          helm package charts/nafets227-backup --destination dist
+          helm package "charts/$CHARTNAME" --destination dist
       - name: Upload Helm chart
+        if: env.CHARTNAME != ''
         uses: actions/upload-artifact@v7
         with:
-          name: helm-chart
-          path: dist/*.tgz
+          name: ${{ env.CHARTNAME }}-${{ env.VERSION }}.tgz
+          path: dist/${{ env.CHARTNAME }}-${{ env.VERSION }}.tgz
           retention-days: 1
 
   test-base-imap:
@@ -148,10 +159,10 @@ jobs:
       - name: Download Docker image
         uses: actions/download-artifact@v8
         with:
-          name: docker-image
-          path: /tmp
+          name: ${{ env.IMGNAME }}.image.tar
+          path: dist
       - name: Load Docker image
-        run: docker load --input /tmp/nafets227-backup.image.tar
+        run: docker load --input "dist/$IMGNAME.image.tar"
       - name: Test
         env:
           GH_TOKEN: ${{ secrets.GH_SECRET_ADMIN_TOKEN }}
@@ -197,10 +208,10 @@ jobs:
       - name: Download Docker image
         uses: actions/download-artifact@v8
         with:
-          name: docker-image
-          path: /tmp
+          name: ${{ env.IMGNAME }}.image.tar
+          path: dist
       - name: Load Docker image
-        run: docker load --input /tmp/nafets227-backup.image.tar
+        run: docker load --input "dist/$IMGNAME.image.tar"
       - name: Test
         env:
           RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
@@ -242,10 +253,10 @@ jobs:
       - name: Download Docker image
         uses: actions/download-artifact@v8
         with:
-          name: docker-image
-          path: /tmp
+          name: ${{ env.IMGNAME }}.image.tar
+          path: dist
       - name: Load Docker image
-        run: docker load --input /tmp/nafets227-backup.image.tar
+        run: docker load --input "dist/$IMGNAME.image.tar"
       - name: Test
         env:
           RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
@@ -280,14 +291,15 @@ jobs:
       - name: Download Docker image
         uses: actions/download-artifact@v8
         with:
-          name: docker-image
-          path: /tmp
+          name: ${{ env.IMGNAME }}.image.tar
+          path: dist
       - name: Load Docker image
-        run: docker load --input /tmp/nafets227-backup.image.tar
+        run: docker load --input "dist/$IMGNAME.image.tar"
       - name: Download Helm chart
+        if: env.CHARTNAME != ''
         uses: actions/download-artifact@v8
         with:
-          name: helm-chart
+          name: ${{ env.CHARTNAME }}-${{ env.VERSION }}.tgz
           path: dist
       # jscpd:ignore-end
       - name: Log into registry ghcr.io
@@ -299,21 +311,22 @@ jobs:
       - name: Push Docker image
         env:
           REFTYPE: ${{ github.ref_type }}
+          IMG: ghcr.io/${{ github.repository_owner }}/${{ env.IMGNAME }}
         run: |
-          docker push "ghcr.io/${{ github.repository }}:${VERSION}"
+          docker push "$IMG:$VERSION"
 
-          if [[ "$REFTYPE" == "tag" ]]; then
-            docker push "ghcr.io/${{ github.repository }}:latest"
+          if [[ "$ISLATEST" == "true" ]]; then
+            docker push "$IMG:latest"
           fi
       - name: Push Helm chart
+        if: env.CHARTNAME != ''
         run: |
           helm push \
-            "dist/nafets227-backup-${VERSION}.tgz" \
+            "dist/$CHARTNAME-$VERSION.tgz" \
             "oci://ghcr.io/${{ github.repository_owner }}/charts"
 
   cleanup:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
@@ -328,11 +341,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           KEEP_DAYS: 30
         run: |
-          scripts/cleanup-ghcr backup
+          scripts/cleanup-ghcr "$IMGNAME"
       - name: Cleanup old Helm charts
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && env.CHARTNAME != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           KEEP_DAYS: 30
         run: |
-          scripts/cleanup-ghcr charts/nafets227-backup
+          scripts/cleanup-ghcr "charts/$CHARTNAME"
