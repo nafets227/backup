@@ -93,8 +93,6 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/${{ env.IMGNAME }}
           tags: |
             type=raw,value=${{ env.VERSION }}
-            # latest only for Release Tags
-            type=raw,value=latest,enable=${{ env.ISLATEST }}
       - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
@@ -316,8 +314,13 @@ jobs:
           docker push "$IMG:$VERSION"
 
           if [[ "$ISLATEST" == "true" ]]; then
+            docker tag "$IMG:${VERSION}" "$IMG:latest"
             docker push "$IMG:latest"
           fi
+
+          # make sure additional tags works
+          docker tag "$IMG:${VERSION}" "$IMG:latestdummycitest"
+          docker push "$IMG:latestdummycitest"
       - name: Push Helm chart
         if: env.CHARTNAME != ''
         run: |
