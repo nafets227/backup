@@ -1,5 +1,16 @@
 # nafets227/backup CHANGELOG
 
+## 1.1.0 (2026-11-10) Custom Port for rsync/SSH
+
+- add custom port for rsync/SSH
+- rclone 1.76.0
+
+## 1.0.2 (2026-10-14) rclone 1.75
+
+- rclone 1.75.2
+- alpine 3.24.3
+- CI improvements incl. upgrades. See commit log for details
+
 ## 1.0.1 (2026-08-18) readonly OneDrive
 
 - Document how rclone2file can be used with readonly access to OneDrive.
