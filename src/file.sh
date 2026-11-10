@@ -43,6 +43,13 @@ function backup2_file {
 		opt="-aHX --delete"
 	fi
 
+	if [ "$1" == "--port" ] ; then
+		ssh_port="$2"
+		shift 2
+	else
+		ssh_port=""
+	fi
+
 	if [ $# -gt 0 ]; then
 		# we got additional rsync parameters
 		prm="$*"
@@ -103,6 +110,10 @@ function backup2_file {
 		sshopt+=" -i $bckfile_dst_secret"
 	else
 		sshopt="ssh"
+	fi
+
+	if [ -n "$ssh_port" ] ; then
+		sshopt+=" -p $ssh_port"
 	fi
 
 	if [ "$DEBUG" == 1 ] ; then
