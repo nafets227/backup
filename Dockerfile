@@ -10,7 +10,7 @@
 
 FROM rclone/rclone:1.76.0 AS rclone
 
-FROM alpine:3.24.3
+FROM alpine:3.24.4
 
 RUN \
 	apk update && \
